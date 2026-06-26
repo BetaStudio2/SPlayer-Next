@@ -13,7 +13,13 @@ import { fetchBytes } from "@main/utils/fetchBytes";
 import { getPlayer, resetPlayer, onPlayerCreated } from "@main/services/engine";
 import { startDevicePolling, stopDevicePolling } from "@main/services/device";
 import { getThumbar } from "@main/services/thumbar";
-import { setTraySongName, setTrayPlayState, setTrayPlayMode } from "@main/services/tray";
+import {
+  setTraySongName,
+  setTrayPlayState,
+  setTrayPlayMode,
+  setTrayLikeState,
+} from "@main/services/tray";
+import { setTaskbarThumbnailCover } from "@main/services/thumbnail";
 import { getMainWindow, setTaskbarProgress } from "@main/window";
 import { store } from "@main/store";
 import { appName, getSongCacheDir } from "@main/utils/config";
@@ -182,6 +188,7 @@ export const registerPlayerIpc = (): void => {
         getMainWindow()?.setTitle(header);
         setTraySongName(header);
         setTrayPlayState(autoPlay ? "playing" : "paused");
+        setTaskbarThumbnailCover(coverData);
       };
       // 流媒体乐观更新
       if (authoritative) {
@@ -230,6 +237,7 @@ export const registerPlayerIpc = (): void => {
             coverUrl,
             durationMs,
           });
+          setTaskbarThumbnailCover(buf);
         });
       }
       const quality = {
@@ -546,6 +554,12 @@ export const registerPlayerIpc = (): void => {
     setTrayPlayMode(repeat, shuffle);
   });
 
+  // 渲染进程同步当前歌曲喜欢状态到托盘与缩略图工具栏
+  ipcMain.on("player:syncLikeState", (_event, liked: boolean) => {
+    setTrayLikeState(liked);
+    getThumbar()?.updateLike(liked);
+  });
+
   // 转发渲染端发起的播放控制
   ipcMain.on("player:dispatch", (_event, type: string) => {
     sendToMain("player:event", { type });
@@ -568,6 +582,7 @@ export const registerPlayerIpc = (): void => {
         case "Seek":
           if (event.positionMs != null) {
             const targetMs = event.positionMs;
+            sendToMain("player:event", { type: "seek", data: { position: targetMs } });
             void inst.seek(targetMs / 1000).then(() => {
               mediaService.setTimeline({
                 currentMs: targetMs,
