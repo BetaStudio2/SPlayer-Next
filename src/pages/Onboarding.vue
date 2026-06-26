@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useSettingsStore } from "@/stores/settings";
+import { isElectron } from "@/utils/config";
 import WindowControls from "@/components/layout/WindowControls.vue";
 import StepWelcome from "@/components/onboarding/StepWelcome.vue";
 import StepPreferences from "@/components/onboarding/StepPreferences.vue";
@@ -12,12 +13,13 @@ const { t } = useI18n();
 const router = useRouter();
 const settings = useSettingsStore();
 
+/** Web 服务端模式下 SPlayer 自身即流媒体服务器，无需配置外部服务器 */
 const STEPS = [
   { key: "welcome", component: StepWelcome },
   { key: "agreement", component: StepAgreement },
   { key: "preferences", component: StepPreferences },
   { key: "library", component: StepLibrary },
-  { key: "streaming", component: StepStreaming },
+  ...(isElectron ? [{ key: "streaming", component: StepStreaming }] : []),
   { key: "hotkeys", component: StepHotkeys },
 ] as const;
 

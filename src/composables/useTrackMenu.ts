@@ -55,6 +55,7 @@ export const useTrackMenu = (
   const router = useRouter();
   const settings = useSettingsStore();
   const { copy } = useCopyText();
+  const isWeb = !window.navigator.userAgent.includes("Electron");
   const isPlaylist = options.collectionType === "playlist";
   const isCloudView = options.collectionType === "cloud";
   const showPlay = !options.hidePlayActions;
@@ -86,7 +87,7 @@ export const useTrackMenu = (
         label: t("songList.context.showInExplorer"),
         icon: markRaw(IconFolderOpen),
         separator: true,
-        show: isLocal,
+        show: isLocal && !isWeb,
       },
       {
         key: "copyPath",

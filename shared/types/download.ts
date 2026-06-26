@@ -93,6 +93,8 @@ export interface EnqueueResult {
 /** 渲染端下载 IPC 入口 */
 export interface DownloadApi {
   start: (req: DownloadRequest) => Promise<EnqueueResult>;
+  /** Web 服务端模式：经服务端中转后直接交给浏览器保存 */
+  browserSave?: (req: DownloadRequest) => Promise<void>;
   cancel: (taskId: string) => Promise<void>;
   retry: (req: DownloadRequest) => Promise<EnqueueResult>;
   remove: (taskId: string) => Promise<void>;
@@ -100,6 +102,8 @@ export interface DownloadApi {
   list: () => Promise<DownloadTask[]>;
   pickDir: () => Promise<{ ok: boolean; dir: string; reason?: "canceled" }>;
   getDir: () => Promise<string>;
+  /** Web 服务端模式：直接设置下载目录（服务端可访问路径） */
+  setDir?: (dir: string) => Promise<string>;
   resetDir: () => Promise<string>;
   onProgress: (callback: (data: DownloadProgress) => void) => () => void;
   onState: (callback: (task: DownloadTask) => void) => () => void;

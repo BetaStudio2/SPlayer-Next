@@ -11,6 +11,7 @@ import IconLucideChevronDown from "~icons/lucide/chevron-down";
 
 const { t } = useI18n();
 const update = useUpdateStore();
+const isWeb = !window.navigator.userAgent.includes("Electron");
 
 /** 检查更新中 */
 const checking = computed(() => update.phase === "checking");
@@ -98,7 +99,7 @@ onMounted(async () => {
                   : t("settings.about.checkUpdate")
             }}
           </SButton>
-          <SButton variant="secondary" @click="handleOpenLogs">
+          <SButton v-if="!isWeb" variant="secondary" @click="handleOpenLogs">
             {{ t("settings.about.openLogs") }}
           </SButton>
         </div>

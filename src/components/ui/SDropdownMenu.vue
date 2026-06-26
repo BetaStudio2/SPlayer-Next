@@ -45,9 +45,22 @@ const emit = defineEmits<{
 
 /** 显示的项 */
 const visibleItems = computed(() => props.items.filter((item) => item.show !== false));
+const submenuOpenState = ref<Record<string, boolean>>({});
+
+const getVisibleChildren = (item: DropdownMenuItem): DropdownMenuItem[] =>
+  (item.children ?? []).filter((child) => child.show !== false);
+
+const setSubmenuOpen = (key: string, open: boolean): void => {
+  submenuOpenState.value = { ...submenuOpenState.value, [key]: open };
+};
+
+const resetSubmenus = (): void => {
+  submenuOpenState.value = {};
+};
 
 const handleSelect = (item: DropdownMenuItem): void => {
   if (item.disabled) return;
+  resetSubmenus();
   emit("select", item.key);
 };
 
@@ -86,12 +99,26 @@ const menuItemClass = computed(() =>
         :avoid-collisions="true"
         :collision-padding="12"
         :class="contentClass"
+        @close-auto-focus="resetSubmenus"
+        @escape-key-down="resetSubmenus"
+        @pointer-down-outside="resetSubmenus"
       >
         <template v-for="item in visibleItems" :key="item.key">
           <SDivider v-if="item.separator" class="mx-1.5 my-0.5" />
           <!-- 子菜单 -->
-          <DropdownMenuSub v-if="item.children">
-            <DropdownMenuSubTrigger :disabled="item.disabled" :class="menuItemClass">
+          <DropdownMenuSub
+            v-if="getVisibleChildren(item).length"
+            :open="submenuOpenState[item.key] ?? false"
+            @update:open="setSubmenuOpen(item.key, $event)"
+          >
+            <DropdownMenuSubTrigger
+              :disabled="item.disabled"
+              :class="menuItemClass"
+              :text-value="item.label"
+              @pointermove="setSubmenuOpen(item.key, true)"
+              @focus="setSubmenuOpen(item.key, true)"
+              @click.stop="setSubmenuOpen(item.key, true)"
+            >
               <component :is="item.icon" v-if="item.icon" class="size-3.5 opacity-60 shrink-0" />
               <span class="flex-1">{{ item.label }}</span>
               <IconLucideChevronRight class="size-3 opacity-40 shrink-0" />
@@ -103,12 +130,13 @@ const menuItemClass = computed(() =>
                 :collision-padding="12"
                 :class="[contentClass, 'max-h-60 overflow-y-auto']"
               >
-                <template v-for="child in item.children" :key="child.key">
+                <template v-for="child in getVisibleChildren(item)" :key="child.key">
                   <SDivider v-if="child.separator" class="mx-1.5 my-0.5" />
                   <DropdownMenuItem
                     v-else
                     :disabled="child.disabled"
                     :class="menuItemClass"
+                    :text-value="child.label"
                     @select="handleSelect(child)"
                   >
                     <component

@@ -13,12 +13,14 @@ import pluginsCategory from "./categories/plugins";
 import AboutSettings from "@/components/settings/custom/AboutSettings.vue";
 import IconLucideInfo from "~icons/lucide/info";
 
+const isWeb = !navigator.userAgent.includes("Electron");
+
 export const settingsSchema: SettingCategory[] = [
   generalCategory,
   appearanceCategory,
   playerCategory,
   lyricCategory,
-  externalLyricCategory,
+  ...(isWeb ? [] : [externalLyricCategory]),
   hotkeysCategory,
   servicesCategory,
   mediaSourceCategory,

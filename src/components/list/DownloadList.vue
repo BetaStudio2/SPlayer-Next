@@ -96,9 +96,23 @@ const rowClass = (task: DownloadTask): string => {
   return base;
 };
 
-/** 在文件管理器中定位下载的文件 */
+/** web 服务端模式：浏览器原生下载到本地（替代桌面端"打开文件夹"） */
+const isWeb = !window.navigator.userAgent.includes("Electron");
+
+/** 在文件管理器中定位下载的文件（web 模式下改为触发浏览器下载到本地） */
 const openFolder = (task: DownloadTask): void => {
-  if (task.filePath) window.api.system.showInExplorer(task.filePath);
+  if (!task.filePath) return;
+  if (isWeb) {
+    // web 模式：通过 /api/download/file/:taskId 触发浏览器原生下载
+    const a = document.createElement("a");
+    a.href = `/api/download/file/${task.taskId}`;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+  window.api.system.showInExplorer(task.filePath);
 };
 
 /** 二次确认后删除已下载的本地文件并移除记录 */
@@ -284,10 +298,13 @@ defineExpose({ playAll });
                 variant="ghost"
                 circle
                 size="small"
-                :title="t('download.openFolder')"
+                :title="isWeb ? t('download.downloadToLocal', '下载到本地') : t('download.openFolder')"
                 @click="openFolder(item)"
               >
-                <template #icon><IconLucideFolderOpen /></template>
+                <template #icon>
+                  <IconLucideDownload v-if="isWeb" />
+                  <IconLucideFolderOpen v-else />
+                </template>
               </SButton>
               <SButton
                 variant="ghost"

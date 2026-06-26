@@ -8,6 +8,7 @@ import { usePlaylistStore } from "@/stores/playlist";
 import { useUserStore } from "@/stores/user";
 import { useDownloadStore } from "@/stores/download";
 import { useHeartMode } from "@/composables/useHeartMode";
+import { isElectron } from "@/utils/config";
 import * as player from "@/core/player";
 import IconLucideHome from "~icons/lucide/home";
 import IconLucideMusic from "~icons/lucide/music";
@@ -193,7 +194,7 @@ const menuItems = computed<SMenuItem[]>(() => [
         },
       ] satisfies SMenuItem[])
     : []),
-  ...(systemSettings.streaming.enabled
+  ...(isElectron && systemSettings.streaming.enabled
     ? ([
         { key: "/streaming", label: t("nav.streaming"), icon: markRaw(IconLucideServer) },
       ] satisfies SMenuItem[])

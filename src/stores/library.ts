@@ -154,9 +154,9 @@ export const useLibraryStore = defineStore("library", () => {
     scanProgress.value = null;
   };
 
-  /** 添加扫描目录 */
-  const addScanDir = async (): Promise<{ success: boolean; error?: string }> => {
-    const res = await window.api.library.addScanDir();
+  /** 添加扫描目录；Web 服务端模式可传 dir 直接指定路径 */
+  const addScanDir = async (dir?: string): Promise<{ success: boolean; error?: string }> => {
+    const res = await window.api.library.addScanDir(dir);
     if (res.success) {
       const newDir = res.data as string;
       const nested = scanDirs.value.some(

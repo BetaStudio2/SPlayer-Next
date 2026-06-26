@@ -21,6 +21,7 @@ const { t } = useI18n();
 const status = useStatusStore();
 const settings = useSettingsStore();
 const { isDesktopLyricOpen } = storeToRefs(settings);
+const isWeb = !window.navigator.userAgent.includes("Electron");
 
 const buttonType = computed<"default" | "cover">(() => (props.cover ? "cover" : "default"));
 const mutedClass = computed(() => (props.cover ? "text-cover/50" : "text-on-surface-variant"));
@@ -113,6 +114,7 @@ const onMoreMenuSelect = (key: string): void => {
       </div>
     </SPopover>
     <SButton
+      v-if="!isWeb"
       :type="lyricButtonType"
       :variant="isDesktopLyricOpen ? 'tertiary' : 'ghost'"
       circle

@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from "vue-router";
+import { isElectron } from "@/utils/config";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -82,33 +83,43 @@ const router = createRouter({
           name: "search",
           component: () => import("@/pages/Search.vue"),
         },
-        {
-          path: "streaming",
-          component: () => import("@/pages/Streaming/Index.vue"),
-          redirect: "/streaming/songs",
-          children: [
-            {
-              path: "songs",
-              name: "streaming-songs",
-              component: () => import("@/pages/Streaming/Songs.vue"),
-            },
-            {
-              path: "albums",
-              name: "streaming-albums",
-              component: () => import("@/pages/Streaming/Albums.vue"),
-            },
-            {
-              path: "artists",
-              name: "streaming-artists",
-              component: () => import("@/pages/Streaming/Artists.vue"),
-            },
-            {
-              path: "playlists",
-              name: "streaming-playlists",
-              component: () => import("@/pages/Streaming/Playlists.vue"),
-            },
-          ],
-        },
+        ...(isElectron
+          ? [
+              {
+                path: "streaming",
+                component: () => import("@/pages/Streaming/Index.vue"),
+                redirect: "/streaming/songs",
+                children: [
+                  {
+                    path: "songs",
+                    name: "streaming-songs",
+                    component: () => import("@/pages/Streaming/Songs.vue"),
+                  },
+                  {
+                    path: "albums",
+                    name: "streaming-albums",
+                    component: () => import("@/pages/Streaming/Albums.vue"),
+                  },
+                  {
+                    path: "artists",
+                    name: "streaming-artists",
+                    component: () => import("@/pages/Streaming/Artists.vue"),
+                  },
+                  {
+                    path: "playlists",
+                    name: "streaming-playlists",
+                    component: () => import("@/pages/Streaming/Playlists.vue"),
+                  },
+                ],
+              },
+            ]
+          : [
+              {
+                path: "streaming",
+                /** Web 服务端模式：SPlayer 自身即流媒体服务器，浏览本机音乐请用 /library */
+                redirect: "/library",
+              },
+            ]),
       ],
     },
   ],

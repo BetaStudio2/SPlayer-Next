@@ -105,6 +105,7 @@ export const defaultSystemConfig: SystemConfig = {
   },
   download: {
     enabled: false,
+    target: "browser",
     dir: null,
     quality: "lossless",
     usePlaybackForDownload: false,

@@ -581,6 +581,7 @@
     "deleteConfirmContent": "This permanently deletes the song file from disk and cannot be undone. Delete it?",
     "tagWarning": "Failed to write tags; file saved",
     "resolveFailed": "Cannot download: {title}",
+    "savedToBrowser": "Sent to browser download: {title}",
     "alreadyQueued": "Already in the download queue",
     "alreadyDownloaded": "Already downloaded",
     "started": "Added to downloads: {title}",
@@ -1590,7 +1591,13 @@
     },
     "downloadDir": {
       "label": "Download Folder",
-      "change": "Change"
+      "change": "Change",
+      "serverPathHint": "Server path"
+    },
+    "downloadTarget": {
+      "browser": "Save in browser",
+      "server": "Save on server",
+      "browserHint": "Downloads are handed to the browser directly and do not consume server disk space"
     },
     "downloadQuality": {
       "label": "Download Quality",

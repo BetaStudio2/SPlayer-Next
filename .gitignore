@@ -19,3 +19,12 @@ skills-lock.json
 native/*/*.node
 # native/*/index.d.ts
 package-lock.json
+
+# server 运行时数据（数据库 / 密钥 / 缓存 / 音乐 / 配置）
+server/data/
+
+# Docker 构建产物（镜像 tar 包等）
+dist/images/
+
+# 本地传输笔记（开发临时文件）
+transmission.md

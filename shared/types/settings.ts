@@ -272,6 +272,8 @@ export interface CacheSettings {
 export interface DownloadSettings {
   /** 下载功能总开关；关闭后隐藏应用内所有下载入口，下载设置仍可预先配置 */
   enabled: boolean;
+  /** Web 端下载目标：浏览器本地保存 / 服务端落盘 */
+  target: "browser" | "server";
   /** 下载目录；null 使用系统下载目录下的应用子目录 */
   dir: string | null;
   /** 下载音质 */

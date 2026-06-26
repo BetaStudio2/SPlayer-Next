@@ -1,0 +1,38 @@
+# 依赖与构建产物
+**/node_modules
+**/dist
+**/out
+server/data
+web/auto-imports.d.ts
+web/components.d.ts
+
+# Docker 镜像包导出
+dist/images/
+*.tar
+*.tar.gz
+
+# Electron / 原生模块（Docker 仅构建 web + server，不需要）
+electron/
+native/
+windows/
+scripts/
+
+# 版本控制与文档
+.git
+.gitignore
+.github
+docs/
+*.md
+!DEPLOY.md
+!USER_AGREEMENT.md
+
+# IDE 与系统文件
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 测试与日志
+**/*.log
+**/coverage
+.playwright

@@ -45,6 +45,35 @@ export const useStreamingStore = defineStore("streaming", () => {
   /** 单页歌曲数量；首批返回后后台继续按此分批拉到拉完 */
   const SONGS_PAGE_SIZE = 500;
 
+  /** Web 服务端模式：通过 /api/streaming/probe 代理 ping + 登录，避免浏览器直连 CORS */
+  const isWebMode = (): boolean => !window.navigator.userAgent.includes("Electron");
+  const probeViaServer = async (
+    cfg: StreamingServerConfig,
+  ): Promise<{ ping: StreamingPingResult; accessToken?: string; userId?: string }> => {
+    const res = await fetch("/api/streaming/probe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cfg),
+    });
+    const r = (await res.json()) as {
+      ok: boolean;
+      version?: string;
+      error?: string;
+      accessToken?: string;
+      userId?: string;
+    };
+    return {
+      ping: {
+        ok: r.ok,
+        version: r.version,
+        error: r.error,
+        code: r.ok ? undefined : "network",
+      },
+      accessToken: r.accessToken,
+      userId: r.userId,
+    };
+  };
+
   /** 运行时缓存 */
   const songs = shallowRef<Track[]>([]);
   const albums = shallowRef<Album[]>([]);
@@ -95,19 +124,26 @@ export const useStreamingStore = defineStore("streaming", () => {
   const refreshCoverUrlsForActive = (): void => {
     const cfg = activeServer.value;
     if (!cfg) return;
+    // Web 服务端模式：cover 走服务端代理，strip auth 后交给 /api/streaming/cover 注入凭据
+    const isWeb = !window.navigator.userAgent.includes("Electron");
+    const rewrite = (url: string | undefined): string | undefined => {
+      if (!url) return url;
+      if (!isWeb) return client.refreshCoverAuth(url, cfg);
+      const stripped = client.stripCoverAuth(url, cfg.type);
+      if (!stripped) return stripped;
+      return `/api/streaming/cover/${cfg.id}?url=${encodeURIComponent(stripped)}`;
+    };
     songs.value = songs.value.map((track) =>
-      track.cover ? { ...track, cover: client.refreshCoverAuth(track.cover, cfg) } : track,
+      track.cover ? { ...track, cover: rewrite(track.cover) } : track,
     );
     albums.value = albums.value.map((album) =>
-      album.cover ? { ...album, cover: client.refreshCoverAuth(album.cover, cfg) } : album,
+      album.cover ? { ...album, cover: rewrite(album.cover) } : album,
     );
     artists.value = artists.value.map((artist) =>
-      artist.avatar ? { ...artist, avatar: client.refreshCoverAuth(artist.avatar, cfg) } : artist,
+      artist.avatar ? { ...artist, avatar: rewrite(artist.avatar) } : artist,
     );
     playlists.value = playlists.value.map((playlist) =>
-      playlist.cover
-        ? { ...playlist, cover: client.refreshCoverAuth(playlist.cover, cfg) }
-        : playlist,
+      playlist.cover ? { ...playlist, cover: rewrite(playlist.cover) } : playlist,
     );
   };
 
@@ -263,6 +299,11 @@ export const useStreamingStore = defineStore("streaming", () => {
       password: input.password,
     };
     try {
+      // Web 服务端模式：probe 代理避免 CORS
+      if (isWebMode()) {
+        const { ping } = await probeViaServer(tempCfg);
+        return ping;
+      }
       if (needsAccessToken(input.type)) {
         const auth = await client.authenticate(tempCfg);
         tempCfg.accessToken = auth.accessToken;
@@ -294,6 +335,25 @@ export const useStreamingStore = defineStore("streaming", () => {
     };
     try {
       const updates: Partial<StreamingServerConfig> = {};
+
+      // Web 服务端模式：probe 代理避免 CORS，自动处理 jellyfin/emby 登录
+      if (isWebMode()) {
+        const { ping, accessToken, userId } = await probeViaServer(cfg);
+        if (!ping.ok) {
+          const code = ping.code ?? "unknown";
+          const error = ping.error ?? "ping 失败";
+          writeStatus({ connected: false, error, errorCode: code });
+          return { ok: false, error, code };
+        }
+        if (accessToken) updates.accessToken = accessToken;
+        if (userId) updates.userId = userId;
+        updates.lastConnected = Date.now();
+        patchServer(id, updates);
+        writeStatus({ connected: true });
+        if (id === activeServerId.value) refreshCoverUrlsForActive();
+        return { ok: true };
+      }
+
       let probe = cfg;
       if (needsAccessToken(cfg.type)) {
         const auth = await client.authenticate(cfg);
@@ -545,6 +605,10 @@ export const useStreamingStore = defineStore("streaming", () => {
     }
     const fresh = servers.value.find((s) => s.id === cfg.id) ?? cfg;
     const sessionId = opts?.playSessionId ?? session.sessionIdForTrack(track.id);
+    // Web 服务端模式（非 Electron）：音频流走服务端代理，凭据不暴露给浏览器
+    if (!window.navigator.userAgent.includes("Electron")) {
+      return `/api/streaming/stream/${fresh.id}?id=${encodeURIComponent(track.originalId!)}&playSessionId=${encodeURIComponent(sessionId)}`;
+    }
     return withAutoReauthFor(fresh, (c) => client.getStreamUrl(c, track.originalId!, sessionId));
   };
 

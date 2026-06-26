@@ -12,6 +12,7 @@ const props = defineProps<{
   directQuit?: boolean;
 }>();
 
+const isWeb = !window.navigator.userAgent.includes("Electron");
 const { isMaximized, minimize, toggleMaximize, close, quit } = useWindowControls();
 
 const onClose = (): void => {
@@ -20,7 +21,7 @@ const onClose = (): void => {
 </script>
 
 <template>
-  <div class="flex items-center gap-3 shrink-0">
+  <div v-if="!isWeb" class="flex items-center gap-3 shrink-0">
     <SButton
       class="app-no-drag"
       :type="cover ? 'cover' : undefined"

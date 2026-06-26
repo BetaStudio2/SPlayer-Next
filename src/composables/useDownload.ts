@@ -22,6 +22,7 @@ interface EnqueueOptions {
 
 const isTerminal = (status: DownloadStatus): boolean =>
   status !== "queued" && status !== "downloading";
+const isWeb = !window.navigator.userAgent.includes("Electron");
 
 /** 可下载音质档位（展示顺序） */
 const DOWNLOAD_QUALITY_LEVELS: QualityLevel[] = ["hi-res", "lossless", "hq", "sq", "lq"];
@@ -44,6 +45,14 @@ export const buildDownloadQualityItems = (
 
 export const useDownload = () => {
   const { t } = useI18n();
+  const settings = useSettingsStore();
+
+  const saveInBrowser = async (req: DownloadRequest): Promise<boolean> => {
+    if (!window.api.download.browserSave) return false;
+    await window.api.download.browserSave(req);
+    toast.success(t("download.savedToBrowser", { title: req.track.title }));
+    return true;
+  };
 
   /** 解析 URL + 歌词并组装下载请求；解析失败时 toast 并返回 null */
   const prepareRequest = async (
@@ -109,6 +118,14 @@ export const useDownload = () => {
   const enqueue = async (track: Track, opts: EnqueueOptions = {}): Promise<boolean> => {
     const req = await prepareRequest(track, opts);
     if (!req) return false;
+    if (isWeb && settings.system.download.target === "browser") {
+      try {
+        return await saveInBrowser(req);
+      } catch {
+        toast.error(t("download.resolveFailed", { title: track.title }));
+        return false;
+      }
+    }
     const res = opts.taskId
       ? await window.api.download.retry(req)
       : await window.api.download.start(req);
@@ -126,6 +143,9 @@ export const useDownload = () => {
   const downloadAndWait = (track: Track): Promise<void> =>
     prepareRequest(track, {}).then((req) => {
       if (!req) return;
+      if (isWeb && settings.system.download.target === "browser") {
+        return saveInBrowser(req).then(() => {});
+      }
       return new Promise<void>((resolve) => {
         const off = window.api.download.onState((task) => {
           if (task.taskId === req.taskId && isTerminal(task.status)) {

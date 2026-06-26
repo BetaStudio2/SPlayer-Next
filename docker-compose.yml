@@ -1,0 +1,69 @@
+# SPlayer-Next Docker Compose（单容器部署）
+#
+# SPlayer-Next 同时具备两个能力：
+#   a) 本地音乐库 —— 扫描挂载的音乐目录，浏览器直接播放
+#   b) Subsonic API 服务 —— 类似 Navidrome，供任意 Subsonic 客户端连接
+#
+# 用法：
+#   docker compose up -d           # 启动
+#   docker compose logs -f         # 查看日志
+#   docker compose down            # 停止
+#
+# 架构选择：默认 amd64；ARM 设备上改为 arm64 或 armv7
+
+services:
+  splayer-next:
+    image: splayer-next:amd64
+    # ARM 设备请改为：
+    # image: splayer-next:arm64
+    # image: splayer-next:armv7
+    container_name: splayer-next
+    restart: unless-stopped
+    ports:
+      # Web + Subsonic API 共用端口
+      - "8080:8080"
+    volumes:
+      # ────────────────────────────────────────────────
+      # 数据持久化（必选）
+      #   SQLite 数据库 / Subsonic 用户 / 配置 / 缓存 / 日志
+      # ────────────────────────────────────────────────
+      - ./data:/app/data
+
+      # ────────────────────────────────────────────────
+      # 音乐文件目录（至少挂载一个）
+      #   SPlayer 启动后自动扫描，支持多层子目录
+      # ────────────────────────────────────────────────
+
+      # 示例 A：本地相对路径
+      - ./music:/app/music:ro
+
+      # 示例 B：本地绝对路径（取消注释使用）
+      # - /home/user/Music:/app/music/本地音乐:ro
+
+      # 示例 C：NAS / 网络存储（取消注释并替换 IP）
+      # - //192.168.1.100/share/music:/app/music/NAS音乐:ro
+
+      # 示例 D：多音乐源（各自独立子目录）
+      # - /mnt/hdd1/无损:/app/music/无损:ro
+      # - /mnt/hdd2/流行:/app/music/流行:ro
+
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      # SPA 静态文件目录（镜像内置路径，一般无需修改）
+      - SPA_DIR=/app/public
+      # 数据根目录（镜像内置 /app/data，与 volume 挂载对齐）
+      - SPLAYER_DATA_DIR=/app/data
+      # 曲库根目录（镜像内置 /app/music，与 volume 挂载对齐）
+      - SPLAYER_MUSIC_DIR=/app/music
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+    # Subsonic 客户端连接信息：
+    #   URL:      http://<你的IP>:8080
+    #   首次访问后进入设置 → 流媒体 → 初始化管理员账号

@@ -16,6 +16,7 @@ const { t } = useI18n();
 const { show: showSettings } = useSettingsDialog();
 const theme = useThemeStore();
 const update = useUpdateStore();
+const isWeb = !window.navigator.userAgent.includes("Electron");
 
 /** 界面缩放弹窗开关 */
 const uiZoomOpen = ref(false);
@@ -41,14 +42,14 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
   },
   { key: "uiZoom", label: t("uiZoom.title"), icon: IconScaling },
   { key: "reload", label: t("nav.reload"), icon: IconRefreshCw, separator: true },
-  { key: "devtools", label: t("nav.devtools"), icon: IconTerminal },
+  { key: "devtools", label: t("nav.devtools"), icon: IconTerminal, show: !isWeb },
   { key: "settings", label: t("nav.globalSettings"), icon: IconSettings },
 ]);
 
 const onMenuSelect = (key: string): void => {
   if (key === "theme") theme.cycleMode();
   else if (key === "reload") location.reload();
-  else if (key === "devtools") window.api.system.toggleDevTools();
+  else if (key === "devtools" && !isWeb) window.api.system.toggleDevTools();
   else if (key === "uiZoom") uiZoomOpen.value = true;
   else if (key === "settings") showSettings();
 };
@@ -104,8 +105,10 @@ const onMenuSelect = (key: string): void => {
           </SButton>
         </template>
       </SDropdownMenu>
-      <SDivider vertical />
-      <WindowControls />
+      <template v-if="!isWeb">
+        <SDivider vertical />
+        <WindowControls />
+      </template>
     </div>
     <UiZoomDialog v-model:open="uiZoomOpen" />
   </div>

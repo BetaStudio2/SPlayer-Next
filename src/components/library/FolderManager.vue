@@ -9,6 +9,11 @@ const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const { scanDirs } = storeToRefs(libraryStore);
 
+/** Web 服务端模式：内联输入框（替代原生目录选择器） */
+const isWeb = !window.navigator.userAgent.includes("Electron");
+const newDirInput = ref("");
+const adding = ref(false);
+
 const emit = defineEmits<{
   (e: "added"): void;
   (e: "removed", dir: string): void;
@@ -19,16 +24,22 @@ const folderName = (dir: string): string => {
   return parts[parts.length - 1] || dir;
 };
 
-const adding = ref(false);
 const removingDir = ref<string | null>(null);
 const removeConfirmOpen = ref(false);
 
 const handleAdd = async (): Promise<void> => {
   if (adding.value) return;
+  // Web 模式：从输入框取路径；桌面端：弹原生选择器（dir 为 undefined）
+  const dir = isWeb ? newDirInput.value.trim() : undefined;
+  if (isWeb && !dir) {
+    toast.warning(t("library.emptyDirHint", "请输入目录路径"));
+    return;
+  }
   adding.value = true;
   try {
-    const res = await libraryStore.addScanDir();
+    const res = await libraryStore.addScanDir(dir);
     if (res.success) {
+      if (isWeb) newDirInput.value = "";
       emit("added");
     } else if (res.error === "nested") {
       toast.warning(t("library.nestedHint"));
@@ -80,7 +91,23 @@ onMounted(() => {
       {{ t("library.emptyHint") }}
     </div>
 
-    <SButton class="mt-1" variant="secondary" :loading="adding" block @click="handleAdd">
+    <!-- Web 模式：内联输入框 + 添加按钮 -->
+    <div v-if="isWeb" class="mt-1 flex items-center gap-2">
+      <SInput
+        v-model="newDirInput"
+        size="small"
+        spellcheck="false"
+        :placeholder="t('library.addFolderPlaceholder', '服务端可访问的绝对路径')"
+        class="font-mono text-sm"
+        @keydown.enter="handleAdd"
+      />
+      <SButton variant="secondary" :loading="adding" @click="handleAdd">
+        <template #icon><IconLucideFolderPlus /></template>
+        {{ t("common.add") }}
+      </SButton>
+    </div>
+    <!-- 桌面端：原生目录选择器按钮 -->
+    <SButton v-else class="mt-1" variant="secondary" :loading="adding" block @click="handleAdd">
       <template #icon><IconLucideFolderPlus /></template>
       {{ t("library.addFolder") }}
     </SButton>

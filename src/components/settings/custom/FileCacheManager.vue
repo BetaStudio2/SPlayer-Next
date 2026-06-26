@@ -19,6 +19,7 @@ defineOptions({ inheritAttrs: false });
 const { t } = useI18n();
 const { stats, cacheDir, loading, clearingId, clearingKind, refresh, setCacheDir } =
   useCacheStats();
+const isWeb = !window.navigator.userAgent.includes("Electron");
 
 const iconMap: Record<string, Component> = {
   covers: IconLucideImage,
@@ -115,7 +116,13 @@ const requestClearAll = async (): Promise<void> => {
         </div>
       </div>
       <div class="shrink-0 flex items-center gap-2">
-        <SButton variant="ghost" circle :title="t('settings.cacheDir.open')" @click="handleOpenDir">
+        <SButton
+          v-if="!isWeb"
+          variant="ghost"
+          circle
+          :title="t('settings.cacheDir.open')"
+          @click="handleOpenDir"
+        >
           <template #icon><IconLucideFolderOpen /></template>
         </SButton>
         <SButton

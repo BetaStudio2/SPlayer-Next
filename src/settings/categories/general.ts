@@ -4,6 +4,8 @@ import StorageManager from "@/components/settings/custom/StorageManager.vue";
 import { useUpdateStore } from "@/stores/update";
 import IconLucideCog from "~icons/lucide/cog";
 
+const isWeb = !navigator.userAgent.includes("Electron");
+
 const generalCategory: SettingCategory = {
   id: "general",
   icon: IconLucideCog,
@@ -28,18 +30,21 @@ const generalCategory: SettingCategory = {
           type: "switch",
           binding: { store: "settings", path: "system.system.rememberWindowState" },
           defaultValue: true,
+          visible: () => !isWeb,
         },
         {
           key: "taskbarProgress",
           type: "switch",
           binding: { store: "settings", path: "system.system.taskbarProgress" },
           defaultValue: true,
+          visible: () => !isWeb,
         },
         {
           key: "orpheusProtocol",
           type: "switch",
           binding: { store: "settings", path: "system.system.registerOrpheusProtocol" },
           defaultValue: false,
+          visible: () => !isWeb,
         },
         {
           key: "closeAction",
@@ -50,12 +55,14 @@ const generalCategory: SettingCategory = {
             { value: "hide", labelKey: "settings.closeAction.hide" },
           ],
           defaultValue: "hide",
+          visible: () => !isWeb,
         },
         {
           key: "rememberCloseChoice",
           type: "switch",
           binding: { store: "settings", path: "appearance.rememberCloseChoice" },
           defaultValue: false,
+          visible: () => !isWeb,
         },
       ],
     },
