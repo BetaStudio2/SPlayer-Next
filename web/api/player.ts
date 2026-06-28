@@ -39,6 +39,7 @@ class WebAudioPlayer implements PlayerApi {
   private ctx: AudioContext | null = null;
   private sourceNode: MediaElementAudioSourceNode | null = null;
   private analyser: AnalyserNode | null = null;
+  private normalizer: DynamicsCompressorNode | null = null;
   private preamp: GainNode | null = null;
   private volumeGain: GainNode | null = null;
   private eqNodes: BiquadFilterNode[] = [];
@@ -54,6 +55,7 @@ class WebAudioPlayer implements PlayerApi {
   private listeners = new Set<(e: PlayerEvent) => void>();
   private rafId = 0;
   private lastPosEmit = 0;
+  private fadeTimer = 0;
 
   constructor() {
     this.audio = new Audio();
@@ -74,6 +76,12 @@ class WebAudioPlayer implements PlayerApi {
     this.volumeGain = this.ctx.createGain();
     this.volumeGain.gain.value = this.volume;
     this.analyser = this.ctx.createAnalyser();
+    this.normalizer = this.ctx.createDynamicsCompressor();
+    this.normalizer.threshold.value = -18;
+    this.normalizer.knee.value = 18;
+    this.normalizer.ratio.value = 3;
+    this.normalizer.attack.value = 0.003;
+    this.normalizer.release.value = 0.25;
     this.analyser.fftSize = 1024;
     // 10 频段 EQ 链
     const freqs = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
@@ -85,33 +93,63 @@ class WebAudioPlayer implements PlayerApi {
       n.gain.value = 0;
       return n;
     });
-    // 连接：source → preamp → [eq 链] → volume → analyser → destination
+    // 连接：source → preamp → [eq / normalization] → volume → analyser → destination
     let node: AudioNode = this.sourceNode;
     node.connect(this.preamp);
-    node = this.preamp;
-    for (const eq of this.eqNodes) {
-      node.connect(eq);
-      node = eq;
-    }
-    node.connect(this.volumeGain);
     this.volumeGain.connect(this.analyser);
     this.analyser.connect(this.ctx.destination);
-    this.applyEqChain();
+    this.applyProcessingChain();
   }
 
-  /** EQ 启用时信号流经 eq 链，禁用时 preamp 直连 volume */
-  private applyEqChain(): void {
-    if (!this.ctx || !this.preamp || !this.volumeGain || this.eqNodes.length === 0) return;
+  /** 根据 EQ / 响度归一化状态重建处理链 */
+  private applyProcessingChain(): void {
+    if (
+      !this.ctx ||
+      !this.preamp ||
+      !this.volumeGain ||
+      !this.normalizer ||
+      this.eqNodes.length === 0
+    ) {
+      return;
+    }
     this.preamp.disconnect();
     for (const eq of this.eqNodes) eq.disconnect();
+    this.normalizer.disconnect();
+    let node: AudioNode = this.preamp;
     if (this.eqEnabled) {
-      this.preamp.connect(this.eqNodes[0]);
+      node.connect(this.eqNodes[0]);
       for (let i = 0; i < this.eqNodes.length - 1; i++) {
         this.eqNodes[i].connect(this.eqNodes[i + 1]);
       }
-      this.eqNodes[this.eqNodes.length - 1].connect(this.volumeGain);
+      node = this.eqNodes[this.eqNodes.length - 1];
+    }
+    if (this.normalization) {
+      node.connect(this.normalizer);
+      node = this.normalizer;
+    }
+    node.connect(this.volumeGain);
+  }
+
+  private clearFadeTimer(): void {
+    if (this.fadeTimer) {
+      window.clearTimeout(this.fadeTimer);
+      this.fadeTimer = 0;
+    }
+  }
+
+  private applyGain(target: number, rampMs = 0): void {
+    const safe = Math.max(0, Math.min(1.5, target));
+    if (this.volumeGain && this.ctx) {
+      const now = this.ctx.currentTime;
+      this.volumeGain.gain.cancelScheduledValues(now);
+      if (rampMs > 0) {
+        this.volumeGain.gain.setValueAtTime(this.volumeGain.gain.value, now);
+        this.volumeGain.gain.linearRampToValueAtTime(safe, now + rampMs / 1000);
+      } else {
+        this.volumeGain.gain.setTargetAtTime(safe, now, 0.01);
+      }
     } else {
-      this.preamp.connect(this.volumeGain);
+      this.audio.volume = Math.max(0, Math.min(1, safe));
     }
   }
 
@@ -218,7 +256,10 @@ class WebAudioPlayer implements PlayerApi {
     try {
       this.ensureGraph();
       if (this.ctx?.state === "suspended") await this.ctx.resume();
+      this.clearFadeTimer();
+      if (this.fadeMs > 0) this.applyGain(0);
       await this.audio.play();
+      this.applyGain(this.volume, this.fadeMs);
       return ok();
     } catch (err) {
       return fail(err instanceof Error ? err.message : "play failed");
@@ -226,11 +267,31 @@ class WebAudioPlayer implements PlayerApi {
   }
 
   async pause(): Promise<IpcResponse> {
+    this.clearFadeTimer();
+    if (this.fadeMs > 0 && !this.audio.paused) {
+      this.applyGain(0, this.fadeMs);
+      this.fadeTimer = window.setTimeout(() => {
+        this.audio.pause();
+        this.fadeTimer = 0;
+      }, this.fadeMs);
+      return ok();
+    }
     this.audio.pause();
     return ok();
   }
 
   async stop(): Promise<IpcResponse> {
+    this.clearFadeTimer();
+    if (this.fadeMs > 0 && !this.audio.paused) {
+      this.applyGain(0, this.fadeMs);
+      this.fadeTimer = window.setTimeout(() => {
+        this.audio.pause();
+        this.audio.currentTime = 0;
+        this.emit({ type: "status", data: this.snapshot() });
+        this.fadeTimer = 0;
+      }, this.fadeMs);
+      return ok();
+    }
     this.audio.pause();
     this.audio.currentTime = 0;
     this.emit({ type: "status", data: this.snapshot() });
@@ -244,11 +305,7 @@ class WebAudioPlayer implements PlayerApi {
 
   async setVolume(volume: number): Promise<IpcResponse> {
     this.volume = Math.max(0, Math.min(1, volume));
-    if (this.volumeGain && this.ctx) {
-      this.volumeGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.01);
-    } else {
-      this.audio.volume = this.volume;
-    }
+    this.applyGain(this.volume);
     return ok();
   }
 
@@ -332,12 +389,13 @@ class WebAudioPlayer implements PlayerApi {
 
   async setNormalizationEnabled(enabled: boolean): Promise<IpcResponse> {
     this.normalization = enabled;
+    this.applyProcessingChain();
     return ok();
   }
 
   async setEqualizerEnabled(enabled: boolean): Promise<IpcResponse> {
     this.eqEnabled = enabled;
-    this.applyEqChain();
+    this.applyProcessingChain();
     return ok();
   }
 
@@ -421,6 +479,10 @@ class WebAudioPlayer implements PlayerApi {
 
   dispatch(): void {
     /* 广播事件无外部消费者，no-op */
+  }
+
+  syncLikeState(): void {
+    /* Web 版无托盘菜单，no-op */
   }
 
   onEvent(callback: (event: PlayerEvent) => void): () => void {

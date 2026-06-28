@@ -66,6 +66,10 @@ const app = new Hono();
 const SUBSONIC_VERSION = "1.16.1";
 const SERVER_NAME = "splayer";
 const SERVER_VERSION = "1.0.0";
+const OPEN_SUBSONIC_EXTENSIONS = [
+  { name: "formPost", versions: [1] },
+  { name: "songLyrics", versions: [1, 2] },
+] as const;
 
 /* ------------------------------------------------------------------ */
 /* 响应封装                                                            */
@@ -83,6 +87,7 @@ const buildBody = (status: "ok" | "failed", payload: Record<string, unknown> = {
     version: SUBSONIC_VERSION,
     type: SERVER_NAME,
     serverVersion: SERVER_VERSION,
+    openSubsonic: true,
     ...payload,
   };
   if (error) body.error = error;
@@ -109,6 +114,7 @@ const singularMap: Record<string, string> = {
   searchResult2: "searchResult2",
   searchResult3: "searchResult3",
   artistsRoot: "artists",
+  versions: "versions",
 };
 
 const singularOf = (key: string): string => singularMap[key] ?? key.replace(/s$/, "");
@@ -129,6 +135,23 @@ const objToXml = (name: string, obj: unknown, indent = ""): string => {
   }
   if (typeof obj === "object") {
     const o = obj as Record<string, unknown>;
+    // Lyrics / line / cue 等包含正文的元素，`value` 需要走 chardata 而不是 XML attribute。
+    if (
+      typeof o.value === "string" &&
+      (name === "lyrics" || name === "line" || name === "cue")
+    ) {
+      const attrs: string[] = [];
+      const children: string[] = [];
+      for (const [k, v] of Object.entries(o)) {
+        if (v == null || k === "value") continue;
+        if (isPrimitive(v)) attrs.push(`${k}="${escapeXml(String(v))}"`);
+        else children.push(objToXml(k, v, indent + "  "));
+      }
+      const attrStr = attrs.length ? " " + attrs.join(" ") : "";
+      const text = escapeXml(o.value);
+      if (children.length === 0) return `${indent}<${name}${attrStr}>${text}</${name}>\n`;
+      return `${indent}<${name}${attrStr}>${text}\n${children.join("")}${indent}</${name}>\n`;
+    }
     const attrs: string[] = [];
     const children: string[] = [];
     for (const [k, v] of Object.entries(o)) {
@@ -322,6 +345,33 @@ interface LrcLine {
   value: string;
 }
 
+interface TrackLyricPayload {
+  main: string;
+  translation?: string;
+  romaji?: string;
+}
+
+interface PreparedSubsonicLyric {
+  synced: boolean;
+  classicText: string;
+  structuredLines: LrcLine[];
+}
+
+const LRC_ALIGN_TOLERANCE_MS = 300;
+
+const trimLyricText = (text?: string | null): string | undefined => {
+  const trimmed = text?.trim();
+  return trimmed ? trimmed : undefined;
+};
+
+const formatLrcTimestamp = (ms: number): string => {
+  const safe = Math.max(0, ms);
+  const mm = Math.floor(safe / 60000);
+  const ss = Math.floor((safe % 60000) / 1000);
+  const xx = Math.floor((safe % 1000) / 10);
+  return `[${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}.${String(xx).padStart(2, "0")}]`;
+};
+
 /** 解析 LRC 文本为带时间戳的行（过滤元数据标签） */
 const parseLrc = (text: string): LrcLine[] => {
   const lines: LrcLine[] = [];
@@ -339,6 +389,69 @@ const parseLrc = (text: string): LrcLine[] => {
   return lines.sort((a, b) => a.start - b.start);
 };
 
+const alignAuxiliaryLines = (mainLines: LrcLine[], extraLines: LrcLine[]): (string | null)[] => {
+  const aligned = Array<string | null>(mainLines.length).fill(null);
+  if (mainLines.length === 0 || extraLines.length === 0) return aligned;
+  let cursor = 0;
+  for (let i = 0; i < mainLines.length; i++) {
+    const mainStart = mainLines[i].start;
+    while (cursor < extraLines.length && extraLines[cursor].start < mainStart - LRC_ALIGN_TOLERANCE_MS) {
+      cursor++;
+    }
+    let bestIndex = -1;
+    let bestDiff = LRC_ALIGN_TOLERANCE_MS + 1;
+    for (let j = cursor; j < extraLines.length; j++) {
+      const diff = extraLines[j].start - mainStart;
+      if (diff > LRC_ALIGN_TOLERANCE_MS) break;
+      const absDiff = Math.abs(diff);
+      if (absDiff < bestDiff) {
+        bestDiff = absDiff;
+        bestIndex = j;
+      }
+    }
+    if (bestIndex >= 0) {
+      aligned[i] = extraLines[bestIndex].value;
+      cursor = bestIndex + 1;
+    }
+  }
+  return aligned;
+};
+
+const prepareSubsonicLyric = (lyric: TrackLyricPayload): PreparedSubsonicLyric => {
+  const mainLines = parseLrc(lyric.main);
+  if (mainLines.length === 0) {
+    return {
+      synced: false,
+      classicText: lyric.main,
+      structuredLines: [],
+    };
+  }
+  const translationLines = lyric.translation ? parseLrc(lyric.translation) : [];
+  const romajiLines = lyric.romaji ? parseLrc(lyric.romaji) : [];
+  const alignedTranslation = alignAuxiliaryLines(mainLines, translationLines);
+  const alignedRomaji = alignAuxiliaryLines(mainLines, romajiLines);
+  const structuredLines: LrcLine[] = [];
+  for (let i = 0; i < mainLines.length; i++) {
+    const main = mainLines[i];
+    const translation = alignedTranslation[i];
+    const romaji = alignedRomaji[i];
+    structuredLines.push(main);
+    if (translation) {
+      structuredLines.push({ start: main.start, value: translation });
+    }
+    if (romaji) {
+      structuredLines.push({ start: main.start, value: romaji });
+    }
+  }
+  return {
+    synced: true,
+    classicText: structuredLines
+      .map((line) => `${formatLrcTimestamp(line.start)}${line.value}`)
+      .join("\n"),
+    structuredLines,
+  };
+};
+
 /**
  * 为指定 Track 拉取歌词：
  * 1) 优先读音乐文件内嵌歌词元数据（USLT/SYLT/LYRICS）
@@ -347,20 +460,38 @@ const parseLrc = (text: string): LrcLine[] => {
  */
 const fetchLyricForTrack = async (
   track: Track,
-): Promise<{ main: string; translation?: string } | null> => {
+): Promise<TrackLyricPayload | null> => {
   // 1) 内嵌歌词
   if (track.id) {
-    const embedded = getTrackLyrics(track.id);
-    if (embedded && embedded.trim()) {
+    const embedded = trimLyricText(getTrackLyrics(track.id));
+    if (embedded) {
       return { main: embedded };
     }
   }
-  // 2) 在线匹配
+  // 2) 在线匹配：优先拿 richer payload，再尽量收敛成标准 LRC 主歌词
   try {
-    const main = await neteaseLyric.getLrcByQuery(track);
-    if (main) return { main };
+    const matched = await neteaseLyric.getByQuery(track);
+    if (matched) {
+      const main =
+        matched.format === "lrc"
+          ? trimLyricText(matched.content)
+          : trimLyricText(await neteaseLyric.getLrcByQuery(track));
+      if (main) {
+        return {
+          main,
+          translation: trimLyricText(matched.translation),
+          romaji: trimLyricText(matched.romaji),
+        };
+      }
+    }
   } catch (err) {
     serverLog.warn(`[subsonic] fetchLyricForTrack(${track.title}) netease failed:`, err);
+  }
+  try {
+    const main = trimLyricText(await neteaseLyric.getLrcByQuery(track));
+    if (main) return { main };
+  } catch (err) {
+    serverLog.warn(`[subsonic] fetchLyricForTrack(${track.title}) netease lrc fallback failed:`, err);
   }
   return null;
 };
@@ -384,6 +515,9 @@ app.all("/*", async (c) => {
       /* ---- 基础 ---- */
       case "ping":
         return send(c, {});
+
+      case "getopensubsonicextensions":
+        return send(c, { openSubsonicExtensions: OPEN_SUBSONIC_EXTENSIONS });
 
       case "getlicense":
         return send(c, { license: { valid: true, email: "splayer@local", licenseExpires: "2099-01-01" } });
@@ -654,14 +788,13 @@ app.all("/*", async (c) => {
         if (!track) return send(c, {}, { code: 10, message: "Missing id or artist/title" });
         const lyric = await fetchLyricForTrack(track);
         if (!lyric) return send(c, { lyrics: {} });
-        // Subsonic 经典 getLyrics：value 内放原始 LRC 文本，synced 标记是否带时间戳
-        const synced = /\[\d{1,2}:\d{1,2}/.test(lyric.main);
+        const prepared = prepareSubsonicLyric(lyric);
         return send(c, {
           lyrics: {
             artist: q.artist ?? firstArtist(track.artists),
             title: q.title ?? track.title,
-            synced: synced ? "true" : "false",
-            value: lyric.main,
+            synced: prepared.synced ? "true" : "false",
+            value: prepared.classicText,
           },
         });
       }
@@ -673,24 +806,8 @@ app.all("/*", async (c) => {
         if (!track) return send(c, {}, { code: 70, message: "Song not found" });
         const lyric = await fetchLyricForTrack(track);
         if (!lyric) return send(c, { lyricsList: {} });
-        const lines = parseLrc(lyric.main);
-        if (lines.length === 0) {
-          // 非同步歌词：整段作为单行
-          return send(c, {
-            lyricsList: {
-              structuredLyrics: [
-                {
-                  lang: "und",
-                  displayArtist: firstArtist(track.artists),
-                  displayTitle: track.title,
-                  synced: "false",
-                  offset: 0,
-                  line: [{ value: lyric.main }],
-                },
-              ],
-            },
-          });
-        }
+        const prepared = prepareSubsonicLyric(lyric);
+        if (prepared.structuredLines.length === 0) return send(c, { lyricsList: {} });
         return send(c, {
           lyricsList: {
             structuredLyrics: [
@@ -698,9 +815,9 @@ app.all("/*", async (c) => {
                 lang: "und",
                 displayArtist: firstArtist(track.artists),
                 displayTitle: track.title,
-                synced: "true",
+                synced: prepared.synced ? "true" : "false",
                 offset: 0,
-                line: lines.map((l) => ({ start: l.start, value: l.value })),
+                line: prepared.structuredLines.map((l) => ({ start: l.start, value: l.value })),
               },
             ],
           },

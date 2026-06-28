@@ -6,6 +6,7 @@ allowBuilds:
   electron: true
   electron-winstaller: true
   esbuild: true
+  sharp: set this to true or false
   vue-demi: true
 minimumReleaseAgeExclude:
   - app-builder-lib@26.15.3

@@ -215,6 +215,20 @@ export const useSettingsStore = defineStore(
           system.player.fadeEnabled ? system.player.fadeDuration : 0,
         );
       }
+      if (keyPath === "player.loudnessNormalization") {
+        await window.api.player.setNormalizationEnabled(
+          system.player.loudnessNormalization ?? false,
+        );
+      }
+      if (keyPath === "player.equalizer.enabled") {
+        await window.api.player.setEqualizerEnabled(system.player.equalizer.enabled);
+      }
+      if (keyPath === "player.equalizer.preamp") {
+        await window.api.player.setPreampGain(system.player.equalizer.preamp);
+      }
+      if (keyPath === "player.equalizer.bands") {
+        await window.api.player.setEqualizerBands([...system.player.equalizer.bands]);
+      }
     };
 
     /** 本地配置写入后处理 */
