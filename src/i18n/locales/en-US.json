@@ -1392,6 +1392,10 @@
       "label": "Taskbar Progress",
       "description": "Show playback progress on the taskbar icon"
     },
+    "taskbarThumbnailCover": {
+      "label": "Taskbar Cover Preview",
+      "description": "Use the album cover as the window preview when hovering the taskbar; disable to show the system's live window"
+    },
     "neteaseRealIp": {
       "label": "Use Real IP",
       "description": "May be restricted overseas or in some regions; enable this to try to resolve it"
@@ -1513,6 +1517,7 @@
       "enable": "Enable",
       "enabled": "Enabled",
       "uninstall": "Uninstall",
+      "configSubtitle": "Plugin settings",
       "uninstallConfirmTitle": "Uninstall Plugin",
       "uninstallConfirm": "Are you sure you want to uninstall \"{name}\"? This action cannot be undone.",
       "uninstallSuccess": "Plugin uninstalled",
@@ -1528,7 +1533,9 @@
         "error": "Error",
         "disabled": "Disabled",
         "unloaded": "Unloaded"
-      }
+      },
+      "sectionSource": "Source Plugins",
+      "sectionControl": "Control Plugins"
     },
     "pluginManager": {
       "label": "Plugin Manager",
