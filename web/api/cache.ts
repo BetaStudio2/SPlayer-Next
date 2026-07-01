@@ -2,8 +2,6 @@
  * window.api.cache mock：Web 版无文件缓存能力
  * song.lookup 返回 null（不走本地缓存），其余降级
  */
-import type { TrackSource } from "@shared/types/player";
-
 export const cacheApi = {
   async getStats(): Promise<
     { id: string; kind: "file" | "db"; path: string; size: number }[]

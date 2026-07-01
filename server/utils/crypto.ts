@@ -28,7 +28,6 @@ import { serverLog } from "./logger";
 
 const KEY_LEN = 32; // AES-256
 const IV_LEN = 12; // GCM 推荐 96 位
-const TAG_LEN = 16;
 const PREFIX = "enc:v1:";
 
 let cachedKey: Buffer | null = null;

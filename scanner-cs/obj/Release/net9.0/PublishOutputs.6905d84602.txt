@@ -1,0 +1,5 @@
+/home/betastudio2/文档/SPlayer-Next/SPlayer-Next/scanner-cs/.artifacts/publish/splayer-scanner.dll
+/home/betastudio2/文档/SPlayer-Next/SPlayer-Next/scanner-cs/.artifacts/publish/splayer-scanner.deps.json
+/home/betastudio2/文档/SPlayer-Next/SPlayer-Next/scanner-cs/.artifacts/publish/splayer-scanner.runtimeconfig.json
+/home/betastudio2/文档/SPlayer-Next/SPlayer-Next/scanner-cs/.artifacts/publish/splayer-scanner.pdb
+/home/betastudio2/文档/SPlayer-Next/SPlayer-Next/scanner-cs/.artifacts/publish/TagLibSharp.dll

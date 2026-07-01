@@ -16,6 +16,7 @@ import type { Server } from "node:http";
 import { WebSocketServer, WebSocket } from "ws";
 import { subscribe } from "@main/utils/events";
 import { getScanProgress } from "@main/music/scanner";
+import { getScrapeProgress } from "@main/music/scraper";
 import { serverLog } from "@main/utils/logger";
 
 /**
@@ -39,8 +40,9 @@ export const attachWebSocket = (server: Server): WebSocketServer => {
   });
 
   wss.on("connection", (ws) => {
-    // 连接建立即推送当前扫描快照，避免客户端空等
+    // 连接建立即推送当前扫描/刮削快照，避免客户端空等
     ws.send(JSON.stringify({ type: "scan:progress", data: getScanProgress() }));
+    ws.send(JSON.stringify({ type: "scrape:progress", data: getScrapeProgress() }));
 
     // 订阅事件总线，转发给该客户端
     const unsub = subscribe((event) => {
@@ -61,6 +63,10 @@ export const attachWebSocket = (server: Server): WebSocketServer => {
         } else if (msg.type === "scan:progress") {
           ws.send(
             JSON.stringify({ type: "scan:progress", data: getScanProgress() }),
+          );
+        } else if (msg.type === "scrape:progress") {
+          ws.send(
+            JSON.stringify({ type: "scrape:progress", data: getScrapeProgress() }),
           );
         }
       } catch {

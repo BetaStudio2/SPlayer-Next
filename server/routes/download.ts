@@ -1,19 +1,19 @@
 /**
- * 下载任务路由
+ * 下载任务路由（Rust 调度器封装）
  *
- * 服务端 fetch 音频流 → 写入 data/downloads/ → WS 推送进度
- * 前端通过 /api/download/file/:taskId 浏览器取回已下载文件
+ * 实际下载由 Rust 二进制 `splayer-downloader` 执行：
+ * - TS 层 spawn 子进程，传递 task-id / url / dest / tmp
+ * - Rust 端流式拉取 → 临时文件落盘 → 完成后 rename
+ * - 进度通过 stdout JSON lines 上报，TS 解析后经 WS 转发
+ * - 取消通过 SIGTERM 终止子进程（Rust 端捕获后清理 .tmp）
  *
- * 替代桌面端主进程下载 + Electron 下载目录：
- * - 任务持久化到 SQLite（重启恢复，interrupted 标记）
- * - 进度经 WS 实时推送（download:state / download:progress）
- * - 凭据/cookie 注入由 server 处理（如 netease song_url 需 cookie）
+ * TS 层职责：任务持久化 / 队列管理 / 文件取回 / 目录管理 / 进度广播
  */
 import { Hono } from "hono";
-import { createWriteStream, createReadStream, existsSync, mkdirSync, renameSync, unlinkSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, unlinkSync, statSync, createReadStream } from "node:fs";
 import path from "node:path";
+import { spawn, type ChildProcess } from "node:child_process";
 import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import { dataRoot } from "@main/utils/paths";
 import { serverLog } from "@main/utils/logger";
 import { emit } from "@main/utils/events";
@@ -32,14 +32,18 @@ import type {
 
 const app = new Hono();
 
+/** Rust 下载引擎二进制路径（容器内默认 /app/bin/splayer-downloader） */
+const DOWNLOADER_BIN =
+  process.env.SPLAYER_DOWNLOADER_BIN ?? "/app/bin/splayer-downloader";
+
 /** 下载目录（可在 dataRoot/downloads 下按歌手/专辑分类，当前扁平） */
 let downloadDir = path.join(dataRoot, "downloads");
 if (!existsSync(downloadDir)) mkdirSync(downloadDir, { recursive: true });
 
 /** 运行态任务（内存权威源） */
 const tasks = new Map<string, DownloadTask>();
-/** 进行中的 AbortController（cancel 用） */
-const controllers = new Map<string, AbortController>();
+/** 进行中的 Rust 子进程（cancel 用） */
+const children = new Map<string, ChildProcess>();
 
 /** 懒加载任务列表（避免模块加载时 DB 未初始化） */
 let tasksLoaded = false;
@@ -63,7 +67,7 @@ const extOf = (url: string, declared?: string): string => {
 /** 安全文件名（去除路径分隔符） */
 const safeName = (name: string): string => name.replace(/[\\/]/g, "-").slice(0, 200);
 
-/** 构造目标文件路径 */
+/** 构造目标文件名 */
 const buildFileName = (req: DownloadRequest): string => {
   const artist = req.track.artists.map((a) => a.name).join(", ");
   const title = req.track.title;
@@ -88,8 +92,86 @@ const broadcastProgress = (data: DownloadProgress): void => {
   emit({ type: "download:progress", data });
 };
 
-/** 执行单个下载任务 */
-const runDownload = async (req: DownloadRequest): Promise<void> => {
+/** Rust stdout 单行 JSON 协议 */
+interface DownloaderEvent {
+  type: "progress" | "done" | "error";
+  taskId: string;
+  received?: number;
+  total?: number;
+  filePath?: string;
+  error?: string;
+}
+
+/** 解析子进程 stdout 行 → 转发到 WS */
+const handleLine = (taskId: string, line: string): void => {
+  const trimmed = line.trim();
+  if (!trimmed) return;
+  let evt: DownloaderEvent;
+  try {
+    evt = JSON.parse(trimmed) as DownloaderEvent;
+  } catch {
+    // 非 JSON 输出（如 panic / 调试日志），原样记录
+    serverLog.debug(`[download] ${taskId} stderr/stdout: ${trimmed}`);
+    return;
+  }
+  const task = tasks.get(taskId);
+  if (!task) return;
+
+  switch (evt.type) {
+    case "progress": {
+      task.received = evt.received ?? task.received;
+      task.total = evt.total ?? task.total;
+      broadcastProgress({
+        taskId,
+        received: task.received,
+        total: task.total,
+      });
+      break;
+    }
+    case "done": {
+      task.status = "done";
+      task.received = task.total || task.received;
+      task.filePath = evt.filePath ?? task.filePath;
+      task.finishedAt = Date.now();
+      broadcastState(task);
+      serverLog.info(`[download] 完成: ${path.basename(task.filePath ?? "")}`);
+      break;
+    }
+    case "error": {
+      task.status = "failed";
+      task.errorCode = evt.error ?? "unknown";
+      task.finishedAt = Date.now();
+      broadcastState(task);
+      serverLog.warn(`[download] 失败 ${taskId}: ${evt.error}`);
+      break;
+    }
+  }
+};
+
+/** 将子进程 stdout 流按行拆分回调 */
+const attachLineReader = (
+  child: ChildProcess,
+  taskId: string,
+  stream: NodeJS.ReadableStream | null,
+): void => {
+  if (!stream) return;
+  let buf = "";
+  stream.on("data", (chunk: Buffer) => {
+    buf += chunk.toString();
+    let idx: number;
+    while ((idx = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, idx);
+      buf = buf.slice(idx + 1);
+      handleLine(taskId, line);
+    }
+  });
+  stream.on("end", () => {
+    if (buf.trim()) handleLine(taskId, buf);
+  });
+};
+
+/** spawn Rust 下载引擎执行单个任务 */
+const spawnDownloader = (req: DownloadRequest): void => {
   const task: DownloadTask = {
     taskId: req.taskId,
     status: "downloading",
@@ -102,103 +184,112 @@ const runDownload = async (req: DownloadRequest): Promise<void> => {
   tasks.set(req.taskId, task);
   broadcastState(task);
 
-  const controller = new AbortController();
-  controllers.set(req.taskId, controller);
+  const dest = buildFilePath(req);
+  const args = [
+    "start",
+    "--task-id",
+    req.taskId,
+    "--url",
+    req.url,
+    "--dest",
+    dest,
+  ];
 
-  // 临时文件（下载完成才 rename，避免半成品被当作完成文件）
-  const finalPath = buildFilePath(req);
-  const tmpPath = `${finalPath}.${req.taskId}.tmp`;
-
+  let child: ChildProcess;
   try {
-    const res = await fetch(req.url, { signal: controller.signal });
-    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
-
-    const total = Number(res.headers.get("content-length")) || req.declaredSize || 0;
-    task.total = total;
-    broadcastState(task);
-
-    // 流式写入 + 进度统计
-    const fileStream = createWriteStream(tmpPath);
-    let received = 0;
-    let lastEmit = 0;
-
-    const counter = new ReadableStream({
-      start(controller) {
-        const reader = res.body!.getReader();
-        const pump = async (): Promise<void> => {
-          const { done, value } = await reader.read();
-          if (done) {
-            controller.close();
-            return;
-          }
-          if (value) {
-            received += value.length;
-            task.received = received;
-            // 节流推送（200ms）
-            const now = Date.now();
-            if (now - lastEmit > 200) {
-              lastEmit = now;
-              broadcastProgress({ taskId: req.taskId, received, total });
-            }
-            controller.enqueue(value);
-          }
-          void pump();
-        };
-        void pump();
-      },
+    child = spawn(DOWNLOADER_BIN, args, {
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
     });
-
-    await pipeline(Readable.fromWeb(counter as any), fileStream);
-
-    // 完成：rename + 更新状态
-    renameSync(tmpPath, finalPath);
-    task.status = "done";
-    task.received = task.total || received;
-    task.filePath = finalPath;
-    task.finishedAt = Date.now();
-    broadcastState(task);
-    serverLog.info(`[download] 完成: ${path.basename(finalPath)}`);
   } catch (err) {
-    // 清理临时文件
-    try {
-      if (existsSync(tmpPath)) unlinkSync(tmpPath);
-    } catch {
-      /* ignore */
-    }
-    const aborted = err instanceof Error && err.name === "AbortError";
-    task.status = aborted ? "canceled" : "failed";
-    task.errorCode = aborted ? undefined : err instanceof Error ? err.message : "unknown";
+    task.status = "failed";
+    task.errorCode = err instanceof Error ? err.message : "spawn failed";
     task.finishedAt = Date.now();
     broadcastState(task);
-    if (!aborted) serverLog.warn(`[download] 失败 ${req.taskId}:`, err);
-  } finally {
-    controllers.delete(req.taskId);
+    serverLog.warn(`[download] spawn 失败 ${req.taskId}:`, err);
+    return;
   }
+
+  children.set(req.taskId, child);
+  serverLog.info(`[download] 启动 ${req.taskId} → ${path.basename(dest)}`);
+
+  attachLineReader(child, req.taskId, child.stdout);
+  // Rust 端的错误日志也尝试按行解析（panic 可能输出非 JSON，记录即可）
+  attachLineReader(child, req.taskId, child.stderr);
+
+  child.on("exit", (code, signal) => {
+    children.delete(req.taskId);
+    const current = tasks.get(req.taskId);
+    if (!current) return;
+    // 已被 cancel/failed/done 标记的不再覆盖
+    if (current.status !== "downloading") return;
+
+    if (signal === "SIGTERM" || signal === "SIGKILL") {
+      current.status = "canceled";
+      current.finishedAt = Date.now();
+      broadcastState(current);
+      serverLog.info(`[download] 取消 ${req.taskId}`);
+    } else if (code !== 0) {
+      current.status = "failed";
+      current.errorCode = current.errorCode ?? `exit ${code ?? signal ?? "?"}`;
+      current.finishedAt = Date.now();
+      broadcastState(current);
+      serverLog.warn(`[download] 异常退出 ${req.taskId}: code=${code} signal=${signal}`);
+    }
+    // code === 0 的情况由 "done" 事件处理
+  });
+
+  child.on("error", (err) => {
+    children.delete(req.taskId);
+    const current = tasks.get(req.taskId);
+    if (!current) return;
+    if (current.status === "downloading") {
+      current.status = "failed";
+      current.errorCode = err.message;
+      current.finishedAt = Date.now();
+      broadcastState(current);
+    }
+    serverLog.warn(`[download] 子进程错误 ${req.taskId}:`, err);
+  });
 };
 
 /** POST /start —— 入队下载 */
-app.post("/start", async (c) => {
+app.post("/start", (c) => {
   ensureTasksLoaded();
-  const req = (await c.req.json().catch(() => null)) as DownloadRequest | null;
-  if (!req || !req.taskId || !req.url) {
-    return c.json({ ok: false } satisfies EnqueueResult, 400);
-  }
-  const existing = tasks.get(req.taskId);
-  if (existing && (existing.status === "downloading" || existing.status === "queued")) {
-    return c.json({ ok: false, reason: "queued" } satisfies EnqueueResult);
-  }
-  // 已下载且文件仍在
-  if (existing?.status === "done" && existing.filePath && existsSync(existing.filePath)) {
-    return c.json({ ok: false, reason: "downloaded" } satisfies EnqueueResult);
-  }
-  void runDownload(req);
-  return c.json({ ok: true } satisfies EnqueueResult);
+  return c.req
+    .json()
+    .catch(() => null)
+    .then((req) => {
+      if (!req || !req.taskId || !req.url) {
+        return c.json({ ok: false } satisfies EnqueueResult, 400);
+      }
+      const downloadReq = req as DownloadRequest;
+      const existing = tasks.get(downloadReq.taskId);
+      if (
+        existing &&
+        (existing.status === "downloading" || existing.status === "queued")
+      ) {
+        return c.json({ ok: false, reason: "queued" } satisfies EnqueueResult);
+      }
+      if (
+        existing?.status === "done" &&
+        existing.filePath &&
+        existsSync(existing.filePath)
+      ) {
+        return c.json({ ok: false, reason: "downloaded" } satisfies EnqueueResult);
+      }
+      spawnDownloader(downloadReq);
+      return c.json({ ok: true } satisfies EnqueueResult);
+    });
 });
 
-/** POST /cancel/:taskId —— 取消下载 */
+/** POST /cancel/:taskId —— 取消下载（SIGTERM 子进程） */
 app.post("/cancel/:taskId", (c) => {
   const { taskId } = c.req.param();
-  controllers.get(taskId)?.abort();
+  const child = children.get(taskId);
+  if (child && !child.killed) {
+    child.kill("SIGTERM");
+  }
   return c.json({ ok: true });
 });
 
@@ -208,7 +299,7 @@ app.post("/retry", async (c) => {
   if (!req) return c.json({ ok: false } satisfies EnqueueResult, 400);
   tasks.delete(req.taskId);
   deleteTask(req.taskId);
-  void runDownload(req);
+  spawnDownloader(req);
   return c.json({ ok: true } satisfies EnqueueResult);
 });
 
@@ -237,7 +328,10 @@ app.post("/browser", async (c) => {
 /** POST /remove/:taskId —— 删除任务 + 文件 */
 app.post("/remove/:taskId", (c) => {
   const { taskId } = c.req.param();
-  controllers.get(taskId)?.abort();
+  const child = children.get(taskId);
+  if (child && !child.killed) {
+    child.kill("SIGTERM");
+  }
   const task = tasks.get(taskId);
   if (task?.filePath && existsSync(task.filePath)) {
     try {

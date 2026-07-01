@@ -149,7 +149,6 @@ const FORWARD_HEADERS = [
   "content-length",
   "content-range",
   "accept-ranges",
-  "transfer-encoding",
 ];
 
 app.get("/stream/:serverId", async (c) => {

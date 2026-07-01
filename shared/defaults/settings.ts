@@ -38,6 +38,24 @@ export const defaultSystemConfig: SystemConfig = {
   },
   library: {
     scanDirs: [],
+    scrapeDirs: [],
+    // 默认启用刮削后整理：按歌手（模板首段 {artist}）归类到音乐库目录
+    // 用户可在前端关闭此开关以保留文件原位
+    organizeAfterScrape: true,
+    organizeTargetDir: "",
+    organizePattern: "{artist}/{album}/{track}. {title}.{ext}",
+    skipScraped: true,
+    useMusicBrainz: true,
+    useDeezer: true,
+    useItunes: true,
+    // 中文音乐源：对中文音乐匹配率更高
+    useNetease: true,
+    useQQMusic: true,
+    useKugou: true,
+    useKuwo: true,
+    useMigu: true,
+    // 多源并发查询线程数
+    concurrentWorkers: 4,
   },
   desktopLyric: {
     fontSize: 24,

@@ -1,7 +1,7 @@
 import type Database from "better-sqlite3";
 
 /** 当前 schema 版本 */
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 7;
 
 type TableInfoRow = { name: string };
 
@@ -92,6 +92,46 @@ export const migrate = (d: Database.Database): void => {
       d.exec("ALTER TABLE tracks ADD COLUMN lyrics TEXT");
     }
     v = 5;
+  }
+
+  // v5 → v6: 刮削器新增列 + 刮削队列表
+  if (v < 6) {
+    const scrapeCols = [
+      ["mbid", "TEXT"],
+      ["album_mbid", "TEXT"],
+      ["artist_mbid", "TEXT"],
+      ["genre", "TEXT"],
+      ["isrc", "TEXT"],
+      ["label", "TEXT"],
+      ["scraped_at", "INTEGER"],
+      ["scraped_sources", "TEXT"],
+    ] as const;
+    for (const [col, type] of scrapeCols) {
+      if (!hasColumn(d, "tracks", col)) {
+        d.exec(`ALTER TABLE tracks ADD COLUMN ${col} ${type}`);
+      }
+    }
+    // 这些列升级到 v7 后以 ALTER TABLE 方式补上
+    // scrape_queue 已迁移至独立的 scraper-state.db
+    v = 6;
+  }
+
+  // v6 → v7: 刮削器增强 - 新增 composer, album_artist, disc_number, year, cover_data 字段
+  if (v < 7) {
+    const extraCols = [
+      ["composer", "TEXT"],
+      ["album_artist", "TEXT"],
+      ["disc_number", "INTEGER"],
+      ["year", "INTEGER"],
+      ["cover_data", "BLOB"],
+      ["cover_mime", "TEXT"],
+    ] as const;
+    for (const [col, type] of extraCols) {
+      if (!hasColumn(d, "tracks", col)) {
+        d.exec(`ALTER TABLE tracks ADD COLUMN ${col} ${type}`);
+      }
+    }
+    v = 7;
   }
 
   // 版本无关部分

@@ -202,6 +202,34 @@ export interface TaskbarLyricSettings {
 export interface LibrarySettings {
   /** 扫描目录列表 */
   scanDirs: string[];
+  /** 刮削目录列表（为空时默认使用 scanDirs） */
+  scrapeDirs: string[];
+  /** 刮削完成后是否自动整理到音乐库目录 */
+  organizeAfterScrape: boolean;
+  /** 整理目标目录（为空时使用 scanDirs[0]） */
+  organizeTargetDir: string;
+  /** 文件夹整理模板，支持变量：{artist}/{albumArtist}/{album}/{genre}/{year}/{disc}/{track}/{title}/{ext} */
+  organizePattern: string;
+  /** 是否跳过已刮削文件（检测 MusicBrainz MBID/ISRC） */
+  skipScraped: boolean;
+  /** 是否使用 MusicBrainz 数据源 */
+  useMusicBrainz: boolean;
+  /** 是否使用 Deezer 数据源（补充封面/元数据） */
+  useDeezer: boolean;
+  /** 是否使用 iTunes Search 数据源（补充封面/元数据） */
+  useItunes: boolean;
+  /** 是否使用网易云数据源（中文元数据/歌词/封面） */
+  useNetease: boolean;
+  /** 是否使用 QQ 音乐数据源（中文元数据/歌词/封面） */
+  useQQMusic: boolean;
+  /** 是否使用酷狗数据源（中文元数据/歌词/封面） */
+  useKugou: boolean;
+  /** 是否使用酷我数据源（中文元数据/歌词/封面） */
+  useKuwo: boolean;
+  /** 是否使用咪咕数据源（中文元数据/封面） */
+  useMigu: boolean;
+  /** 多源并发查询线程数（1-32，默认 4） */
+  concurrentWorkers: number;
 }
 
 /** 流媒体总开关 */

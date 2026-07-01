@@ -18,6 +18,11 @@ await esbuild.build({
   // 原生 / 第三方包保持 external，由 node_modules 解析
   packages: "external",
   tsconfig: "tsconfig.json",
+  // 路径别名（与 tsconfig paths 同步，esbuild 不自动读取）
+  alias: {
+    "@main": ".",
+    "@shared": "../shared",
+  },
   sourcemap: true,
   // ESM 下提供 require（部分 CJS 依赖需要）
   banner: {

@@ -36,3 +36,8 @@ export const pluginsDir = path.join(dataRoot, "plugins");
 export const musicDir = process.env.SPLAYER_MUSIC_DIR
   ? path.resolve(process.env.SPLAYER_MUSIC_DIR)
   : path.join(dataRoot, "music");
+
+/** 独立刮削整理目录：刮削后存放整理结果的挂载点 */
+export const scrapeDir = process.env.SPLAYER_SCRAPE_DIR
+  ? path.resolve(process.env.SPLAYER_SCRAPE_DIR)
+  : path.join(dataRoot, "scrape");

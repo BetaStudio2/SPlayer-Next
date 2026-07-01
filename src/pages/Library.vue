@@ -2,15 +2,19 @@
 import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
 import { useLibraryStore } from "@/stores/library";
 import SongList from "@/components/list/SongList.vue";
+import FolderManager from "@/components/library/FolderManager.vue";
+import ScrapeFolderManager from "@/components/library/ScrapeFolderManager.vue";
 import { formatFileSize } from "@/utils/format";
+import { isElectron } from "@/utils/config";
 import IconFolderOpen from "~icons/lucide/folder-open";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
 import IconLucideListChecks from "~icons/lucide/list-checks";
+import IconLucideWand2 from "~icons/lucide/wand-2";
 import * as player from "@/core/player";
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
-const { tracks, scanDirs, scanning, scanProgress, initialized } = storeToRefs(libraryStore);
+const { tracks, scanDirs, scrapeDirs, scanning, scanProgress, scraping, scrapeProgress, initialized } = storeToRefs(libraryStore);
 
 /** 搜索关键词 */
 const searchQuery = ref("");
@@ -46,12 +50,29 @@ const scanPercent = computed(() => {
   return Math.round((scanProgress.value.scanned / scanProgress.value.total) * 100);
 });
 
+// 刮削进度百分比
+const scrapePercent = computed(() => {
+  if (!scrapeProgress.value || scrapeProgress.value.total === 0) return 0;
+  return Math.round((scrapeProgress.value.scraped / scrapeProgress.value.total) * 100);
+});
+
 // 目录管理弹窗
 const folderDialogOpen = ref(false);
+const scrapeFolderDialogOpen = ref(false);
 
 const moreMenuItems = computed<DropdownMenuItem[]>(() => [
   { key: "batchManage", label: t("songList.batch.manage"), icon: IconLucideListChecks },
   { key: "folders", label: t("library.folders"), icon: IconFolderOpen, separator: true },
+  ...(isElectron
+    ? []
+    : [
+        {
+          key: "scrapeFolders",
+          label: t("library.scrapeFolders"),
+          icon: IconLucideWand2,
+          separator: true,
+        } as DropdownMenuItem,
+      ]),
   {
     key: "scan",
     label: scanning.value ? t("library.scanning") : t("library.scanAll"),
@@ -71,6 +92,10 @@ const handleMoreMenu = (key: string): void => {
     case "folders":
       folderDialogOpen.value = true;
       break;
+    // 刮削目录管理
+    case "scrapeFolders":
+      scrapeFolderDialogOpen.value = true;
+      break;
     // 全量扫描
     case "scan":
       libraryStore.startScan(false);
@@ -78,20 +103,35 @@ const handleMoreMenu = (key: string): void => {
   }
 };
 
+// 刮削
+const handleScrape = (): void => {
+  if (scraping.value) {
+    libraryStore.cancelScrape();
+  } else {
+    libraryStore.startScrape();
+  }
+};
+
 // 进入页面时初始化
 onMounted(async () => {
   libraryStore.subscribeScanProgress();
+  if (!isElectron) {
+    libraryStore.subscribeScrapeProgress();
+  }
   if (!initialized.value) {
     await libraryStore.load();
   }
-  // 有目录即扫描：尚无曲目时全量，已有曲目时增量
+  // 每次进入页面都触发一次增量扫描，避免因本地缓存状态未就绪误走全量
   if (scanDirs.value.length > 0) {
-    libraryStore.startScan(tracks.value.length > 0);
+    libraryStore.startScan(true);
   }
 });
 
 onUnmounted(() => {
   libraryStore.unsubscribeScanProgress();
+  if (!isElectron) {
+    libraryStore.unsubscribeScrapeProgress();
+  }
 });
 </script>
 
@@ -106,7 +146,7 @@ onUnmounted(() => {
           <Transition name="fade" mode="out-in">
             <div
               v-if="scanning && scanProgress"
-              key="progress"
+              key="scan-progress"
               class="flex items-center gap-2 text-sm text-on-surface-variant/50"
             >
               <SLoading class="size-3.5 text-primary shrink-0" />
@@ -114,11 +154,31 @@ onUnmounted(() => {
                 {{
                   t("library.scanProgress", {
                     scanned: scanProgress.scanned,
-                    total: scanProgress.total,
+                    total: scanProgress.total > 0 ? scanProgress.total : "?",
                   })
                 }}
               </span>
-              <span class="text-on-surface-variant/40">{{ scanPercent }}%</span>
+              <span v-if="scanProgress.total > 0" class="text-on-surface-variant/40">
+                {{ scanPercent }}%
+              </span>
+            </div>
+            <div
+              v-else-if="scraping && scrapeProgress"
+              key="scrape-progress"
+              class="flex items-center gap-2 text-sm text-on-surface-variant/50"
+            >
+              <SLoading class="size-3.5 text-secondary shrink-0" />
+              <span class="tabular-nums">
+                {{
+                  t("library.scrapeProgress", {
+                    scraped: scrapeProgress.scraped,
+                    total: scrapeProgress.total > 0 ? scrapeProgress.total : "?",
+                  })
+                }}
+              </span>
+              <span v-if="scrapeProgress.total > 0" class="text-on-surface-variant/40">
+                {{ scrapePercent }}%
+              </span>
             </div>
             <div
               v-else-if="tracks.length > 0"
@@ -159,6 +219,18 @@ onUnmounted(() => {
           >
             <template #icon>
               <IconLucideRefreshCw :class="{ 'animate-spin': scanning }" />
+            </template>
+          </SButton>
+          <SButton
+            v-if="!isElectron"
+            variant="secondary"
+            circle
+            :disabled="scraping || scrapeDirs.length === 0"
+            :title="scraping ? t('library.scraping') : t('library.scrape')"
+            @click="handleScrape"
+          >
+            <template #icon>
+              <IconLucideWand2 :class="{ 'animate-pulse': scraping }" />
             </template>
           </SButton>
           <SDropdownMenu :items="moreMenuItems" align="start" @select="handleMoreMenu">
@@ -214,6 +286,17 @@ onUnmounted(() => {
       width="480px"
     >
       <FolderManager @added="handleFolderAdded" />
+    </SDialog>
+
+    <!-- 刮削目录管理 -->
+    <SDialog
+      v-if="!isElectron"
+      v-model:open="scrapeFolderDialogOpen"
+      :title="t('library.scrapeFolders')"
+      :description="t('library.scrapeFoldersDescription')"
+      width="480px"
+    >
+      <ScrapeFolderManager />
     </SDialog>
   </div>
 </template>

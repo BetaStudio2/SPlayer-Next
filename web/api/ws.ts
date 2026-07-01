@@ -24,21 +24,9 @@ let socket: WebSocket | null = null;
 let reconnectTimer: number | null = null;
 let heartbeatTimer: number | null = null;
 const listeners = new Set<(event: ServerEvent) => void>();
-let manualClose = false;
 
 const HEARTBEAT_INTERVAL = 30_000;
 const RECONNECT_DELAY = 3_000;
-
-const clearTimers = (): void => {
-  if (reconnectTimer !== null) {
-    window.clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
-  if (heartbeatTimer !== null) {
-    window.clearInterval(heartbeatTimer);
-    heartbeatTimer = null;
-  }
-};
 
 const startHeartbeat = (): void => {
   if (heartbeatTimer !== null) return;
@@ -54,7 +42,6 @@ const startHeartbeat = (): void => {
 };
 
 const ensureSocket = (): void => {
-  if (manualClose) return;
   if (socket) {
     if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
       return;
@@ -102,7 +89,7 @@ const ensureSocket = (): void => {
       window.clearInterval(heartbeatTimer);
       heartbeatTimer = null;
     }
-    if (!manualClose) scheduleReconnect();
+    scheduleReconnect();
   };
 
   socket.onerror = (): void => {

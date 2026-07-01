@@ -119,6 +119,44 @@ export const setFftFrame = (data: number[]): void => {
 /** RAF 循环读取最新频谱帧 */
 export const getFftFrame = (): readonly number[] => fftFrame;
 
+// ---------------------------------------------------------------------------
+// Web 端 FFT 桥接：Electron 主进程通过 IPC push 调用 setFftFrame，
+// 浏览器 Web 端没有 IPC push，需要在 RAF 中轮询 WebAudioPlayer.getFftData()
+// ---------------------------------------------------------------------------
+let _fftPollRaf = 0;
+let _fftPollActive = false;
+
+export const startFftPolling = (): void => {
+  if (_fftPollActive) return;
+  _fftPollActive = true;
+  const poll = async () => {
+    if (!_fftPollActive) return;
+    try {
+      const res = await window.api.player.getFftData();
+      if (res.success && res.data && res.data.length > 0) {
+        // WebAudio getByteFrequencyData 返回 Uint8Array (0-255)，
+        // 需要归一化到 0-1 与 Electron/Rust 端保持一致
+        const normalized = new Array(res.data.length);
+        for (let i = 0; i < res.data.length; i++) {
+          normalized[i] = res.data[i] / 255;
+        }
+        fftFrame = normalized;
+      }
+    } catch { /* player 未初始化或 api 不可用 */ }
+    _fftPollRaf = requestAnimationFrame(poll);
+  };
+  poll();
+};
+
+export const stopFftPolling = (): void => {
+  _fftPollActive = false;
+  if (_fftPollRaf) {
+    cancelAnimationFrame(_fftPollRaf);
+    _fftPollRaf = 0;
+  }
+  fftFrame = [];
+};
+
 /** 重置位置/时长/播放标志 */
 export const reset = (): void => {
   currentTimeMs = 0;

@@ -11,11 +11,28 @@ dist/images/
 *.tar
 *.tar.gz
 
-# Electron / 原生模块（Docker 仅构建 web + server，不需要）
+# Electron / 原生模块（Docker 仅构建 web + server + Rust downloader，不需要桌面端源码）
 electron/
-native/
 windows/
 scripts/
+# native/ 目录：保留 Rust workspace 根 Cargo.toml 与 download-engine（服务端下载引擎）
+# 仅排除桌面端 crate 的源码与配置（Cargo.toml 保留以让 workspace 解析依赖图）
+native/audio-engine/src/
+native/audio-engine/build.rs
+native/audio-engine/index.d.ts
+native/audio-engine/package.json
+native/media-ctrl/src/
+native/media-ctrl/build.rs
+native/media-ctrl/index.d.ts
+native/media-ctrl/package.json
+native/taskbar-lyric/src/
+native/taskbar-lyric/build.rs
+native/taskbar-lyric/index.d.ts
+native/taskbar-lyric/package.json
+native/taskbar-thumbnail/src/
+native/taskbar-thumbnail/build.rs
+native/taskbar-thumbnail/index.d.ts
+native/taskbar-thumbnail/package.json
 
 # 版本控制与文档
 .git
@@ -36,3 +53,11 @@ Thumbs.db
 **/*.log
 **/coverage
 .playwright
+
+# 通用构建缓存与宿主机产物
+**/bin
+**/obj
+**/.artifacts
+**/.dotnet-home
+**/.nuget
+**/.cache

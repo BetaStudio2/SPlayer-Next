@@ -103,7 +103,7 @@ onMounted(() => {
       />
       <SButton variant="secondary" :loading="adding" @click="handleAdd">
         <template #icon><IconLucideFolderPlus /></template>
-        {{ t("common.add") }}
+        {{ t("library.addFolder") }}
       </SButton>
     </div>
     <!-- 桌面端：原生目录选择器按钮 -->

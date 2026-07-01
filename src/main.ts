@@ -12,6 +12,7 @@ import { useHotkeyStore } from "./stores/hotkey";
 import { initPlayer } from "./core/player";
 import { installHotkeyManager } from "./core/hotkey/manager";
 import { vRipple } from "./directives/ripple";
+import { initWebSocket } from "./services/ws";
 
 const pinia = createPinia();
 pinia.use(piniaPersistedstate);
@@ -53,6 +54,8 @@ router.isReady().then(() => {
   }, remaining);
   // 初始化播放器
   initPlayer().catch(console.error);
+  // 初始化 WebSocket 连接（Web 模式）
+  initWebSocket();
   // 初始化快捷键
   useHotkeyStore()
     .init()

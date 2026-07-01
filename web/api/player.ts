@@ -94,7 +94,7 @@ class WebAudioPlayer implements PlayerApi {
       return n;
     });
     // 连接：source → preamp → [eq / normalization] → volume → analyser → destination
-    let node: AudioNode = this.sourceNode;
+    const node: AudioNode = this.sourceNode;
     node.connect(this.preamp);
     this.volumeGain.connect(this.analyser);
     this.analyser.connect(this.ctx.destination);

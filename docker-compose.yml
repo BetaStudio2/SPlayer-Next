@@ -4,19 +4,40 @@
 #   a) 本地音乐库 —— 扫描挂载的音乐目录，浏览器直接播放
 #   b) Subsonic API 服务 —— 类似 Navidrome，供任意 Subsonic 客户端连接
 #
+# 架构：
+#   ┌───────────────────────────────────────────────┐
+#   │                 splayer 容器                  │
+#   │  ┌───────────┐  ┌────────────┐                │
+#   │  │ TS API    │  │ Go Subsonic│                │
+#   │  │ :8080     │  │ :8081      │                │
+#   │  └─────┬─────┘  └─────┬──────┘                │
+#   │        │              │                       │
+#   │        └──────┬───────┘                       │
+#   │               │                               │
+#   │      ┌────────▼────────┐                      │
+#   │      │ 共享数据目录     │                      │
+#   │      │ /app/data       │                      │
+#   │      └────────┬────────┘                      │
+#   │               │                               │
+#   │   C# Scanner / C++ Scraper 按需在容器内执行   │
+#   └───────────────────────────────────────────────┘
+#
 # 用法：
 #   docker compose up -d           # 启动
 #   docker compose logs -f         # 查看日志
 #   docker compose down            # 停止
 #
-# 架构选择：默认 amd64；ARM 设备上改为 arm64 或 armv7
+# 架构选择：默认 amd64；ARM 设备上改为 arm64
 
 services:
-  splayer-next:
+  splayer:
     image: splayer-next:amd64
     # ARM 设备请改为：
     # image: splayer-next:arm64
-    # image: splayer-next:armv7
+    # 或从本地构建：
+    # build:
+    #   context: .
+    #   dockerfile: ${SPLAYER_DOCKERFILE:-Dockerfile}
     container_name: splayer-next
     restart: unless-stopped
     ports:
@@ -28,6 +49,13 @@ services:
       #   SQLite 数据库 / Subsonic 用户 / 配置 / 缓存 / 日志
       # ────────────────────────────────────────────────
       - ./data:/app/data
+
+      # ────────────────────────────────────────────────
+      # 独立刮削整理目录（推荐设置）
+      #   用于将音乐文件刮削后，按特定规则整理到 /app/music 下。
+      #   若不设置，则只能在 /app/music 中就地刮削。
+      # ────────────────────────────────────────────────
+      - ./scrape:/app/scrape
 
       # ────────────────────────────────────────────────
       # 音乐文件目录（至少挂载一个）
@@ -48,14 +76,21 @@ services:
       # - /mnt/hdd2/流行:/app/music/流行:ro
 
     environment:
-      - NODE_ENV=production
-      - PORT=8080
+      NODE_ENV: production
+      PORT: 8080
       # SPA 静态文件目录（镜像内置路径，一般无需修改）
-      - SPA_DIR=/app/public
+      SPA_DIR: /app/public
       # 数据根目录（镜像内置 /app/data，与 volume 挂载对齐）
-      - SPLAYER_DATA_DIR=/app/data
+      SPLAYER_DATA_DIR: /app/data
       # 曲库根目录（镜像内置 /app/music，与 volume 挂载对齐）
-      - SPLAYER_MUSIC_DIR=/app/music
+      SPLAYER_MUSIC_DIR: /app/music
+      # 独立刮削整理目录（可选，与 volume 挂载对齐）
+      SPLAYER_SCRAPE_DIR: /app/scrape
+      # 加密密钥（生产环境请更换为随机字符串）
+      PROXY_KEY: ${PROXY_KEY:-dev-proxy-key}
+      SPLAYER_ENCRYPTION_KEY: ${SPLAYER_ENCRYPTION_KEY:-}
+      # Go Subsonic 后端地址（容器内通信，无需修改）
+      SUBSONIC_BACKEND_URL: http://127.0.0.1:8081
 
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]

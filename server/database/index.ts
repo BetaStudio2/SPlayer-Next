@@ -4,13 +4,14 @@ import Database from "better-sqlite3";
 import { libraryLog } from "@main/utils/logger";
 import { databaseDir } from "@main/utils/paths";
 import { migrate } from "./migration";
+import { initScraperDb, closeScraperDb, getScraperDb, isScraperDbOpen } from "./scraper-db";
 
 /** 数据库文件路径 */
 const dbPath = path.join(databaseDir, "library.db");
 
 let db: Database.Database | null = null;
 
-/** 获取数据库实例 */
+/** 获取媒体库数据库实例 */
 export const getDb = (): Database.Database => {
   if (!db) throw new Error("Database not initialized");
   return db;
@@ -22,6 +23,8 @@ export const isDbOpen = (): boolean => db !== null;
 /** 初始化数据库：打开连接、启用 WAL、建表建索引、执行迁移 */
 export const initDatabase = (): void => {
   fs.mkdirSync(databaseDir, { recursive: true });
+
+  // 媒体库
   db = new Database(dbPath);
   db.pragma("journal_mode = WAL");
 
@@ -135,7 +138,10 @@ export const initDatabase = (): void => {
     CREATE INDEX IF NOT EXISTS idx_download_tasks_created ON download_tasks(created_at);
   `);
   migrate(db);
-  libraryLog.info(`数据库已初始化: ${dbPath}`);
+  libraryLog.info(`媒体库数据库已初始化: ${dbPath}`);
+
+  // 刮削器独立数据库
+  initScraperDb();
 };
 
 /** 关闭数据库连接 */
@@ -143,9 +149,12 @@ export const closeDatabase = (): void => {
   if (db) {
     db.close();
     db = null;
-    libraryLog.info("数据库已关闭");
   }
+  closeScraperDb();
+  libraryLog.info("数据库已关闭");
 };
+
+export { getScraperDb, isScraperDbOpen } from "./scraper-db";
 
 export {
   getAllTracks,
@@ -163,6 +172,7 @@ export {
   getTrackLyrics,
   getRandomTrack,
   getRandomTracks,
+  invalidateTracksCache,
 } from "./queries";
 
 export type { FileRecord, UpsertTrack } from "./queries";

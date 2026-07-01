@@ -22,9 +22,6 @@ import sharp from "sharp";
 import {
   getUserByUsername,
   listUsers,
-  createUser,
-  updateUser,
-  deleteUser,
   type SubsonicUser,
   star,
   unstar,
@@ -58,7 +55,7 @@ import {
 import { getCoverCacheDir } from "@main/utils/config";
 import { serverLog } from "@main/utils/logger";
 import * as neteaseLyric from "@main/apis/common/lyric/netease";
-import type { Track, Artist, Album } from "@shared/types/player";
+import type { Track, Artist } from "@shared/types/player";
 import type { AlbumSummary, ArtistSummary } from "@shared/types/library";
 
 const app = new Hono();

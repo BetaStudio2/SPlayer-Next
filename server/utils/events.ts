@@ -10,10 +10,30 @@ import { EventEmitter } from "node:events";
 import type { ScanProgress } from "@main/music/scanner";
 import type { DownloadTask, DownloadProgress } from "@shared/types/download";
 
+/** 刮削进度 */
+export interface ScrapeProgress {
+  scraping: boolean;
+  total: number;
+  scraped: number;    // 已处理总数 = success + failed + skipped + notFound
+  success: number;    // 刮削成功
+  failed: number;     // 写入失败
+  skipped: number;    // 已跳过（已有元数据）
+  notFound: number;   // 无匹配
+  canceled: boolean;
+  /** 整理阶段标记（刮削完成后整理文件时置 true，结束后置 false） */
+  organizing?: boolean;
+  /** 整理阶段文件总数 */
+  organizeTotal?: number;
+  /** 整理阶段已处理文件数 */
+  organizeDone?: number;
+}
+
 /** 服务端向客户端推送的事件类型 */
 export type ServerEvent =
   | { type: "scan:progress"; data: ScanProgress }
   | { type: "scan:done"; data: { total: number; scanned: number; canceled: boolean } }
+  | { type: "scrape:progress"; data: ScrapeProgress }
+  | { type: "scrape:done"; data: { total: number; scraped: number; success: number; failed: number; skipped: number; notFound: number; canceled: boolean } }
   | { type: "library:changed"; data: { action: "add" | "remove" | "update"; path: string } }
   | { type: "download:state"; data: DownloadTask }
   | { type: "download:progress"; data: DownloadProgress };
