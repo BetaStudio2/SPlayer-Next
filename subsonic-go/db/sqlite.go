@@ -25,9 +25,13 @@ func defaultDataDir() string {
 	return filepath.Join(wd, "data")
 }
 
-// Open 打开 SQLite 数据库（只读复用 library.db）
+// Open 打开 SQLite 数据库
+//
+// 使用 rw（读写）模式而非 ro（只读）：
+// - ro 模式下无法设置 WAL journal mode，导致 TS 写进程阻塞 Go 读操作
+// - rw 模式配合 busy_timeout，TS 写时 Go 读会等待而非挂死
 func Open(dbPath string) error {
-	dsn := fmt.Sprintf("file:%s?mode=ro&_journal_mode=WAL&_busy_timeout=5000", dbPath)
+	dsn := fmt.Sprintf("file:%s?mode=rw&_journal_mode=WAL&_busy_timeout=10000", dbPath)
 	var err error
 	pool, err = sql.Open("sqlite", dsn)
 	if err != nil {
