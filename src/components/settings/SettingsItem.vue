@@ -12,7 +12,10 @@ const { t } = useI18n();
 
 const model = props.item.binding ? useSettingModel(props.item.binding) : ref<any>();
 
-/** 应用变更 */
+/** 拖拽开始前的值，用于滑块取消时回滚 */
+const dragPrevValue = ref<unknown>();
+
+/** 应用变更（有 confirm 的滑块只做确认检查，值已由 @change 同步） */
 const applyChange = async (next: unknown): Promise<void> => {
   const cfg = props.item.confirm;
   if (cfg && (!cfg.when || cfg.when(next))) {
@@ -23,7 +26,10 @@ const applyChange = async (next: unknown): Promise<void> => {
       confirmText: cfg.confirmTextKey ? t(cfg.confirmTextKey) : undefined,
       cancelText: cfg.cancelTextKey ? t(cfg.cancelTextKey) : undefined,
     });
-    if (!confirmed) return;
+    if (!confirmed) {
+      model.value = dragPrevValue.value;
+      return;
+    }
   }
   model.value = next;
 };
@@ -100,7 +106,9 @@ const descriptionText = computed(() =>
           :track-height="4"
           always-show-thumb
           show-popover
-          @change="applyChange($event)"
+          @change="model = $event"
+          @drag-start="dragPrevValue = model.value"
+          @drag-end="applyChange($event)"
         >
           <template #popover="{ value }">{{ value }}</template>
         </SSlider>

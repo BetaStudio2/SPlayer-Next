@@ -325,6 +325,26 @@ app.post("/browser", async (c) => {
   }
 });
 
+/** POST /browser-stream —— 流式下载中转（流媒体源专用，独立于完整 DownloadRequest） */
+app.post("/browser-stream", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as { url: string; fileName: string } | null;
+  if (!body?.url) return c.text("bad request", 400);
+  const fileName = body.fileName || "download.mp3";
+  try {
+    const res = await fetch(body.url);
+    if (!res.ok || !res.body) return c.text(`HTTP ${res.status}`, 502);
+    const headers: Record<string, string> = {
+      "Content-Type": res.headers.get("content-type") ?? "application/octet-stream",
+      "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+      "Cache-Control": "no-store",
+    };
+    return c.body(res.body, 200, headers);
+  } catch (err) {
+    serverLog.warn("[download] 流式下载中转失败:", err);
+    return c.text(err instanceof Error ? err.message : "download failed", 502);
+  }
+});
+
 /** POST /remove/:taskId —— 删除任务 + 文件 */
 app.post("/remove/:taskId", (c) => {
   const { taskId } = c.req.param();

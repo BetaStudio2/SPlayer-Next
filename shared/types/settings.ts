@@ -234,6 +234,8 @@ export interface LibrarySettings {
   useMigu: boolean;
   /** 多源并发查询线程数（1-32，默认 4） */
   concurrentWorkers: number;
+  /** 扫描器并行解析线程数（1-128，默认 = 2*CPU核数，0 表示自动） */
+  scannerMaxParallelism: number;
 }
 
 /** 流媒体总开关 */

@@ -139,14 +139,27 @@ func scanSQLiteFloat64(val any) int64 {
 func scanTrack(row interface{ Scan(...any) error }) (model.Track, error) {
 	var t model.Track
 	var rawFileMtime, rawFileCtime any
+	var rawSampleRate, rawBitRate, rawChannels, rawBitsPerSample any
 	err := row.Scan(
 		&t.ID, &t.Path, &t.Title, &t.TrackNo, &t.ArtistsJSON, &t.AlbumJSON,
-		&t.Duration, &t.Cover, &t.Codec, &t.SampleRate, &t.BitRate,
-		&t.Channels, &t.BitsPerSample, &t.FileSize, &rawFileMtime, &rawFileCtime,
+		&t.Duration, &t.Cover, &t.Codec, &rawSampleRate, &rawBitRate,
+		&rawChannels, &rawBitsPerSample, &t.FileSize, &rawFileMtime, &rawFileCtime,
 		&t.ScannedAt, &t.Lyrics,
 	)
 	if err != nil {
 		return t, err
+	}
+	if rawSampleRate != nil {
+		t.SampleRate = sql.NullInt64{Int64: scanSQLiteFloat64(rawSampleRate), Valid: true}
+	}
+	if rawBitRate != nil {
+		t.BitRate = sql.NullInt64{Int64: scanSQLiteFloat64(rawBitRate), Valid: true}
+	}
+	if rawChannels != nil {
+		t.Channels = sql.NullInt64{Int64: scanSQLiteFloat64(rawChannels), Valid: true}
+	}
+	if rawBitsPerSample != nil {
+		t.BitsPerSample = sql.NullInt64{Int64: scanSQLiteFloat64(rawBitsPerSample), Valid: true}
 	}
 	if rawFileMtime != nil {
 		t.FileMtime = sql.NullInt64{Int64: scanSQLiteFloat64(rawFileMtime), Valid: true}
@@ -177,6 +190,71 @@ func GetAllTracks() ([]model.Track, error) {
 		tracks = append(tracks, t)
 	}
 	return tracks, nil
+}
+
+// GetTracksPaginated 分页获取曲目（LIMIT + OFFSET）
+func GetTracksPaginated(limit, offset int) ([]model.Track, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 500 {
+		limit = 500
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	rows, err := pool.Query("SELECT "+trackColumns+" FROM tracks ORDER BY id LIMIT ? OFFSET ?", limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var tracks []model.Track
+	for rows.Next() {
+		t, err := scanTrack(rows)
+		if err != nil {
+			return nil, err
+		}
+		tracks = append(tracks, t)
+	}
+	return tracks, nil
+}
+
+// GetTrackCount 返回曲目总数
+func GetTrackCount() (int, error) {
+	var count int
+	err := pool.QueryRow("SELECT COUNT(*) FROM tracks").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// RemoveDuplicatePaths 移除 path 列的重复行，保留 rowid 最小的那条
+// 源于 C# 扫描器直接写入与 Node.js watcher HTTP 写入共用同一 SQLite 时，
+// 可能因蓝图时序产生同 path 不同 id 的行。
+func RemoveDuplicatePaths() (int, error) {
+	// 先统计
+	var dupCount int
+	err := pool.QueryRow(`
+		SELECT COUNT(*) - COUNT(DISTINCT path) FROM tracks
+	`).Scan(&dupCount)
+	if err != nil {
+		return 0, err
+	}
+	if dupCount == 0 {
+		return 0, nil
+	}
+	// 删除 path 重复的行，保留 rowid 最小的
+	res, err := pool.Exec(`
+		DELETE FROM tracks WHERE rowid NOT IN (
+			SELECT MIN(rowid) FROM tracks GROUP BY path
+		)
+	`)
+	if err != nil {
+		return 0, err
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
 }
 
 // GetTrackByID 按 ID 获取单曲
@@ -244,12 +322,16 @@ func GetRandomTracks(limit int) ([]model.Track, error) {
 }
 
 // SearchTracks 模糊搜索
+//
+// artists/album 列为 JSON，INSTR 做字节级搜索兼容多字节 UTF-8。
 func SearchTracks(query string) ([]model.Track, error) {
 	pattern := "%" + query + "%"
 	rows, err := pool.Query(
 		`SELECT `+trackColumns+` FROM tracks
-		 WHERE title LIKE ? ESCAPE '\' OR artists LIKE ? ESCAPE '\' OR album LIKE ? ESCAPE '\'`,
-		pattern, pattern, pattern,
+		 WHERE title LIKE ? ESCAPE '\'
+		    OR INSTR(album, ?) > 0
+		    OR INSTR(artists, ?) > 0`,
+		pattern, query, query,
 	)
 	if err != nil {
 		return nil, err
@@ -371,7 +453,11 @@ func GetAlbumTracks(albumName string) ([]model.Track, error) {
 // GetArtistTracks 按歌手名获取全部曲目
 func GetArtistTracks(artistName string) ([]model.Track, error) {
 	rows, err := pool.Query(`
-		SELECT DISTINCT `+trackColumns+` FROM tracks t, json_each(t.artists) a
+		SELECT DISTINCT t.id, t.path, t.title, t.track, t.artists, t.album,
+			t.duration, t.cover, t.codec, t.sample_rate, t.bit_rate,
+			t.channels, t.bits_per_sample, t.file_size, t.file_mtime, t.file_ctime,
+			t.scanned_at, t.lyrics
+		FROM tracks t, json_each(t.artists) a
 		WHERE LOWER(json_extract(a.value, '$.name')) = LOWER(?)`, artistName)
 	if err != nil {
 		return nil, err

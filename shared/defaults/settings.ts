@@ -56,6 +56,8 @@ export const defaultSystemConfig: SystemConfig = {
     useMigu: true,
     // 多源并发查询线程数
     concurrentWorkers: 4,
+    // 扫描器并行解析线程数（0=自动，由扫描器根据硬件自适应）
+    scannerMaxParallelism: 0,
   },
   desktopLyric: {
     fontSize: 24,

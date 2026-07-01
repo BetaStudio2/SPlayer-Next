@@ -28,3 +28,6 @@ dist/images/
 
 # 本地传输笔记（开发临时文件）
 transmission.md
+
+# 本地数据库文件（开发调试用）
+library.db

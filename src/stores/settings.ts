@@ -38,6 +38,7 @@ export const useSettingsStore = defineStore(
     const appearance = reactive<AppearanceSettings>({
       layoutMode: "default",
       routeTransition: "fade",
+      sidebarNavStyle: "default",
       sidebarCollapsed: false,
       sidebarPlaylistCover: false,
       showQualitySwitch: false,

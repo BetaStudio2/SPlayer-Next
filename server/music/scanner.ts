@@ -3,7 +3,7 @@
  *
  * 实际扫描由 C# 二进制 `splayer-scanner` 执行：
  * - TS 层 spawn 子进程，传递 scan 子命令与目录列表
- * - C# 端用 TagLibSharp 解析元数据，通过 HTTP 代理写入 SQLite
+ * - C# 端用 TagLibSharp 解析元数据，通过 SqliteDirectWriter 直写 SQLite
  * - 进度通过 stdout JSON lines 上报，TS 解析后经 WS 转发
  * - 取消通过 SIGTERM 终止子进程（C# 端捕获 Ctrl+C 后清理）
  *
@@ -26,6 +26,7 @@ import { getCoverCacheDir } from "@main/utils/config";
 import { libraryLog } from "@main/utils/logger";
 import { databaseDir, musicDir } from "@main/utils/paths";
 import { emit } from "@main/utils/events";
+import { store } from "@main/store";
 
 /** C# 扫描引擎二进制路径（容器内默认 /app/bin/splayer-scanner） */
 const SCANNER_BIN = process.env.SPLAYER_SCANNER_BIN ?? "/app/bin/splayer-scanner";
@@ -83,6 +84,7 @@ interface ScannerEvent {
   deleted?: number;
   canceled?: boolean;
   errors?: number;
+  trained?: number;
 }
 
 /** 解析子进程 stdout 行 → 更新内部状态 + WS 广播 */
@@ -125,7 +127,7 @@ const handleLine = (line: string): void => {
       emit({ type: "scan:progress", data: getScanProgress() });
       libraryLog.info(
         `[scanner] 扫描完成: ${progress.scanned}/${progress.total}` +
-          `（upsert=${evt.upserted ?? 0}, delete=${evt.deleted ?? 0}, errors=${evt.errors ?? 0}）`,
+          `（upsert=${evt.upserted ?? 0}, delete=${evt.deleted ?? 0}, trained=${evt.trained ?? 0}, errors=${evt.errors ?? 0}）`,
       );
       break;
     }
@@ -185,18 +187,21 @@ export const startScan = async (dirs: string[], incremental = true): Promise<voi
       windowsHide: true,
       env: {
         ...process.env,
-        SPLAYER_API_URL: process.env.SPLAYER_API_URL ?? "http://localhost:8080",
         // 直写模式：扫描器直接操作 SQLite，数据不经过 V8 堆
         SPLAYER_DB_PATH: process.env.SPLAYER_DB_PATH ?? path.join(databaseDir, "library.db"),
         // 传递给 C++ 刮削器的安全限制
-        SCRAPER_MAX_SCAN_FILES: process.env.SCRAPER_MAX_SCAN_FILES ?? "50000",
+          SCRAPER_MAX_SCAN_FILES: process.env.SCRAPER_MAX_SCAN_FILES ?? "50000",
         SCRAPER_MAX_FILE_SIZE_MB: process.env.SCRAPER_MAX_FILE_SIZE_MB ?? "500",
         SCRAPER_MAX_SCAN_ERRORS: process.env.SCRAPER_MAX_SCAN_ERRORS ?? "50",
         // 传递给 C# 扫描器的安全限制
         SCANNER_MAX_SCAN_FILES: process.env.SCANNER_MAX_SCAN_FILES ?? process.env.SCRAPER_MAX_SCAN_FILES ?? "50000",
         SCANNER_MAX_FILE_SIZE_MB: process.env.SCANNER_MAX_FILE_SIZE_MB ?? process.env.SCRAPER_MAX_FILE_SIZE_MB ?? "500",
         SCANNER_MAX_SCAN_ERRORS: process.env.SCANNER_MAX_SCAN_ERRORS ?? process.env.SCRAPER_MAX_SCAN_ERRORS ?? "50",
-        SCANNER_MAX_PARALLELISM: process.env.SCANNER_MAX_PARALLELISM ?? Math.min(4, Math.max(2, Math.floor(cpus().length / 2))).toString(),
+        SCANNER_MAX_PARALLELISM: (
+          store.store.library.scannerMaxParallelism > 0
+            ? store.store.library.scannerMaxParallelism
+            : Math.min(4, Math.max(2, Math.floor(cpus().length / 2)))
+        ).toString(),
         // C# 端单次 DB 请求超时（毫秒）：0=禁用（默认），-1=自动（>=30s），>0=指定值
         SCANNER_DB_REQUEST_TIMEOUT_MS: process.env.SCANNER_DB_REQUEST_TIMEOUT_MS ?? "0",
 

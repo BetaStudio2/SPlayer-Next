@@ -25,6 +25,14 @@ func main() {
 	defer db.Close()
 	log.Printf("[subsonic-go] 数据库已连接: %s", dbPath)
 
+	// 启动时去重：移除 path 重复的残余行（源于 C# 扫描器与 Node.js watcher 并发写入）
+	dedupCount, err := db.RemoveDuplicatePaths()
+	if err != nil {
+		log.Printf("[subsonic-go] 路径去重失败: %v", err)
+	} else if dedupCount > 0 {
+		log.Printf("[subsonic-go] 路径去重: 清理 %d 条重复行", dedupCount)
+	}
+
 	r := chi.NewRouter()
 
 	// 鉴权中间件（全部 /rest/* 端点）

@@ -3,13 +3,13 @@ import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
 import { useLibraryStore } from "@/stores/library";
 import SongList from "@/components/list/SongList.vue";
 import FolderManager from "@/components/library/FolderManager.vue";
-import ScrapeFolderManager from "@/components/library/ScrapeFolderManager.vue";
 import { formatFileSize } from "@/utils/format";
 import { isElectron } from "@/utils/config";
 import IconFolderOpen from "~icons/lucide/folder-open";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
 import IconLucideListChecks from "~icons/lucide/list-checks";
 import IconLucideWand2 from "~icons/lucide/wand-2";
+import IconLucideFolderSync from "~icons/lucide/folder-sync";
 import * as player from "@/core/player";
 
 const { t } = useI18n();
@@ -58,21 +58,10 @@ const scrapePercent = computed(() => {
 
 // 目录管理弹窗
 const folderDialogOpen = ref(false);
-const scrapeFolderDialogOpen = ref(false);
 
 const moreMenuItems = computed<DropdownMenuItem[]>(() => [
   { key: "batchManage", label: t("songList.batch.manage"), icon: IconLucideListChecks },
   { key: "folders", label: t("library.folders"), icon: IconFolderOpen, separator: true },
-  ...(isElectron
-    ? []
-    : [
-        {
-          key: "scrapeFolders",
-          label: t("library.scrapeFolders"),
-          icon: IconLucideWand2,
-          separator: true,
-        } as DropdownMenuItem,
-      ]),
   {
     key: "scan",
     label: scanning.value ? t("library.scanning") : t("library.scanAll"),
@@ -92,10 +81,6 @@ const handleMoreMenu = (key: string): void => {
     case "folders":
       folderDialogOpen.value = true;
       break;
-    // 刮削目录管理
-    case "scrapeFolders":
-      scrapeFolderDialogOpen.value = true;
-      break;
     // 全量扫描
     case "scan":
       libraryStore.startScan(false);
@@ -110,6 +95,11 @@ const handleScrape = (): void => {
   } else {
     libraryStore.startScrape();
   }
+};
+
+/** 仅整理（不刮削） */
+const handleOrganize = (): void => {
+  libraryStore.startOrganize();
 };
 
 // 进入页面时初始化
@@ -233,6 +223,18 @@ onUnmounted(() => {
               <IconLucideWand2 :class="{ 'animate-pulse': scraping }" />
             </template>
           </SButton>
+          <SButton
+            v-if="!isElectron"
+            variant="secondary"
+            circle
+            :disabled="scraping || scrapeDirs.length === 0"
+            :title="t('library.organizeOnly')"
+            @click="handleOrganize"
+          >
+            <template #icon>
+              <IconLucideFolderSync />
+            </template>
+          </SButton>
           <SDropdownMenu :items="moreMenuItems" align="start" @select="handleMoreMenu">
             <template #trigger>
               <SButton variant="secondary" circle>
@@ -286,17 +288,6 @@ onUnmounted(() => {
       width="480px"
     >
       <FolderManager @added="handleFolderAdded" />
-    </SDialog>
-
-    <!-- 刮削目录管理 -->
-    <SDialog
-      v-if="!isElectron"
-      v-model:open="scrapeFolderDialogOpen"
-      :title="t('library.scrapeFolders')"
-      :description="t('library.scrapeFoldersDescription')"
-      width="480px"
-    >
-      <ScrapeFolderManager />
     </SDialog>
   </div>
 </template>

@@ -12,7 +12,7 @@
  */
 import { Hono, type Context } from "hono";
 import { serverLog } from "@main/utils/logger";
-import tsSubsonic from "./subsonic";
+import tsSubsonic from "./subsonic/index";
 
 const app = new Hono();
 
@@ -97,7 +97,12 @@ const proxyToGo = async (c: Context): Promise<Response> => {
     }
   }
 
-  const resp = await fetch(targetUrl, init);
+  // 给代理→Go 的请求加超时，防止 Go 卡住时反向代理连接泄漏
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30_000);
+  const resp = await fetch(targetUrl, { ...init, signal: ctrl.signal }).finally(() =>
+    clearTimeout(timer),
+  );
 
   // #region debug-point proxy-response
   serverLog.info(`[subsonic-proxy] Go ←: ${resp.status} ${resp.headers.get("content-type") ?? "-"}`);

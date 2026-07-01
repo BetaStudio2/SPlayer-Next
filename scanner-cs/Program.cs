@@ -12,10 +12,13 @@ namespace SPlayer.Scanner;
 ///   splayer-scanner parse &lt;file&gt;
 ///
 /// 环境变量：
-///   SPLAYER_API_URL    TS 层 API 地址（默认 http://localhost:8080）
-///   PROXY_KEY          SQLite 写入代理密钥
 ///   SPLAYER_DATA_DIR   数据目录（默认 <cwd>/data）
 ///   SPLAYER_MUSIC_DIR  音乐根目录
+///   SPLAYER_DB_PATH    SQLite 数据库路径（必须设置，直写模式）
+///   SCANNER_MAX_PARALLELISM  并行解析数（默认 = 2 * CPU 核数）
+///   SCANNER_MAX_FILE_SIZE_MB  文件大小上限 MB（默认 500）
+///   SCANNER_MAX_SCAN_FILES    文件数量上限（默认 50000）
+///   SCANNER_MAX_SCAN_ERRORS   连续错误上限（默认 50）
 ///
 /// 输出：
 ///   stdout：JSON 格式进度/结果（TS 层监听）
@@ -26,13 +29,12 @@ public static class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        var apiUrl = Environment.GetEnvironmentVariable("SPLAYER_API_URL") ?? "http://localhost:8080";
-        var proxyKey = Environment.GetEnvironmentVariable("PROXY_KEY") ?? "dev-proxy-key";
         var dataDir = Environment.GetEnvironmentVariable("SPLAYER_DATA_DIR")
             ?? Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "data"));
         var defaultMusicDir = Environment.GetEnvironmentVariable("SPLAYER_MUSIC_DIR")
             ?? Path.Combine(dataDir, "music");
         var coverCacheDir = Path.Combine(dataDir, "cache", "covers");
+        var quarantineDir = Path.Combine(dataDir, "quarantine");
 
         // 安全限制环境变量
         var maxFileSizeMb = int.TryParse(Environment.GetEnvironmentVariable("SCANNER_MAX_FILE_SIZE_MB"), out var mf) ? mf : 500;
@@ -40,8 +42,6 @@ public static class Program
         var maxScanErrors = int.TryParse(Environment.GetEnvironmentVariable("SCANNER_MAX_SCAN_ERRORS"), out var se) ? se : 50;
         var maxParallelism = int.TryParse(Environment.GetEnvironmentVariable("SCANNER_MAX_PARALLELISM"), out var mp)
             ? mp : AdaptiveConcurrency.ForIOBound();
-        // DB 请求超时（毫秒）：0=禁用（默认），-1=自动（最低30s），>0=指定毫秒
-        var dbRequestTimeoutMs = int.TryParse(Environment.GetEnvironmentVariable("SCANNER_DB_REQUEST_TIMEOUT_MS"), out var dt) ? dt : 0;
 
         if (args.Length == 0)
         {
@@ -52,7 +52,7 @@ public static class Program
         var command = args[0].ToLowerInvariant();
         return command switch
         {
-            "scan" => await RunScan(args[1..], apiUrl, proxyKey, defaultMusicDir, coverCacheDir, maxFileSizeMb, maxScanFiles, maxScanErrors, maxParallelism, dbRequestTimeoutMs),
+            "scan" => await RunScan(args[1..], defaultMusicDir, coverCacheDir, quarantineDir, maxFileSizeMb, maxScanFiles, maxScanErrors, maxParallelism),
             "parse" => await RunParse(args[1..], coverCacheDir),
             "-h" or "--help" or "help" => PrintUsage(),
             _ => UnknownCommand(command),
@@ -60,8 +60,8 @@ public static class Program
     }
 
     private static async Task<int> RunScan(
-        string[] args, string apiUrl, string proxyKey, string defaultMusicDir, string coverCacheDir,
-        int maxFileSizeMb, int maxScanFiles, int maxScanErrors, int maxParallelism, int dbRequestTimeoutMs)
+        string[] args, string defaultMusicDir, string coverCacheDir, string quarantineDir,
+        int maxFileSizeMb, int maxScanFiles, int maxScanErrors, int maxParallelism)
     {
         string? dirs = null;
         var full = false;
@@ -95,57 +95,34 @@ public static class Program
             : dirs.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
         var dbPath = Environment.GetEnvironmentVariable("SPLAYER_DB_PATH");
-
-        if (!string.IsNullOrEmpty(dbPath))
+        if (string.IsNullOrEmpty(dbPath))
         {
-            // 直写模式：扫描器直接操作 SQLite，数据不经过 Node.js / V8 堆
-            Console.Error.WriteLine($"[scanner] 直写模式: {dbPath}");
-            using var db = new SqliteDirectWriter(dbPath);
-            var engine = new ScannerEngine(db, coverCacheDir, batch, !full,
-                maxFileSizeBytes: maxFileSizeMb * 1024L * 1024L,
-                maxScanFiles: maxScanFiles,
-                maxScanErrors: maxScanErrors,
-                maxParallelism: maxParallelism);
-
-            using var cts = new CancellationTokenSource();
-            Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
-
-            try
-            {
-                var result = await engine.ScanAsync(dirList, cts.Token);
-                Console.WriteLine(JsonSerializer.Serialize(result, ScannerJsonOptions.Default));
-                return result.Canceled ? 2 : 0;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"[scanner] FATAL: {ex}");
-                return 1;
-            }
+            Console.Error.WriteLine("[scanner] 错误: 未设置 SPLAYER_DB_PATH 环境变量。直写模式需要数据库路径。");
+            return 1;
         }
-        else
+
+        // 直写模式：扫描器直接操作 SQLite，数据不经过 Node.js / V8 堆
+        Console.Error.WriteLine($"[scanner] 直写模式: {dbPath}");
+        using var db = new SqliteDirectWriter(dbPath);
+        var engine = new ScannerEngine(db, coverCacheDir, quarantineDir, batch, !full,
+            maxFileSizeBytes: maxFileSizeMb * 1024L * 1024L,
+            maxScanFiles: maxScanFiles,
+            maxScanErrors: maxScanErrors,
+            maxParallelism: maxParallelism);
+
+        using var cts = new CancellationTokenSource();
+        Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+
+        try
         {
-            // HTTP 代理模式：通过 Node.js better-sqlite3 写入
-            using var db = new DbProxyClient(apiUrl, proxyKey, dbRequestTimeoutMs);
-            var engine = new ScannerEngine(db, coverCacheDir, batch, !full,
-                maxFileSizeBytes: maxFileSizeMb * 1024L * 1024L,
-                maxScanFiles: maxScanFiles,
-                maxScanErrors: maxScanErrors,
-                maxParallelism: maxParallelism);
-
-            using var cts = new CancellationTokenSource();
-            Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
-
-            try
-            {
-                var result = await engine.ScanAsync(dirList, cts.Token);
-                Console.WriteLine(JsonSerializer.Serialize(result, ScannerJsonOptions.Default));
-                return result.Canceled ? 2 : 0;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"[scanner] FATAL: {ex}");
-                return 1;
-            }
+            var result = await engine.ScanAsync(dirList, cts.Token);
+            Console.WriteLine(JsonSerializer.Serialize(result, ScannerJsonOptions.Default));
+            return result.Canceled ? 2 : 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[scanner] FATAL: {ex}");
+            return 1;
         }
     }
 
@@ -181,14 +158,17 @@ public static class Program
 
             选项:
               --dirs, -d    扫描目录（逗号分隔，默认 $SPLAYER_MUSIC_DIR）
-              --full, -f    全量扫描（跳过增量比对）
+              --full, -f    全量扫描（清空数据库重新构建）
               --batch, -b   批量写入大小（默认 50）
 
             环境变量:
-              SPLAYER_API_URL    TS 层 API 地址（默认 http://localhost:8080）
-              PROXY_KEY          SQLite 写入代理密钥
-              SPLAYER_DATA_DIR   数据目录（默认 <cwd>/data）
-              SPLAYER_MUSIC_DIR  音乐根目录
+              SPLAYER_DB_PATH             SQLite 数据库路径（必需）
+              SPLAYER_DATA_DIR            数据目录（默认 <cwd>/data）
+              SPLAYER_MUSIC_DIR           音乐根目录
+              SCANNER_MAX_PARALLELISM     并行解析数（默认 = 2 * CPU 核数）
+              SCANNER_MAX_FILE_SIZE_MB    文件大小上限 MB（默认 500）
+              SCANNER_MAX_SCAN_FILES      文件数量上限（默认 50000）
+              SCANNER_MAX_SCAN_ERRORS     连续错误上限（默认 50）
             """);
         return 0;
     }

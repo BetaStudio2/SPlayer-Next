@@ -926,7 +926,10 @@ public:
     static std::string toLower(const std::string& s) {
         std::string out;
         out.reserve(s.size());
-        for (unsigned char c : s) out.push_back(static_cast<char>(std::tolower(c)));
+        for (unsigned char c : s) {
+            // ASCII 字符 -> tolower; UTF-8 多字节字符直接保留
+            out.push_back(c < 0x80 ? static_cast<char>(std::tolower(c)) : static_cast<char>(c));
+        }
         return out;
     }
 
@@ -2503,8 +2506,10 @@ private:
     /// @returns -1 表示舍弃，0-14 表示有效评分
     static int scoreChineseSong(const ChineseSong& song, const TrackInfo& track) {
         int titleScore = ChineseMusicClientBase::matchScore(song.name, track.title);
-        int artistScore = ChineseMusicClientBase::matchArtist(song.artist, track.artist);
-        // 任一不匹配 → 舍弃
+        // 当文件 artist 标签为空时，跳过 artist 匹配（常见于标签不完整的文件）
+        int artistScore = track.artist.empty() ? 1 :
+                          ChineseMusicClientBase::matchArtist(song.artist, track.artist);
+        // 任一不匹配 → 舍弃（artist 空时仅要求 title 匹配）
         if (titleScore == 0 || artistScore == 0) return -1;
         int albumScore = track.album.empty() ? 0 :
                          ChineseMusicClientBase::matchScore(song.album, track.album);

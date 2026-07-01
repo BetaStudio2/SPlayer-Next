@@ -174,6 +174,8 @@ export interface AppearanceSettings {
   layoutMode: LayoutMode;
   /** 路由切换动效 */
   routeTransition: RouteTransition;
+  /** 侧边栏导航高亮动效 */
+  sidebarNavStyle: "default" | "animated";
   /** 侧边栏折叠 */
   sidebarCollapsed: boolean;
   /** 侧边栏歌单项显示封面 */

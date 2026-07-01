@@ -695,6 +695,7 @@
       "download": "下载配置",
       "localCache": "本地与缓存",
       "plugins": "插件管理",
+      "scraper": "刮削与扫描",
       "about": "关于软件"
     },
     "section": {
@@ -736,6 +737,9 @@
       "songCache": "歌曲缓存",
       "cache": "缓存",
       "database": "数据库",
+      "library": "曲库",
+      "scanner": "扫描",
+      "scraper": "刮削",
       "downloadLocation": "下载配置",
       "downloadGeneral": "下载选项",
       "downloadTags": "写入内容",
@@ -917,7 +921,13 @@
     },
     "confirm": {
       "highResourceTitle": "高占用功能",
-      "highResourceContent": "开启后可能明显增加内存与 CPU 占用，低配设备上或出现卡顿。确定开启吗？"
+      "highResourceContent": "开启后可能明显增加内存与 CPU 占用，低配设备上或出现卡顿。确定开启吗？",
+      "highParallelismTitle": "高并发扫描",
+      "highParallelismContent": "极高并发可能导致系统卡顿或内存溢出"
+    },
+    "scannerParallelism": {
+      "label": "扫描并行度",
+      "description": "扫描音频文件时并发处理的线程数，0 表示自动"
     },
     "useAMSpring": {
       "label": "弹簧动画调试开关",
@@ -1347,6 +1357,12 @@
     "sidebarCollapsed": {
       "label": "折叠侧边栏",
       "description": "将侧边栏折叠为图标模式"
+    },
+    "sidebarNavStyle": {
+      "label": "导航高亮动效",
+      "description": "切换侧边栏导航高亮指示器的动画风格",
+      "default": "静态",
+      "animated": "滑动"
     },
     "sidebarPlaylistCover": {
       "label": "歌单显示封面",

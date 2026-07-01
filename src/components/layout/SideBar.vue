@@ -258,6 +258,7 @@ onMounted(() => {
         :items="menuItems"
         :model-value="activeKey"
         :collapsed="appearance.sidebarCollapsed"
+        :nav-style="appearance.sidebarNavStyle"
         @select="onSelect"
       />
     </div>

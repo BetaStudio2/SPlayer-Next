@@ -3,7 +3,7 @@
  */
 import { StreamingAuthError, StreamingHttpError, StreamingTimeoutError } from "./errors";
 
-const REQUEST_TIMEOUT = 15_000;
+const REQUEST_TIMEOUT = 30_000;
 
 /**
  * 带超时的 fetch；超时抛 StreamingTimeoutError

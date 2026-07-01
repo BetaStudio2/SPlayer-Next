@@ -28,14 +28,18 @@ const props = withDefaults(
     collapsed?: boolean;
     /** 挂载时把选中项滚动到可视区中间 */
     centerActiveOnMount?: boolean;
+    /** 导航高亮动效模式 */
+    navStyle?: "default" | "animated";
   }>(),
-  { size: "medium", collapsed: false, centerActiveOnMount: false },
+  { size: "medium", collapsed: false, centerActiveOnMount: false, navStyle: "default" },
 );
 
 const emit = defineEmits<{
   "update:modelValue": [key: string];
   select: [key: string];
 }>();
+
+const navRef = ref<HTMLElement | null>(null);
 
 /** 各菜单项行元素，按 key 收集，用于定位选中项 */
 const itemEls = new Map<string, HTMLElement>();
@@ -44,11 +48,59 @@ const setItemEl = (key: string, el: Element | ComponentPublicInstance | null): v
   else itemEls.delete(key);
 };
 
+/** 滑动高亮条的位置 */
+const highlighterStyle = ref<{ top: string; height: string }>({ top: "0", height: "0" });
+
+const updateHighlighter = () => {
+  if (props.navStyle !== "animated" || !props.modelValue || !navRef.value) return;
+  const activeEl = itemEls.get(props.modelValue);
+  if (!activeEl) return;
+  const navRect = navRef.value.getBoundingClientRect();
+  const elRect = activeEl.getBoundingClientRect();
+  highlighterStyle.value = {
+    top: `${elRect.top - navRect.top + 8}px`,
+    height: `${elRect.height - 16}px`,
+  };
+};
+
+/** 当 modelValue / collapsed / items 变化时重新计算高亮位置 */
+watch(
+  () => [props.modelValue, props.collapsed, props.items] as const,
+  () => nextTick(updateHighlighter),
+  { deep: true },
+);
+
+/** 切换到 animated 模式时立即定位高亮条，并管理 resize 监听 */
+watch(
+  () => props.navStyle,
+  (style) => {
+    window.removeEventListener("resize", updateHighlighter);
+    if (style === "animated") {
+      window.addEventListener("resize", updateHighlighter);
+      nextTick(updateHighlighter);
+    }
+  },
+);
+
 onMounted(() => {
   if (!props.centerActiveOnMount) return;
   const key = props.modelValue;
   if (!key) return;
-  nextTick(() => itemEls.get(key)?.scrollIntoView({ block: "center" }));
+  nextTick(() => {
+    itemEls.get(key)?.scrollIntoView({ block: "center" });
+    updateHighlighter();
+  });
+
+  // 窗口大小变化时重新定位高亮条（由 navStyle watch 统一管理）
+  if (props.navStyle === "animated") {
+    window.addEventListener("resize", updateHighlighter);
+  }
+});
+
+onUnmounted(() => {
+  if (props.navStyle === "animated") {
+    window.removeEventListener("resize", updateHighlighter);
+  }
 });
 
 const sizeClass = computed(() => {
@@ -88,7 +140,17 @@ const handleSelect = (item: SMenuItem) => {
 </script>
 
 <template>
-  <nav class="flex flex-col gap-1">
+  <nav
+    ref="navRef"
+    class="flex flex-col gap-1"
+    :class="{ 'relative': navStyle === 'animated' }"
+  >
+    <!-- 滑动高亮条（animated 模式） -->
+    <div
+      v-if="navStyle === 'animated' && !collapsed"
+      class="absolute left-0 w-0.75 rounded-full bg-primary pointer-events-none z-1 transition-[top,height] duration-250"
+      :style="{ top: highlighterStyle.top, height: highlighterStyle.height }"
+    />
     <template v-for="item in items" :key="item.key">
       <!-- 分隔线 -->
       <SDivider v-if="item.type === 'divider'" class="mx-1" />
@@ -147,7 +209,8 @@ const handleSelect = (item: SMenuItem) => {
           >
             <component :is="item.trailing" />
           </div>
-          <Transition name="fade">
+          <!-- 默认模式：静态高亮指示器 -->
+          <Transition v-if="navStyle === 'default'" name="fade">
             <span
               v-if="modelValue === item.key"
               class="absolute left-0 top-2 bottom-2 w-0.75 rounded-full bg-primary"

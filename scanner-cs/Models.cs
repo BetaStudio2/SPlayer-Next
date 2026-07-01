@@ -86,6 +86,9 @@ public sealed class ScanProgress
     public int Upserted { get; set; }
     [JsonPropertyName("errors")]
     public int Errors { get; set; }
+    /// <summary>被永久隔离的损坏文件数</summary>
+    [JsonPropertyName("trained")]
+    public int Trained { get; set; }
     /// <summary>扫描开始时间戳（毫秒），仅日志用，不序列化</summary>
     [JsonIgnore]
     public long StartedAt { get; set; }
@@ -110,4 +113,21 @@ public sealed class ScanResult
     public bool Canceled { get; set; }
     [JsonPropertyName("errors")]
     public int Errors { get; set; }
+    /// <summary>被永久隔离的损坏文件数（ScanResult）</summary>
+    [JsonPropertyName("trained")]
+    public int Trained { get; set; }
+}
+
+/// <summary>
+/// 场景默认 JSON 序列化配置。不缩进、小驼峰命名、宽松 long 转换。
+/// </summary>
+public static class ScannerJsonOptions
+{
+    public static readonly JsonSerializerOptions Default = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters = { new LongTimestampConverter() },
+    };
 }

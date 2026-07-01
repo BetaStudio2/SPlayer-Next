@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SettingCategory } from "@/types/settings-schema";
 import type { SMenuItem } from "@/components/ui/SMenu.vue";
+import { useSettingsStore } from "@/stores/settings";
 
 const props = defineProps<{
   categories: SettingCategory[];
@@ -12,6 +13,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const { appearance } = useSettingsStore();
 
 const menuItems = computed<SMenuItem[]>(() =>
   props.categories.map((cat) => ({
@@ -26,6 +28,7 @@ const menuItems = computed<SMenuItem[]>(() =>
   <SMenu
     :items="menuItems"
     :model-value="activeId"
+    :nav-style="appearance.sidebarNavStyle"
     center-active-on-mount
     @select="emit('select', $event)"
   />

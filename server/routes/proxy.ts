@@ -8,7 +8,7 @@ import type { ApiPlatform } from "@shared/types/apis";
 
 const app = new Hono();
 
-/** 各平台调用器：统一返回 { status?, body?, data? }，与桌面端 ipc:apis 一致 */
+/** 各平台调用器：统一返回 { data, status? } */
 const dispatch = async (
   platform: ApiPlatform,
   name: string,
@@ -17,7 +17,7 @@ const dispatch = async (
   switch (platform) {
     case "netease": {
       const res = await callNetease(name, params);
-      return { status: res.status, body: res.body };
+      return { body: res.body, data: res.body, status: res.status };
     }
     case "qqmusic": {
       const data = await callQQMusic(name, params);

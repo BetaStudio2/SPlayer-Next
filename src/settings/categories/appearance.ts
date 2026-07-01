@@ -149,10 +149,30 @@ const appearanceCategory: SettingCategory = {
           defaultValue: "fade",
         },
         {
+          key: "sidebarNavStyle",
+          type: "select",
+          binding: { store: "settings", path: "appearance.sidebarNavStyle" },
+          options: [
+            { value: "default", labelKey: "settings.sidebarNavStyle.default" },
+            { value: "animated", labelKey: "settings.sidebarNavStyle.animated" },
+          ],
+          defaultValue: "default",
+        },
+        {
           key: "sidebarCollapsed",
           type: "switch",
           binding: { store: "settings", path: "appearance.sidebarCollapsed" },
           defaultValue: false,
+        },
+        {
+          key: "sidebarNavStyle",
+          type: "select",
+          binding: { store: "settings", path: "appearance.sidebarNavStyle" },
+          options: [
+            { value: "default", labelKey: "settings.sidebarNavStyle.default" },
+            { value: "animated", labelKey: "settings.sidebarNavStyle.animated" },
+          ],
+          defaultValue: "default",
         },
         {
           key: "sidebarPlaylistCover",

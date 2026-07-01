@@ -10,49 +10,23 @@
  * 统一入口：callKugou(name, params)
  */
 
-import { createHash } from "node:crypto";
+import { LRUCache } from "@main/apis/common/cache";
 import { modules } from "./modules";
 import type { KGParams } from "./core/types";
 
-/** 2 分钟响应缓存 */
-const DEFAULT_TTL = 2 * 60 * 1000;
-const MAX_ENTRIES = 200;
-
-interface CacheEntry {
-  value: unknown;
-  expireAt: number;
-}
-
-const cache = new Map<string, CacheEntry>();
-
-const hashParams = (params: unknown): string =>
-  createHash("md5")
-    .update(JSON.stringify(params ?? {}))
-    .digest("hex")
-    .slice(0, 8);
-
-const cacheGet = (key: string): unknown => {
-  const hit = cache.get(key);
-  if (!hit) return undefined;
-  if (hit.expireAt <= Date.now()) {
-    cache.delete(key);
-    return undefined;
-  }
-  cache.delete(key);
-  cache.set(key, hit);
-  return hit.value;
+const isEmptyResult = (value: unknown): boolean => {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  if (Array.isArray(v.songs) && v.songs.length === 0) return true;
+  return false;
 };
 
-const cacheSet = (key: string, value: unknown, ttl = DEFAULT_TTL): void => {
-  if (cache.size >= MAX_ENTRIES) {
-    const oldest = cache.keys().next().value;
-    if (oldest !== undefined) cache.delete(oldest);
-  }
-  cache.set(key, { value, expireAt: Date.now() + ttl });
-};
+const apiCache = new LRUCache({
+  shouldCache: (v) => !isEmptyResult(v),
+});
 
 export const clearKugouCache = (): void => {
-  cache.clear();
+  apiCache.clear();
 };
 
 /**
@@ -65,19 +39,11 @@ export const callKugou = async (name: string, params: KGParams = {}): Promise<an
   const fn = Object.hasOwn(modules, name) ? modules[name] : undefined;
   if (!fn) throw new Error(`unknown kg api: ${name}`);
 
-  const key = `${name}|${hashParams(params)}`;
-  const hit = cacheGet(key);
+  const key = LRUCache.key(name, params);
+  const hit = apiCache.get(key);
   if (hit !== undefined) return hit;
 
   const value = await fn(params);
-  // 空结果不缓存，避免一次失败被钉死 2 分钟
-  if (!isEmptyResult(value)) cacheSet(key, value);
+  apiCache.set(key, value);
   return value;
-};
-
-const isEmptyResult = (value: unknown): boolean => {
-  if (!value || typeof value !== "object") return false;
-  const v = value as Record<string, unknown>;
-  if (Array.isArray(v.songs) && v.songs.length === 0) return true;
-  return false;
 };

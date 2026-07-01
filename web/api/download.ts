@@ -56,6 +56,32 @@ export const downloadApi: DownloadApi = {
   },
 
   async browserSave(req: DownloadRequest): Promise<void> {
+    // 流媒体源：直接触发浏览器下载（避免通过 Node.js 代理缓冲整个文件）
+    // 利用 <a download> 标签让浏览器原生接管下载
+    if (req.track.source === "streaming") {
+      // 对于 streaming 源，url 已经是 /api/streaming/stream/ 代理路径
+      // 通过 fetch + blob 方式触发浏览器下载
+      const res = await fetch("/api/download/browser-stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: req.url,
+          fileName: req.track.title ? `${req.track.title}.${req.declaredFormat ?? "mp3"}` : "download.mp3",
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const fallbackArtist = req.track.artists.map((item) => item.name).join(", ");
+      const fallbackName = `${fallbackArtist ? `${fallbackArtist} - ` : ""}${req.track.title}.${req.declaredFormat ?? "mp3"}`
+        .replace(/[\\/:*?"<>|]/g, " ")
+        .trim();
+      const fileName = parseFilename(res.headers.get("content-disposition"), fallbackName);
+      const result = await systemApi.saveFile(await blob.arrayBuffer(), fileName);
+      if (!result.success) throw new Error(result.error ?? "save failed");
+      return;
+    }
+
+    // 已有解析 URL：直接用 fetch 拉取后交给浏览器保存
     const res = await fetch("/api/download/browser", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

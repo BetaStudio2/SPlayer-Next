@@ -119,7 +119,7 @@ func TrackToChild(t model.Track, userID string, includeStarred bool, isStarredFn
 		child["track"] = t.TrackNo.Int64
 	}
 	if t.BitRate.Valid {
-		child["bitRate"] = t.BitRate.Int64 / 1000
+		child["bitRate"] = t.BitRate.Int64
 	}
 	if t.FileCtime.Valid {
 		child["created"] = TimestampISO(t.FileCtime.Int64)

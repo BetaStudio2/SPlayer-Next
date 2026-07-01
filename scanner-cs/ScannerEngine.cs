@@ -14,15 +14,16 @@ namespace SPlayer.Scanner;
 ///
 /// 职责：
 /// 1. 递归收集目录下的音频文件（带安全限制，自动去重）
-/// 2. 扫描前创建 SQLite 蓝图表（记录 DB 中现有文件）
-/// 3. 用 TagLibSharp 解析元数据 + 提取封面 + 提取歌词
-/// 4. 并行解析 + Channel 批量写入 TS 层
-/// 5. 每个文件从蓝图中消费移除（原子操作："已处理"持久化）
-/// 6. 扫描后清理蓝图残留（＝磁盘已删除的曲目）
+/// 2. 全量/增量分流：全量清空重建，增量加载快照到内存
+/// 3. 用 TagLibSharp 并行解析元数据 + 提取封面 + 提取歌词
+/// 4. Channel 批量写入 SQLite（直写）
+/// 5. 快照残留清理（已从磁盘删除的曲目）
+/// 6. trained 文件统一移入 quarantine 目录
 /// 7. 通过 stdout 输出 JSON 进度（TS 层监听）
 ///
-/// 蓝图崩溃安全：扫描崩溃后蓝图表仍存在 DB 中，
-/// 下次扫描会重建蓝图（DROP + CREATE），不会丢失"已处理"状态判定。
+/// 崩溃安全：
+///   - _scanner_errors 表持久化失败计数，crash 后不丢失"已知坏文件"状态
+///   - _scanner_trained 表持久化待隔离标记，crash 后扫描引擎重启时可继续
 /// </summary>
 public sealed class ScannerEngine
 {
@@ -35,6 +36,7 @@ public sealed class ScannerEngine
 
     private readonly IScannerDatabase _db;
     private readonly string _coverCacheDir;
+    private readonly string _quarantineDir;
     private readonly int _batchSize;
     private readonly bool _incremental;
 
@@ -47,6 +49,7 @@ public sealed class ScannerEngine
     public ScannerEngine(
         IScannerDatabase db,
         string coverCacheDir,
+        string quarantineDir,
         int batchSize = 50,
         bool incremental = true,
         long? maxFileSizeBytes = null,
@@ -56,6 +59,7 @@ public sealed class ScannerEngine
     {
         _db = db;
         _coverCacheDir = coverCacheDir;
+        _quarantineDir = quarantineDir;
         _batchSize = Math.Max(1, batchSize);
         _incremental = incremental;
 
@@ -63,18 +67,27 @@ public sealed class ScannerEngine
         _maxFileSizeBytes = maxFileSizeBytes ?? (500L * 1024 * 1024);
         _maxScanFiles = maxScanFiles ?? 50000;
         _maxScanErrors = maxScanErrors ?? 50;
-        _maxParallelism = maxParallelism ?? AdaptiveConcurrency.ForIOBound();
+
+        // 并发数：优先构造函数参数 → 环境变量 → AdaptiveConcurrency
+        if (maxParallelism.HasValue)
+            _maxParallelism = maxParallelism.Value;
+        else if (int.TryParse(Environment.GetEnvironmentVariable("SCANNER_MAX_PARALLELISM"), out var envP))
+            _maxParallelism = envP;
+        else
+            _maxParallelism = AdaptiveConcurrency.ForIOBound();
+        if (_maxParallelism < 1) _maxParallelism = AdaptiveConcurrency.ForIOBound();
     }
 
     /// <summary>
     /// 启动扫描
     ///
-    /// 扫描流程（蓝图驱动）：
+    /// 扫描流程：
     ///   1. 递归收集文件
-    ///   2. 创建蓝图表（复制 DB 中所有文件路径 + mtime + size 到临时表）
-    ///   3. 并行解析文件，每文件调用 BlueprintConsume（原子移除 + 增量比对）
+    ///   2. 全量/增量分流：全量清空重建，增量加载快照到内存
+    ///   3. 并行解析文件，从内存快照 TryRemove（不变跳过），错误文件标记 trained
     ///   4. 批量 upsert 新/变更的数据
-    ///   5. BlueprintCleanup：蓝图残留 = 磁盘已删除 → 清理 DB 记录
+    ///   5. 快照残留 = 磁盘已删除 → 清理 DB 记录
+    ///   6. trained 文件统一移入 quarantine 目录并清理 DB 记录
     /// </summary>
     public async Task<ScanResult> ScanAsync(List<string> dirs, CancellationToken ct = default)
     {
@@ -94,16 +107,44 @@ public sealed class ScannerEngine
         EmitProgress(progress);
         LogInfo($"发现 {files.Count} 个音频文件");
 
-        // 2. 创建蓝图表（SQLite 临时表，记录 DB 中现有文件路径 + mtime + size）
-        //    崩溃安全：即使进程 crash，蓝图仍留在 DB 中
-        bool blueprintOk = false;
-        LogInfo("创建扫描蓝图表...");
-        try { await _db.BlueprintInitAsync(ct); blueprintOk = true; }
-        catch (Exception ex) { LogWarn($"创建蓝图失败，将退化到全量扫描: {ex.Message}"); }
+        // 2. 全量扫描模式：清空所有曲目记录 + 错误记录
+        //    增量扫描模式：加载 tracks 快照到内存做比对（无需 _scanner_blueprint 表）
+        ConcurrentDictionary<string, (long Mtime, long Size)>? trackSnapshot = null;
+        if (!_incremental)
+        {
+            LogInfo("全量扫描模式：清空所有曲目记录 + 错误记录");
+            try { await _db.ClearAllTracksAsync(ct); }
+            catch (Exception ex) { LogWarn($"清空曲目失败: {ex.Message}"); }
+            try { await _db.ClearParseErrorsAsync(ct); }
+            catch (Exception ex) { LogWarn($"清空错误记录失败: {ex.Message}"); }
+        }
+        else
+        {
+            LogInfo("增量扫描模式：加载已有曲目快照...");
+            try { trackSnapshot = await _db.LoadTrackSnapshotAsync(ct); }
+            catch (Exception ex) { LogWarn($"加载快照失败，将退化到全量扫描: {ex.Message}"); }
+        }
 
-        // 3. 并行解析 + Channel 批量写入
-        var channel = Channel.CreateUnbounded<TrackMetadata>(new UnboundedChannelOptions { SingleWriter = false });
+        // 4. 并行解析 + Channel 批量写入（有界 + Wait 背压，写入跟不上时自然阻塞解析线程）
+        var channel = Channel.CreateBounded<TrackMetadata>(new BoundedChannelOptions(1024)
+        {
+            FullMode = BoundedChannelFullMode.Wait,
+            SingleWriter = false,
+        });
         var writer = Task.Run(async () => await ChannelWriterAsync(channel.Reader, result, ct), ct);
+
+        // 2.5 一次性加载错误路径快照到内存（全量模式已清空，增量模式加载 fail_count >= 3 的路径）
+        //     避免并行循环中每文件查 DB 导致的锁竞争串行化
+        var errorSnapshot = new HashSet<string>(StringComparer.Ordinal);
+        if (_incremental)
+        {
+            try
+            {
+                errorSnapshot = await _db.LoadErrorSnapshotAsync(ct);
+                LogInfo($"加载错误快照: {errorSnapshot.Count} 个已隔离路径");
+            }
+            catch (Exception ex) { LogWarn($"加载错误快照失败: {ex.Message}"); }
+        }
 
         var parserOptions = new ParallelOptions
         {
@@ -129,31 +170,34 @@ public sealed class ScannerEngine
 
                 lock (_lock) { progress.Current = file; }
 
-                // 从蓝图中消费此路径（原子操作：移除 + 增量比对）
-                // 始终消费（即使非增量），确保 cleanup 时蓝图只保留"磁盘上不存在"的文件
+                // 增量扫描：从内存快照 TryRemove，不变跳过
                 bool shouldSkip = false;
                 var fi = SafeFileInfo(file);
-                if (blueprintOk && fi != null && fi.Exists)
+                if (trackSnapshot != null && fi != null && fi.Exists)
                 {
-                    try
+                    if (trackSnapshot.TryRemove(file, out var cached))
                     {
-                        var consume = await _db.BlueprintConsumeAsync(
-                            file, ToUnixMs(fi.LastWriteTimeUtc), fi.Length, itemCt);
-
-                        // 仅 incremental 模式下跳过未变化文件
-                        if (_incremental && consume.Exists && consume.Unchanged)
-                            shouldSkip = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        LogWarn($"蓝图消费失败 {file}: {ex.Message}");
-                        // 蓝图不可用 → 退化到全量扫描，不中止
-                        blueprintOk = false;
+                        var unchanged = cached.Mtime > 0
+                            && cached.Mtime == ToUnixMs(fi.LastWriteTimeUtc)
+                            && cached.Size == fi.Length;
+                        if (unchanged) shouldSkip = true;
                     }
                 }
                 if (shouldSkip)
                 {
                     lock (_lock) { progress.Scanned++; result.Scanned++; }
+                    TryEmitProgress(ref lastEmit, progress, result);
+                    return;
+                }
+
+                // 错误文件跳过检查：从内存快照判断连续解析失败 >= 3 次 → 标记隔离
+                // （避免每文件查 DB，消除锁竞争串行化瓶颈）
+                if (errorSnapshot.Contains(file))
+                {
+                    LogWarn($"标记损坏文件（待隔离 trained）: {file}");
+                    try { await _db.MarkTrainedAsync(file, itemCt); }
+                    catch (Exception ex) { LogWarn($"标记隔离失败 {file}: {ex.Message}"); }
+                    lock (_lock) { progress.Scanned++; result.Scanned++; result.Trained++; progress.Trained = result.Trained; }
                     TryEmitProgress(ref lastEmit, progress, result);
                     return;
                 }
@@ -170,6 +214,9 @@ public sealed class ScannerEngine
                     int errCount;
                     lock (_lock) { errCount = ++consecutiveErrors; }
                     lock (_lock) { result.Errors++; }
+                    // 记录解析失败到 _scanner_errors 表（含具体原因）
+                    try { await _db.RecordParseErrorAsync(file, "parse_failed", itemCt); }
+                    catch { /* 非致命错误 */ }
                     if (errCount >= _maxScanErrors)
                     {
                         LogError($"连续失败达到上限 {_maxScanErrors}，中止扫描");
@@ -197,12 +244,13 @@ public sealed class ScannerEngine
 
         await writer;
 
-        // 4. 清理蓝图残留（＝存在于 DB 但磁盘上已删除的文件）
-        if (!ct.IsCancellationRequested)
+        // 4. 清理快照残留（＝磁盘已删除的文件）
+        if (!ct.IsCancellationRequested && trackSnapshot != null && !trackSnapshot.IsEmpty)
         {
+            var stale = trackSnapshot.Keys.ToList();
             try
             {
-                var deleted = await _db.BlueprintCleanupAsync(ct);
+                var deleted = await _db.DeleteTracksByPathsAsync(stale, ct);
                 if (deleted > 0)
                 {
                     result.Deleted = deleted;
@@ -215,11 +263,100 @@ public sealed class ScannerEngine
             }
         }
 
+        // 5. 排空写队列，确保所有 trained 标记和错误记录已持久化
+        try { await _db.FlushAsync(ct); }
+        catch (Exception ex) { LogWarn($"drain 写队列失败: {ex.Message}"); }
+
+        // 6. 统一处理隔离文件：移入 quarantine 目录并清理数据库记录
+        if (!ct.IsCancellationRequested)
+        {
+            try { await QuarantineTrainedFilesAsync(ct); }
+            catch (Exception ex) { LogError($"隔离处理异常: {ex.Message}"); }
+        }
+
         result.Total = files.Count;
         result.Canceled = ct.IsCancellationRequested;
         sw.Stop();
-        LogInfo($"扫描完成: {result.Scanned}/{result.Total}（upsert={result.Upserted}, delete={result.Deleted}, errors={result.Errors}, {sw.ElapsedMilliseconds}ms）");
+        LogInfo($"扫描完成: {result.Scanned}/{result.Total}（upsert={result.Upserted}, delete={result.Deleted}, trained={result.Trained}, errors={result.Errors}, {sw.ElapsedMilliseconds}ms）");
         return result;
+    }
+
+    /// <summary>
+    /// 统一处理已标记 trained 的文件：
+    /// 1. 从 _scanner_trained 表读出所有待隔离路径
+    /// 2. 将文件从原始位置移入 quarantine 目录（以 MD5 前缀防重名）
+    /// 3. 从 tracks 表删除对应记录（如果是之前解析成功的文件后损坏）
+    /// 4. 从 _scanner_errors 表删除对应错误记录
+    /// 5. 清空 _scanner_trained 表
+    /// </summary>
+    private async Task QuarantineTrainedFilesAsync(CancellationToken ct)
+    {
+        var paths = await _db.GetTrainedPathsAsync(ct);
+        if (paths.Count == 0) return;
+
+        LogInfo($"开始隔离 {paths.Count} 个损坏文件 → {_quarantineDir}");
+        Directory.CreateDirectory(_quarantineDir);
+
+        var moved = 0;
+        var failedMove = new List<string>();
+
+        foreach (var path in paths)
+        {
+            if (ct.IsCancellationRequested) break;
+
+            try
+            {
+                if (!File.Exists(path))
+                {
+                    // 文件已被手动删除，只清记录
+                    moved++;
+                    continue;
+                }
+
+                // 以 MD5(path) + 原文件名 防止重名冲突
+                var hash = Md5Hex(path);
+                var name = Path.GetFileName(path);
+                var dest = Path.Combine(_quarantineDir, $"{hash}_{name}");
+
+                // 如果目标已存在（理论上不会），追加数字后缀
+                var counter = 1;
+                while (File.Exists(dest))
+                {
+                    dest = Path.Combine(_quarantineDir, $"{hash}_{counter}_{name}");
+                    counter++;
+                }
+
+                File.Move(path, dest);
+                moved++;
+            }
+            catch (Exception ex)
+            {
+                LogWarn($"隔离文件失败 {path}: {ex.Message}");
+                failedMove.Add(path);
+            }
+        }
+
+        // 清理 tracks 和 errors 中所有已标记 trained 的记录
+        try
+        {
+            var delTracks = await _db.DeleteTracksByPathsAsync(paths, ct);
+            if (delTracks > 0) LogInfo($"隔离后清理 {delTracks} 条曲目记录");
+        }
+        catch (Exception ex) { LogWarn($"清理隔离曲目记录失败: {ex.Message}"); }
+
+        try
+        {
+            var delErrors = await _db.DeleteParseErrorsByPathsAsync(paths, ct);
+            if (delErrors > 0) LogInfo($"隔离后清理 {delErrors} 条错误记录");
+        }
+        catch (Exception ex) { LogWarn($"清理隔离错误记录失败: {ex.Message}"); }
+
+        await _db.ClearTrainedAsync(ct);
+
+        if (failedMove.Count > 0)
+            LogWarn($"隔离完成: {moved}/{paths.Count} 成功, {failedMove.Count} 移动失败（记录已清理）");
+        else
+            LogInfo($"隔离完成: {moved} 个文件已移入 {_quarantineDir}");
     }
 
     /// <summary>

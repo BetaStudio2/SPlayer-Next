@@ -9,49 +9,14 @@
  * 统一入口：callQQMusic(name, params)
  */
 
-import { createHash } from "node:crypto";
+import { LRUCache } from "@main/apis/common/cache";
 import { modules } from "./modules";
 import type { QMParams } from "./core/types";
 
-/** 2 分钟响应缓存 */
-const DEFAULT_TTL = 2 * 60 * 1000;
-const MAX_ENTRIES = 200;
-
-interface CacheEntry {
-  value: unknown;
-  expireAt: number;
-}
-
-const cache = new Map<string, CacheEntry>();
-
-const hashParams = (params: unknown): string =>
-  createHash("md5")
-    .update(JSON.stringify(params ?? {}))
-    .digest("hex")
-    .slice(0, 8);
-
-const cacheGet = (key: string): unknown => {
-  const hit = cache.get(key);
-  if (!hit) return undefined;
-  if (hit.expireAt <= Date.now()) {
-    cache.delete(key);
-    return undefined;
-  }
-  cache.delete(key);
-  cache.set(key, hit);
-  return hit.value;
-};
-
-const cacheSet = (key: string, value: unknown, ttl = DEFAULT_TTL): void => {
-  if (cache.size >= MAX_ENTRIES) {
-    const oldest = cache.keys().next().value;
-    if (oldest !== undefined) cache.delete(oldest);
-  }
-  cache.set(key, { value, expireAt: Date.now() + ttl });
-};
+const apiCache = new LRUCache();
 
 export const clearQQMusicCache = (): void => {
-  cache.clear();
+  apiCache.clear();
 };
 
 /**
@@ -64,11 +29,11 @@ export const callQQMusic = async (name: string, params: QMParams = {}): Promise<
   const fn = Object.hasOwn(modules, name) ? modules[name] : undefined;
   if (!fn) throw new Error(`unknown qm api: ${name}`);
 
-  const key = `${name}|${hashParams(params)}`;
-  const hit = cacheGet(key);
+  const key = LRUCache.key(name, params);
+  const hit = apiCache.get(key);
   if (hit !== undefined) return hit;
 
   const value = await fn(params);
-  cacheSet(key, value);
+  apiCache.set(key, value);
   return value;
 };

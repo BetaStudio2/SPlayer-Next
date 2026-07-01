@@ -284,14 +284,45 @@ func Search(w http.ResponseWriter, r *http.Request, endpoint string) {
 	artistCount := clampNonNeg(middleware.ParseIntOr(q.Get("artistCount"), 10))
 	albumCount := clampNonNeg(middleware.ParseIntOr(q.Get("albumCount"), 10))
 	songCount := clampNonNeg(middleware.ParseIntOr(q.Get("songCount"), 10))
-	artistOffset := clampNonNeg(middleware.ParseIntOr(q.Get("artistOffset"), 0))
-	albumOffset := clampNonNeg(middleware.ParseIntOr(q.Get("albumOffset"), 0))
-	songOffset := clampNonNeg(middleware.ParseIntOr(q.Get("songOffset"), 0))
+	// offset 只保非负，不能截断上限——否则超出 500 后每页都返回同一批，客户端无限追加重复曲目
+	artistOffset := clampOffset(middleware.ParseIntOr(q.Get("artistOffset"), 0))
+	albumOffset := clampOffset(middleware.ParseIntOr(q.Get("albumOffset"), 0))
+	songOffset := clampOffset(middleware.ParseIntOr(q.Get("songOffset"), 0))
 
 	var tracks []model.Track
 	var err error
+	matchedArtists := make(map[string]db.ArtistSummary)
+	matchedAlbums := make(map[string]db.AlbumSummary)
+	user := middleware.GetUser(r)
+
 	if query != "" {
 		tracks, err = db.SearchTracks(query)
+	} else if artistCount == 0 && albumCount == 0 {
+		// 纯分页：仅拉取歌曲，跳过艺术家/专辑构建
+		tracks, err = db.GetTracksPaginated(songCount, songOffset)
+		if err == nil {
+			// 获取歌曲总数量用于分页判断
+			totalCount, countErr := db.GetTrackCount()
+			if countErr == nil && songOffset+songCount < totalCount {
+				// 还有更多歌曲——前端会根据 songOffset 自动翻页
+			}
+			songList := make([]any, 0, len(tracks))
+			for _, t := range tracks {
+				songList = append(songList, util.TrackToChild(t, user.ID, true, isStarredHelper))
+			}
+			key := "searchResult2"
+			if endpoint == "search3" {
+				key = "searchResult3"
+			}
+			xmlutil.Send(w, r, map[string]any{
+				key: map[string]any{
+					"artist": []any{},
+					"album":  []any{},
+					"song":   songList,
+				},
+			}, nil)
+			return
+		}
 	} else {
 		tracks, err = db.GetAllTracks()
 	}
@@ -300,47 +331,45 @@ func Search(w http.ResponseWriter, r *http.Request, endpoint string) {
 		return
 	}
 
-	matchedArtists := make(map[string]db.ArtistSummary)
-	matchedAlbums := make(map[string]db.AlbumSummary)
-
-	for _, t := range tracks {
-		artists := util.ParseArtists(t.ArtistsJSON)
-		for _, a := range artists {
-			if _, ok := matchedArtists[a.Name]; !ok {
-				at, _ := db.GetArtistTracks(a.Name)
-				cover := ""
-				for _, x := range at {
-					if x.Cover.Valid && x.Cover.String != "" {
-						cover = x.Cover.String
-						break
-					}
-				}
-				matchedArtists[a.Name] = db.ArtistSummary{Name: a.Name, TrackCount: len(at), Cover: nullableString(cover)}
-			}
-		}
-		if t.AlbumJSON.Valid {
-			album := util.ParseAlbum(t.AlbumJSON.String)
-			if album != nil && album.Name != "" {
-				if _, ok := matchedAlbums[album.Name]; !ok {
-					at, _ := db.GetAlbumTracks(album.Name)
+	if query != "" || artistCount > 0 || albumCount > 0 {
+		for _, t := range tracks {
+			artists := util.ParseArtists(t.ArtistsJSON)
+			for _, a := range artists {
+				if _, ok := matchedArtists[a.Name]; !ok {
+					at, _ := db.GetArtistTracks(a.Name)
 					cover := ""
-					artistName := ""
-					if len(at) > 0 {
-						artistName = util.FirstArtist(util.ParseArtists(at[0].ArtistsJSON))
-					}
 					for _, x := range at {
 						if x.Cover.Valid && x.Cover.String != "" {
 							cover = x.Cover.String
 							break
 						}
 					}
-					matchedAlbums[album.Name] = db.AlbumSummary{Name: album.Name, Cover: nullableString(cover), Artists: artistName, TrackCount: len(at)}
+					matchedArtists[a.Name] = db.ArtistSummary{Name: a.Name, TrackCount: len(at), Cover: nullableString(cover)}
+				}
+			}
+			if t.AlbumJSON.Valid {
+				album := util.ParseAlbum(t.AlbumJSON.String)
+				if album != nil && album.Name != "" {
+					if _, ok := matchedAlbums[album.Name]; !ok {
+						at, _ := db.GetAlbumTracks(album.Name)
+						cover := ""
+						artistName := ""
+						if len(at) > 0 {
+							artistName = util.FirstArtist(util.ParseArtists(at[0].ArtistsJSON))
+						}
+						for _, x := range at {
+							if x.Cover.Valid && x.Cover.String != "" {
+								cover = x.Cover.String
+								break
+							}
+						}
+						matchedAlbums[album.Name] = db.AlbumSummary{Name: album.Name, Cover: nullableString(cover), Artists: artistName, TrackCount: len(at)}
+					}
 				}
 			}
 		}
 	}
 
-	user := middleware.GetUser(r)
 	artistList := sliceMapArtists(matchedArtists, artistOffset, artistCount)
 	albumList := sliceMapAlbums(matchedAlbums, albumOffset, albumCount)
 	songList := make([]any, 0)
@@ -511,6 +540,14 @@ func clampNonNeg(n int) int {
 	}
 	if n > 500 {
 		return 500
+	}
+	return n
+}
+
+// clampOffset 仅保证 offset 非负，不设上限——分页偏移截断会导致重复返回同一页数据
+func clampOffset(n int) int {
+	if n < 0 {
+		return 0
 	}
 	return n
 }

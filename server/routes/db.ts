@@ -8,6 +8,7 @@
  * 内部鉴权：通过 x-proxy-key header 校验（环境变量 PROXY_KEY），
  * 默认值仅用于开发，生产环境必须设置。
  */
+import { existsSync } from "node:fs";
 import { Hono } from "hono";
 import { upsertTracks, deleteTracksByPaths, type UpsertTrack } from "@main/database";
 import { getDb, getScraperDb } from "@main/database";
@@ -61,137 +62,6 @@ app.post("/delete", async (c) => {
     return c.json({ ok: true, affected: paths.length });
   } catch (err) {
     libraryLog.error("[db-proxy] delete 失败:", err);
-    return c.json({ ok: false, error: err instanceof Error ? err.message : "unknown" }, 500);
-  }
-});
-
-/** GET /file-records —— 返回增量扫描比对所需的文件记录 */
-app.get("/file-records", (c) => {
-  const rows = getDb()
-    .prepare("SELECT path, COALESCE(file_mtime, 0) as mtime, file_size as size FROM tracks")
-    .all() as { path: string; mtime: number; size: number }[];
-  return c.json({ ok: true, records: rows });
-});
-
-/* ------------------------------------------------------------------ */
-/* 扫描蓝图表（Blueprint）—— 替代纯内存 \"records + allSeen\"           */
-/* 崩溃安全：蓝图持久化在 SQLite 中，扫描崩溃后不会丢失"已处理"状态      */
-/* ------------------------------------------------------------------ */
-
-/**
- * POST /blueprint/init —— 创建扫描蓝图表，记录当前 DB 中所有文件路径。
- * 蓝图表是普通持久表（非 TEMP，以避免 HTTP 多连接不可见）。
- * 扫描结束后 cleanup 删除。
- */
-app.post("/blueprint/init", (c) => {
-  const db = getDb();
-  db.exec(`
-    DROP TABLE IF EXISTS _scanner_blueprint;
-    CREATE TABLE IF NOT EXISTS _scanner_blueprint (
-      path TEXT PRIMARY KEY,
-      mtime INTEGER NOT NULL DEFAULT 0,
-      size INTEGER NOT NULL DEFAULT 0
-    );
-    INSERT INTO _scanner_blueprint (path, mtime, size)
-    SELECT path, COALESCE(file_mtime, 0), COALESCE(file_size, 0) FROM tracks;
-  `);
-  const count = db
-    .prepare("SELECT COUNT(*) as cnt FROM _scanner_blueprint")
-    .get() as { cnt: number };
-  libraryLog.info(`[blueprint] 已创建蓝图，包含 ${count.cnt} 条记录`);
-  return c.json({ ok: true, total: count.cnt });
-});
-
-/**
- * POST /blueprint/consume  body: { path, mtime?, size? }
- *
- * 原子操作：检查文件是否在蓝图中，并移除。
- * 响应：
- *   { ok: true, exists: true, unchanged: true }  → 文件未变，跳过
- *   { ok: true, exists: true, unchanged: false } → 文件已变，需要重新解析
- *   { ok: true, exists: false }                  → 新文件，需要入库
- */
-app.post("/blueprint/consume", async (c) => {
-  try {
-    const { path, mtime, size } = (await c.req.json()) as {
-      path: string;
-      mtime?: number;
-      size?: number;
-    };
-    if (!path) return c.json({ ok: false, error: "missing path" }, 400);
-
-    const db = getDb();
-    const row = db
-      .prepare("SELECT mtime, size FROM _scanner_blueprint WHERE path = ?")
-      .get(path) as { mtime: number; size: number } | undefined;
-
-    if (!row) {
-      return c.json({ ok: true, exists: false });
-    }
-
-    // 从蓝图中移除（无论是否变化，都已"被处理"）
-    db.prepare("DELETE FROM _scanner_blueprint WHERE path = ?").run(path);
-
-    // 判断文件是否未变化（mtime + size 精确比对）
-    const unchanged =
-      mtime !== undefined && size !== undefined &&
-      row.mtime === mtime && row.size === size;
-
-    return c.json({ ok: true, exists: true, unchanged });
-  } catch (err) {
-    libraryLog.error("[blueprint] consume 失败:", err);
-    return c.json({ ok: false, error: err instanceof Error ? err.message : "unknown" }, 500);
-  }
-});
-
-/**
- * POST /blueprint/cleanup —— 删除蓝图中残留的曲目（＝磁盘已删除），并销毁蓝图
- * 同时清理关联的 scrape_queue 孤儿项，防止 Pending 任务指向不存在的曲目。
- * 响应：{ ok: true, deleted: N }
- */
-app.post("/blueprint/cleanup", async (c) => {
-  try {
-    const db = getDb();
-    const stale = db
-      .prepare("SELECT path FROM _scanner_blueprint")
-      .all() as { path: string }[];
-
-    if (stale.length === 0) {
-      db.exec("DROP TABLE IF EXISTS _scanner_blueprint");
-      return c.json({ ok: true, deleted: 0 });
-    }
-
-    const paths = stale.map((r) => r.path);
-    deleteTracksByPaths(paths);
-
-    // 清理 scrape_queue 孤儿：从 scrapestate.db 移除无效引用
-    const sdb = getScraperDb();
-    const orphanCleanup = sdb.transaction(() => {
-      let orphanCount = 0;
-      const orphans = sdb
-        .prepare(
-          `SELECT s.track_id FROM scrape_queue s
-           WHERE s.track_id NOT IN (SELECT id FROM tracks)`,
-        )
-        .all() as { track_id: string }[];
-      const delStmt = sdb.prepare("DELETE FROM scrape_queue WHERE track_id = ?");
-      for (const o of orphans) {
-        delStmt.run(o.track_id);
-        orphanCount++;
-      }
-      return orphanCount;
-    });
-    const orphanCount = orphanCleanup();
-    if (orphanCount > 0) {
-      libraryLog.info(`[blueprint] 清理 ${orphanCount} 个 scrape_queue 孤儿项`);
-    }
-
-    db.exec("DROP TABLE IF EXISTS _scanner_blueprint");
-
-    libraryLog.info(`[blueprint] 清理 ${paths.length} 条失效记录`);
-    return c.json({ ok: true, deleted: paths.length, orphans: orphanCount });
-  } catch (err) {
-    libraryLog.error("[blueprint] cleanup 失败:", err);
     return c.json({ ok: false, error: err instanceof Error ? err.message : "unknown" }, 500);
   }
 });
@@ -266,6 +136,61 @@ app.get("/tracks/:id", (c) => {
     isrc: row.isrc,
     duration: row.duration,
     path: row.path,
+  });
+});
+
+/**
+ * GET /analyze —— 数据库完整性分析
+ *
+ * 返回 tracks 表的状态统计，用于诊断数据库共享导致的脏数据问题。
+ * 无需代理密钥鉴权（只读操作）。
+ */
+app.get("/analyze", (c) => {
+  const db = getDb();
+
+  // 总行数
+  const totalRow = db.prepare("SELECT COUNT(*) as count FROM tracks").get() as { count: number };
+
+  // 唯一 path 数
+  const uniquePathRow = db.prepare("SELECT COUNT(DISTINCT path) as count FROM tracks").get() as {
+    count: number;
+  };
+
+  // path 重复统计
+  const dupRows = db
+    .prepare(
+      `SELECT path, COUNT(*) as cnt, GROUP_CONCAT(id) as ids
+       FROM tracks
+       GROUP BY path
+       HAVING cnt > 1
+       LIMIT 20`,
+    )
+    .all() as { path: string; cnt: number; ids: string }[];
+
+  // path 中文件还在磁盘上的比例（采样前 1000 条）
+  const samplePaths = db
+    .prepare("SELECT path FROM tracks LIMIT 1000")
+    .all() as { path: string }[];
+  let onDisk = 0;
+  for (const row of samplePaths) {
+    if (existsSync(row.path)) onDisk++;
+  }
+
+  return c.json({
+    ok: true,
+    totalRows: totalRow.count,
+    uniquePaths: uniquePathRow.count,
+    duplicatePaths: dupRows.length,
+    duplicates: dupRows.map((r) => ({
+      path: r.path,
+      count: r.cnt,
+      ids: r.ids.split(","),
+    })),
+    diskHealth: {
+      sampled: samplePaths.length,
+      onDisk,
+      orphanEstimate: samplePaths.length - onDisk,
+    },
   });
 });
 
