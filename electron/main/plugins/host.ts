@@ -5,9 +5,10 @@
  * dispatch 根据 method 去做真实工作（网络/存储），再通过 sandbox.sendHostResult 回传。
  */
 
-import type { HostCallMethod, HostRequestOptions } from "@shared/types/plugin";
+import type { HostCallMethod, HostRequestOptions, PluginGrant } from "@shared/types/plugin";
 import { PluginErrorCodes } from "@shared/defaults/plugin-api";
-import type { Sandbox } from "./sandbox";
+import { coreLog } from "@main/utils/logger";
+import { pluginHost } from "./host-process";
 import { hostRequest } from "./net";
 import {
   pluginStorageGet,
@@ -17,15 +18,27 @@ import {
 } from "./storage";
 import { playerControl } from "@main/services/playerControl";
 
-/** 处理一次 worker→host 调用 */
+/** 处理一次 plugin→host 调用 */
 export const dispatchHostCall = async (
-  sandbox: Sandbox,
   pluginId: string,
+  grant: PluginGrant[],
   callId: string,
   method: HostCallMethod,
   args: unknown[],
 ): Promise<void> => {
   try {
+    // 权限门控
+    if (method === "request" && !grant.includes("network")) {
+      throw Object.assign(new Error(`plugin "${pluginId}" lacks "network" grant`), {
+        code: PluginErrorCodes.PERMISSION_DENIED,
+      });
+    }
+    if (method.startsWith("player.") && !grant.includes("control")) {
+      coreLog.warn(`[plugin:${pluginId}] 缺少 "control" 权限，拒绝调用 ${method}`);
+      throw Object.assign(new Error(`plugin "${pluginId}" lacks "control" grant`), {
+        code: PluginErrorCodes.PERMISSION_DENIED,
+      });
+    }
     let data: unknown;
     switch (method) {
       case "request":
@@ -84,9 +97,9 @@ export const dispatchHostCall = async (
           code: PluginErrorCodes.UNKNOWN,
         });
     }
-    sandbox.sendHostResult(callId, true, data);
+    pluginHost.sendHostResult(pluginId, callId, true, data);
   } catch (err) {
-    sandbox.sendHostResult(callId, false, undefined, {
+    pluginHost.sendHostResult(pluginId, callId, false, undefined, {
       code: ((err as any)?.code as string) ?? PluginErrorCodes.UNKNOWN,
       message: err instanceof Error ? err.message : String(err),
     });

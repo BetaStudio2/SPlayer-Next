@@ -185,7 +185,7 @@ const toggleLyric = (): void => {
     >
       <div
         v-show="isExpanded"
-        class="fixed inset-0 z-200 bg-surface overflow-hidden text-cover"
+        class="fixed inset-0 z-200 overflow-hidden text-cover"
         :class="immersive ? 'cursor-none [&_*]:!cursor-none' : ''"
         style="--lp-color: rgb(var(--s-cover))"
         @mouseenter="onPlayerMouseEnter"
@@ -287,6 +287,7 @@ const toggleLyric = (): void => {
                 fontSize: lyricFontSize,
                 fontWeight: String(settings.lyric.fontWeight),
                 fontFamily: settings.lyric.fontFamily || undefined,
+                mixBlendMode: settings.lyric.lyricBlendMode,
               }"
             >
               <AMLLLyrics

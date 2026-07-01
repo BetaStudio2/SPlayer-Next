@@ -2,8 +2,8 @@
  * 插件脚本加载器
  *
  * - 读取脚本文件（.js 或 gz_ 压缩文本）
- * - 解析头部 JSDoc 元数据（`@name` / `@version` / ...）
- * - 生成稳定的 pluginId（name + sha1(source).slice(0,8)）
+ * - 解析头部 JSDoc 元数据（`@id` / `@name` / `@version` / ...）
+ * - 生成稳定的 pluginId（优先作者声明的 `@id`，否则按 `平台.名称` 兜底），跨版本不变以支持原地更新
  * - 返回 { source, manifest }
  */
 
@@ -13,8 +13,9 @@ import crypto from "node:crypto";
 import zlib from "node:zlib";
 import {
   PLUGIN_TYPES,
+  PLUGIN_GRANTS,
+  type PluginGrant,
   type PluginManifest,
-  type PluginPlatform,
   type PluginType,
 } from "@shared/types/plugin";
 import { HOST_API_LEVEL, PluginErrorCodes } from "@shared/defaults/plugin-api";
@@ -28,6 +29,7 @@ const FIELD_LIMITS: Record<string, number> = {
   author: 56,
   homepage: 1024,
   version: 36,
+  changelog: 500,
 };
 
 // JSDoc 风格的 `* @key value`
@@ -46,14 +48,17 @@ export const decompressIfNeeded = (raw: string): string => {
 };
 
 interface HeaderFields {
+  id?: string;
+  grant?: string;
   name?: string;
   description?: string;
   version?: string;
   author?: string;
   homepage?: string;
-  platform?: PluginPlatform;
   apiLevel?: number;
   type?: PluginType;
+  updateUrl?: string;
+  changelog?: string;
 }
 
 const parseHeader = (source: string): HeaderFields => {
@@ -70,6 +75,12 @@ const parseHeader = (source: string): HeaderFields => {
     const limit = FIELD_LIMITS[key];
     const val = limit && raw.length > limit ? raw.slice(0, limit) + "..." : raw;
     switch (key) {
+      case "id":
+        out.id = val;
+        break;
+      case "grant":
+        out.grant = raw;
+        break;
       case "name":
       case "description":
       case "version":
@@ -77,8 +88,13 @@ const parseHeader = (source: string): HeaderFields => {
       case "homepage":
         out[key] = val;
         break;
-      case "platform":
-        out.platform = val === "lx" ? "lx" : "splayer";
+      case "updateUrl":
+      case "updateURL":
+        out.updateUrl = raw;
+        break;
+      case "changelog":
+        // 单行头里用字面 \n 表示换行，卡片按 pre-wrap 渲染
+        out.changelog = val.replace(/\\n/g, "\n");
         break;
       case "apiLevel": {
         const n = parseInt(val, 10);
@@ -97,12 +113,52 @@ const parseHeader = (source: string): HeaderFields => {
 
 const sha1 = (data: string): string => crypto.createHash("sha1").update(data).digest("hex");
 
-/** 规范化 name 为 id 可用的 slug */
+/** 规范化 name 为 id 片段的 slug；纯非 ASCII 名会得到空串，交给 deriveId 兜底 */
 const slugify = (name: string): string =>
   name
     .toLowerCase()
     .replace(/[^a-z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "plugin";
+    .replace(/^-+|-+$/g, "");
+
+/** 规范化作者声明的 @id：小写、仅留 [a-z0-9._-]、去首尾分隔符并截断 */
+const normalizeId = (raw: string): string =>
+  raw
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^[-._]+|[-._]+$/g, "")
+    .slice(0, 64);
+
+/**
+ * 计算插件身份 id
+ * - 作者声明 `@id`（规范化后非空）→ 直接用，改名/改源码都不变，将来市场也按它做唯一键
+ * - 否则按名称 slug 兜底；纯非 ASCII 名（如纯中文）slug 为空时退化为名称哈希，避免全部塌成同一个 id
+ * @param declared - 头部 `@id`（可空）
+ * @param name - 展示名
+ */
+const deriveId = (declared: string | undefined, name: string): string => {
+  const normalized = declared ? normalizeId(declared) : "";
+  if (normalized) return normalized;
+  const slug = slugify(name);
+  return slug || sha1(name).slice(0, 8);
+};
+
+/**
+ * 计算插件权限
+ * - 音源类（type 非 control，含缺省与 lx 脚本）：联网解析 URL 是其本职，自动授予 network
+ * - 控制类：解析 @grant 按白名单去重过滤（缺省 []）——控制插件能看到播放数据，联网外发须显式声明
+ * @param declared - 头部 @grant 原文（可空）
+ * @param type - 插件类型
+ */
+const deriveGrants = (declared: string | undefined, type: PluginType): PluginGrant[] => {
+  if (type !== "control") return ["network"];
+  if (!declared) return [];
+  const valid = (PLUGIN_GRANTS as readonly string[]).includes.bind(PLUGIN_GRANTS);
+  const parsed = declared
+    .split(/[,\s]+/)
+    .map((item) => item.trim().toLowerCase())
+    .filter((item): item is PluginGrant => valid(item));
+  return [...new Set(parsed)];
+};
 
 export interface LoadedScript {
   /** 纯文本源码 */
@@ -125,7 +181,6 @@ export const loadScript = (rawOrPath: string, isPath: boolean, fileName?: string
   const name = header.name || `user_api_${hash.slice(0, 6)}`;
   const version = header.version || "0.0.0";
 
-  const platform: PluginPlatform = header.platform ?? (wasCompressed ? "lx" : "splayer");
   const apiLevel = header.apiLevel ?? 1;
   const rawType: PluginType = header.type ?? "source";
 
@@ -144,7 +199,10 @@ export const loadScript = (rawOrPath: string, isPath: boolean, fileName?: string
     );
   }
 
-  const id = `${slugify(name)}-${hash.slice(0, 8)}`;
+  // 身份优先用作者声明的 @id（跨版本/改名都稳定）；无 @id 时按名称兜底。
+  // 兜底依赖名称而非源码，故源码更新 id 不变、可原地替换；无 @name 的脚本其 name 已含源码 hash，按内容区分、不享受原地更新。
+  const id = deriveId(header.id, name);
+  const grant = deriveGrants(header.grant, rawType);
   const finalFileName = fileName ?? (isPath ? path.basename(rawOrPath) : `${id}.js`);
 
   const manifest: PluginManifest = {
@@ -154,10 +212,12 @@ export const loadScript = (rawOrPath: string, isPath: boolean, fileName?: string
     description: header.description,
     author: header.author,
     homepage: header.homepage,
-    platform,
+    grant,
     type: rawType,
     apiLevel,
     hash,
+    updateUrl: header.updateUrl,
+    changelog: header.changelog,
     installedAt: Date.now(),
     fileName: finalFileName,
   };
