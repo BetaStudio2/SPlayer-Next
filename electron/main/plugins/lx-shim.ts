@@ -1,10 +1,10 @@
 /**
- * lx-music-desktop user_api 脚本兼容垫片
+ * lx-music-desktop user_api 脚本兼容兼容层
  *
  * 在沙箱里注入 `window.lx` / `globalThis.lx`，把 lx 的 `EVENT_NAMES` / `request` / `on` / `send` / `utils`
  * / `currentScriptInfo` / `version` / `env` 桥接到 splayer 宿主 API。
  *
- * 被 sandbox.worker.ts 导入，运行在 utilityProcess + vm.Context 外层（注入前）。
+ * 被 host.worker.ts 导入，运行在 utilityProcess + vm.Context 外层（注入前）。
  */
 
 import crypto from "node:crypto";
@@ -139,7 +139,7 @@ const buildLxUtils = (): object => ({
 });
 
 /**
- * 安装 lx 垫片
+ * 安装 lx 兼容层
  * @param sandboxGlobal 沙箱上下文对象（vm.createContext 前的 plain object）
  * @param splayer 宿主 API 实例
  * @param handlers 共享的 action handler 注册表

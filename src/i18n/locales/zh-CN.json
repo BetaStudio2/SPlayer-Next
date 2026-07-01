@@ -79,6 +79,7 @@
     "cancel": "取消",
     "close": "关闭",
     "configure": "配置",
+    "more": "更多",
     "save": "保存",
     "reset": "重置",
     "search": "搜索",
@@ -729,7 +730,8 @@
       "lastfm": "Last.fm",
       "externalApi": "外部 API",
       "systemConfig": "系统配置",
-      "pluginsList": "已安装插件",
+      "pluginManage": "导入插件",
+      "pluginsList": "插件管理",
       "streaming": "流媒体管理",
       "songCache": "歌曲缓存",
       "cache": "缓存",
@@ -969,6 +971,13 @@
       "label": "歌词字重",
       "description": "歌词文字粗细"
     },
+    "lyricBlendMode": {
+      "label": "歌词混合模式",
+      "description": "控制歌词与背景的混合方式",
+      "normal": "Normal",
+      "screen": "Screen",
+      "plusLighter": "Plus Lighter"
+    },
     "followCoverColor": {
       "label": "跟随封面颜色",
       "description": "歌词颜色跟随当前封面主色调"
@@ -1124,6 +1133,10 @@
       "label": "锁定窗口",
       "description": "锁定后鼠标点击将穿透到下层窗口，无法拖动"
     },
+    "desktopLyricUseCSSDrag": {
+      "label": "使用 CSS 拖拽",
+      "description": "使用 CSS -webkit-app-region 拖拽，在 Wayland 环境建议启用"
+    },
     "dynamicIslandEnabled": {
       "label": "开启灵动岛",
       "description": "在屏幕顶部显示一个简洁的悬浮歌词窗口，可拖离至任意位置"
@@ -1175,6 +1188,10 @@
     "dynamicIslandNonOcclusive": {
       "label": "非遮挡模式",
       "description": "鼠标穿透窗口，悬停时隐藏内容"
+    },
+    "dynamicIslandUseCSSDrag": {
+      "label": "使用 CSS 拖拽",
+      "description": "使用 CSS -webkit-app-region 拖拽，在 Wayland 环境建议启用"
     },
     "taskbarLyricEnabled": {
       "label": "开启任务栏歌词",
@@ -1547,14 +1564,24 @@
       "done": "全部数据已清除"
     },
     "plugins": {
+      "securityWarningTitle": "安装前请注意安全风险",
+      "securityWarning": "插件为第三方代码，软件已尽可能做了沙箱隔离，但仍无法完全杜绝风险，恶意插件可能访问你的数据或执行危险操作。请仅安装来自可信来源的插件。",
       "hint": "从本地或在线安装",
-      "hintDetail": "通过插件扩展软件音乐能力，同时兼容 lx 插件",
+      "hintDetail": "通过插件扩展软件功能，详见",
+      "docs": "插件文档",
       "importLocal": "本地导入",
       "importFromUrl": "在线导入",
       "importUrlTitle": "从 URL 导入插件",
       "importUrlPlaceholder": "粘贴 .js 脚本的 https:// 链接",
       "importUrlSubmit": "导入",
       "importUrlInvalid": "请输入合法的 http 或 https 链接",
+      "market": "插件市场",
+      "install": "安装",
+      "installed": "已安装",
+      "marketEmpty": "暂无插件",
+      "marketError": "加载失败",
+      "publishHint": "想分享你的插件？",
+      "publishAction": "前往发布",
       "importSuccess": "插件导入成功",
       "importFailed": "插件导入失败",
       "empty": "暂无已安装的插件",
@@ -1569,9 +1596,16 @@
       "uninstallFailed": "卸载失败",
       "by": "作者",
       "sources": "支持源",
-      "updateAvailable": "有更新",
-      "newVersion": "发现新版本",
+      "pendingUpdate": "待更新",
+      "noChangelog": "暂无更新说明",
       "openUpdateUrl": "查看更新",
+      "checkUpdate": "检查更新",
+      "checkUpdateFailed": "检查更新失败",
+      "updateFound": "发现新版本",
+      "updateLatest": "已是最新版本",
+      "update": "更新",
+      "updateSuccess": "插件已更新",
+      "updateFailed": "更新失败，可点「查看更新」手动安装",
       "status": {
         "ready": "已就绪",
         "loading": "加载中",
@@ -1580,7 +1614,34 @@
         "unloaded": "未加载"
       },
       "sectionSource": "音源插件",
-      "sectionControl": "控制插件"
+      "sectionControl": "控制插件",
+      "detail": {
+        "title": "插件详情",
+        "intro": "简介",
+        "grants": "权限",
+        "contributes": "能力",
+        "info": "信息",
+        "noDescription": "暂无简介",
+        "grantNone": "该插件未声明任何权限",
+        "autoGranted": "自动授予",
+        "sources": "音源",
+        "events": "事件",
+        "controls": "反向控制",
+        "controlsYes": "是",
+        "settingsCount": "设置项",
+        "menus": "菜单项",
+        "id": "ID",
+        "author": "作者",
+        "apiLevel": "API 级别",
+        "installed": "安装",
+        "updated": "更新",
+        "homepage": "主页"
+      },
+      "grant": {
+        "network": { "label": "联网", "desc": "插件可发起网络请求" },
+        "control": { "label": "控制", "desc": "插件可控制播放器" },
+        "ui": { "label": "界面", "desc": "插件可扩展或修改应用界面" }
+      }
     },
     "pluginManager": {
       "label": "插件管理",

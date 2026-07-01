@@ -76,6 +76,7 @@ export const defaultSystemConfig: SystemConfig = {
     animation: true,
     alwaysOnTop: true,
     locked: false,
+    useCSSDrag: false,
   },
   dynamicIsland: {
     scale: 1,
@@ -91,6 +92,7 @@ export const defaultSystemConfig: SystemConfig = {
     nonOcclusive: false,
     doubleLine: false,
     showTranslation: false,
+    useCSSDrag: false,
   },
   taskbarLyric: {
     position: "auto",

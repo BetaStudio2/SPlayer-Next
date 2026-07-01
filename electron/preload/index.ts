@@ -1,7 +1,13 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
 import type { TaskbarLyricSettings } from "@shared/types/settings";
-import type { PluginInfo, PluginResolveUrlArgs } from "@shared/types/plugin";
+import type {
+  PluginInfo,
+  PluginResolveUrlArgs,
+  PluginInvokeMenuArgs,
+  PluginMatchLyricArgs,
+  PluginMatchCoverArgs,
+} from "@shared/types/plugin";
 import type { HotkeyActionId, HotkeyBinding, HotkeyConflict } from "@shared/types/hotkey";
 import type { LoadOptions, TrackSource } from "@shared/types/player";
 import type { StreamingServerConfig } from "@shared/types/streaming";
@@ -301,8 +307,20 @@ const api = {
     // 写入控制类插件配置项
     setSetting: (id: string, key: string, value: unknown) =>
       ipcRenderer.invoke("plugin:setSetting", id, key, value),
+    // 手动检查更新
+    checkUpdate: (id: string) => ipcRenderer.invoke("plugin:checkUpdate", id),
+    // 一键更新
+    applyUpdate: (id: string) => ipcRenderer.invoke("plugin:applyUpdate", id),
     // 解析播放 URL
     resolveUrl: (args: PluginResolveUrlArgs) => ipcRenderer.invoke("plugin:resolveUrl", args),
+    // 触发插件自定义菜单项
+    invokeMenu: (args: PluginInvokeMenuArgs) => ipcRenderer.invoke("plugin:invokeMenu", args),
+    // 经插件兜底匹配歌词
+    matchLyric: (args: PluginMatchLyricArgs) => ipcRenderer.invoke("plugin:matchLyric", args),
+    // 经插件兜底匹配封面
+    matchCover: (args: PluginMatchCoverArgs) => ipcRenderer.invoke("plugin:matchCover", args),
+    // 拉取插件市场列表
+    market: () => ipcRenderer.invoke("plugin:market"),
     // 订阅插件状态变化
     onStatus: (callback: (info: PluginInfo) => void) =>
       subscribe<PluginInfo>("plugin:status", callback),

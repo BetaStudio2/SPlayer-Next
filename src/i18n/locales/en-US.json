@@ -91,6 +91,7 @@
     "cancel": "Cancel",
     "close": "Close",
     "configure": "Configure",
+    "more": "More",
     "save": "Save",
     "reset": "Reset",
     "search": "Search",
@@ -741,7 +742,8 @@
       "lastfm": "Last.fm",
       "externalApi": "External API",
       "systemConfig": "System",
-      "pluginsList": "Installed Plugins",
+      "pluginManage": "Import Plugins",
+      "pluginsList": "Plugin Management",
       "streaming": "Streaming",
       "songCache": "Song Cache",
       "downloadLocation": "Download Settings",
@@ -981,6 +983,13 @@
       "label": "Font Weight",
       "description": "Lyric text weight"
     },
+    "lyricBlendMode": {
+      "label": "Lyric Blend Mode",
+      "description": "Controls how lyrics blend with the background",
+      "normal": "Normal",
+      "screen": "Screen",
+      "plusLighter": "Plus Lighter"
+    },
     "followCoverColor": {
       "label": "Follow Cover Color",
       "description": "Lyric color follows the current cover art"
@@ -1136,6 +1145,10 @@
       "label": "Lock Window",
       "description": "Make window click-through and non-draggable"
     },
+    "desktopLyricUseCSSDrag": {
+      "label": "Enable CSS Drag",
+      "description": "Enable CSS-based drag, recommended for Wayland environments"
+    },
     "dynamicIslandEnabled": {
       "label": "Enable Dynamic Island",
       "description": "Show a compact floating lyric window at the top of the screen; drag it anywhere"
@@ -1187,6 +1200,10 @@
     "dynamicIslandNonOcclusive": {
       "label": "Non-Occlusive Mode",
       "description": "Click-through window; hide on hover"
+    },
+    "dynamicIslandUseCSSDrag": {
+      "label": "Enable CSS Drag",
+      "description": "Enable CSS-based drag, recommended for Wayland environments"
     },
     "taskbarLyricEnabled": {
       "label": "Enable Taskbar Lyric",
@@ -1559,14 +1576,24 @@
       "done": "All data has been cleared"
     },
     "plugins": {
+      "securityWarningTitle": "Mind the security risks before installing",
+      "securityWarning": "Plugins are third-party code. The app sandboxes them as much as possible, but the risk cannot be fully eliminated — a malicious plugin may access your data or perform dangerous actions. Only install plugins from sources you trust.",
       "hint": "Install from local file or URL",
-      "hintDetail": "Extend music capabilities with plugins, compatible with lx plugins",
+      "hintDetail": "Extend the app with plugins. See the",
+      "docs": "plugin docs",
       "importLocal": "Local",
       "importFromUrl": "From URL",
       "importUrlTitle": "Install plugin from URL",
       "importUrlPlaceholder": "Paste https:// link to a .js script",
       "importUrlSubmit": "Install",
       "importUrlInvalid": "Please enter a valid http or https URL",
+      "market": "Plugin Market",
+      "install": "Install",
+      "installed": "Installed",
+      "marketEmpty": "No plugins available",
+      "marketError": "Failed to load",
+      "publishHint": "Made a plugin?",
+      "publishAction": "Publish",
       "importSuccess": "Plugin imported",
       "importFailed": "Failed to import plugin",
       "empty": "No plugins installed",
@@ -1581,9 +1608,16 @@
       "uninstallFailed": "Uninstall failed",
       "by": "By",
       "sources": "Sources",
-      "updateAvailable": "Update",
-      "newVersion": "New version available",
+      "pendingUpdate": "Update",
+      "noChangelog": "No release notes",
       "openUpdateUrl": "Open update page",
+      "checkUpdate": "Check update",
+      "checkUpdateFailed": "Update check failed",
+      "updateFound": "New version available",
+      "updateLatest": "Already up to date",
+      "update": "Update",
+      "updateSuccess": "Plugin updated",
+      "updateFailed": "Update failed, use \"Open update page\" to install manually",
       "status": {
         "ready": "Ready",
         "loading": "Loading",
@@ -1592,7 +1626,34 @@
         "unloaded": "Unloaded"
       },
       "sectionSource": "Source Plugins",
-      "sectionControl": "Control Plugins"
+      "sectionControl": "Control Plugins",
+      "detail": {
+        "title": "Plugin Details",
+        "intro": "About",
+        "grants": "Permissions",
+        "contributes": "Capabilities",
+        "info": "Info",
+        "noDescription": "No description",
+        "grantNone": "This plugin declares no permissions",
+        "autoGranted": "Auto-granted",
+        "sources": "Sources",
+        "events": "Events",
+        "controls": "Playback control",
+        "controlsYes": "Yes",
+        "settingsCount": "Settings",
+        "menus": "Menu items",
+        "id": "ID",
+        "author": "Author",
+        "apiLevel": "API level",
+        "installed": "Installed",
+        "updated": "Updated",
+        "homepage": "Homepage"
+      },
+      "grant": {
+        "network": { "label": "Network", "desc": "Can make network requests" },
+        "control": { "label": "Control", "desc": "Can control the player" },
+        "ui": { "label": "Interface", "desc": "Can extend or modify the app interface" }
+      }
     },
     "pluginManager": {
       "label": "Plugin Manager",
