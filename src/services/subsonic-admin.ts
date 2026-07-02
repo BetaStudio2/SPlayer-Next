@@ -17,6 +17,8 @@ export interface SubsonicServiceStatus {
   initialized: boolean;
   userCount: number;
   adminExists: boolean;
+  /** Go 后端运行状态 */
+  goBackend: { running: boolean; pid: number | null; startTime: number };
 }
 
 export interface SubsonicServiceUser {
@@ -115,5 +117,21 @@ export const subsonicAdminApi = {
   },
   async deleteShare(id: string): Promise<void> {
     await json(await fetch(`/api/subsonic/shares/${id}`, { method: "DELETE", credentials: "same-origin" }));
+  },
+
+  /* ---- Go 后端管理 ---- */
+
+  async getGoStatus(): Promise<{ running: boolean; pid: number | null; startTime: number }> {
+    return json(await fetch("/api/subsonic/go/status", { credentials: "same-origin" }));
+  },
+  async startGoBackend(): Promise<{ running: boolean; pid: number | null; startTime: number }> {
+    return json(
+      await fetch("/api/subsonic/go/start", { method: "POST", credentials: "same-origin" }),
+    );
+  },
+  async stopGoBackend(): Promise<{ running: boolean; pid: number | null; startTime: number }> {
+    return json(
+      await fetch("/api/subsonic/go/stop", { method: "POST", credentials: "same-origin" }),
+    );
   },
 };

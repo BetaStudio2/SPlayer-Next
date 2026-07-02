@@ -168,6 +168,9 @@ export interface PlayerSettings {
   songLevel: QualityLevel;
 }
 
+/** Toast 消息风格 */
+export type ToastStyle = "default" | "classic";
+
 /** 外观设置 */
 export interface AppearanceSettings {
   /** 布局模式 */
@@ -182,6 +185,8 @@ export interface AppearanceSettings {
   sidebarPlaylistCover: boolean;
   /** 播放栏显示快捷音质切换 */
   showQualitySwitch: boolean;
+  /** Toast 消息风格 */
+  toastStyle: ToastStyle;
   /** 点击关闭按钮的行为 */
   closeAction: "quit" | "hide";
   /** 记忆关闭选择 */

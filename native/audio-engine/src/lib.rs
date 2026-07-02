@@ -689,6 +689,8 @@ pub struct JsScannedTrack {
     pub mtime: f64,
     /// 创建时间（Unix ms）
     pub ctime: f64,
+    /// 内嵌歌词
+    pub lyrics: Option<String>,
 }
 
 impl From<scanner::ScannedTrack> for JsScannedTrack {
@@ -709,6 +711,7 @@ impl From<scanner::ScannedTrack> for JsScannedTrack {
             file_size: track.file_size as f64,
             mtime: track.mtime as f64,
             ctime: track.ctime as f64,
+            lyrics: track.lyrics,
         }
     }
 }

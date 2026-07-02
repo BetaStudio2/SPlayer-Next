@@ -251,6 +251,26 @@ const copyEndpoint = async (): Promise<void> => {
 };
 
 const formatDate = (ts: number): string => new Date(ts).toLocaleString();
+
+/* ---- Go 后端开关 ---- */
+const goBusy = ref(false);
+const toggleGoBackend = async (): Promise<void> => {
+  goBusy.value = true;
+  try {
+    if (status.value?.goBackend.running) {
+      await subsonicAdminApi.stopGoBackend();
+      toast.success("Go 后端已停止");
+    } else {
+      await subsonicAdminApi.startGoBackend();
+      toast.success("Go 后端已启动");
+    }
+    await refresh();
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "操作失败");
+  } finally {
+    goBusy.value = false;
+  }
+};
 </script>
 
 <template>
@@ -330,9 +350,7 @@ const formatDate = (ts: number): string => new Date(ts).toLocaleString();
         <div class="flex items-center gap-2 mb-3">
           <IconLucideServer class="size-5 text-primary" />
           <span class="text-base font-medium">{{ t("subsonic.admin.serviceTitle", "Subsonic 流媒体服务") }}</span>
-          <span class="ml-auto px-2 py-0.5 rounded-full text-xs bg-success/15 text-success">
-            {{ t("common.running", "运行中") }}
-          </span>
+          <span class="ml-auto text-xs text-on-surface-variant/50">{{ t("common.version", "版本") }} {{ status?.apiVersion }}</span>
           <SButton variant="ghost" size="small" :title="t('common.logout', '注销')" @click="handleLogout">
             <template #icon><IconLucideLogOut class="size-4" /></template>
           </SButton>
@@ -358,6 +376,47 @@ const formatDate = (ts: number): string => new Date(ts).toLocaleString();
         </div>
         <div class="mt-3 pt-3 border-t border-on-surface/8 text-xs text-on-surface-variant/70 leading-relaxed">
           {{ t("subsonic.admin.connectHint", "在 Subsonic 客户端（Ultrasonic / playSub 等）的「服务器地址」字段填入上方地址（无需追加 /rest），再输入用户名密码即可连接。") }}
+        </div>
+      </div>
+
+      <!-- Go 后端 -->
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <IconLucideServer class="size-4 text-on-surface-variant" />
+          <span class="text-sm font-medium">Go Subsonic 后端</span>
+          <div class="ml-auto flex items-center gap-2">
+            <div v-if="status?.goBackend" class="flex items-center gap-1.5 text-xs">
+              <span
+                class="size-2 rounded-full"
+                :class="status.goBackend.running ? 'bg-success' : 'bg-on-surface/20'"
+              />
+              <span
+                class="text-on-surface-variant/70"
+                :class="status.goBackend.running ? 'text-success' : ''"
+              >
+                {{ status.goBackend.running ? t("common.running", "运行中") : t("common.stopped", "已停止") }}
+              </span>
+            </div>
+            <SButton
+              variant="secondary"
+              size="small"
+              :loading="goBusy"
+              :type="status?.goBackend?.running ? 'error' : 'primary'"
+              @click="toggleGoBackend"
+            >
+              {{ status?.goBackend?.running ? t("common.stop", "停止") : t("common.start", "启动") }}
+            </SButton>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-on-surface/4">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-on-surface">Go Subsonic 提供完整 Subsonic 协议实现</div>
+            <div class="text-xs text-on-surface-variant/60 mt-0.5">
+              {{ status?.goBackend?.running
+                ? `PID ${status.goBackend.pid} · ${formatDate(status.goBackend.startTime)} 启动`
+                : "未运行，点击上方按钮启动" }}
+            </div>
+          </div>
         </div>
       </div>
 

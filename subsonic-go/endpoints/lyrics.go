@@ -1,7 +1,10 @@
 package endpoints
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/splayer/subsonic-go/db"
@@ -9,6 +12,46 @@ import (
 	"github.com/splayer/subsonic-go/util"
 	"github.com/splayer/subsonic-go/xmlutil"
 )
+
+/** TS 后端地址（Node.js，提供在线歌词注入） */
+func tsBackendURL() string {
+	if v := os.Getenv("SUBSONIC_TS_URL"); v != "" {
+		return strings.TrimRight(v, "/")
+	}
+	return "http://127.0.0.1:8080"
+}
+
+/** 在线歌词注入请求体 */
+type injectLyricReq struct {
+	ID     string `json:"id,omitempty"`
+	Title  string `json:"title"`
+	Artist string `json:"artist,omitempty"`
+}
+
+/** 在线歌词注入响应 */
+type injectLyricResp struct {
+	Main        string `json:"main,omitempty"`
+	Translation string `json:"translation,omitempty"`
+	Romaji      string `json:"romaji,omitempty"`
+}
+
+/** 回调 TS 获取在线歌词 */
+func fetchOnlineLyrics(id, title, artist string) *injectLyricResp {
+	body, _ := json.Marshal(injectLyricReq{ID: id, Title: title, Artist: artist})
+	resp, err := http.Post(tsBackendURL()+"/api/subsonic-inject/lyrics", "application/json", bytes.NewReader(body))
+	if err != nil {
+		return nil
+	}
+	defer resp.Body.Close()
+	var result injectLyricResp
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil
+	}
+	if result.Main == "" {
+		return nil
+	}
+	return &result
+}
 
 // GetLyrics /rest/getLyrics.view
 func GetLyrics(w http.ResponseWriter, r *http.Request) {
@@ -39,11 +82,18 @@ func GetLyrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 取歌词（仅内嵌，在线匹配后续接入 TS API）
+	// 1) 取内嵌歌词
 	var mainLyric string
 	if trackID != "" {
 		if embedded, err := db.GetTrackLyrics(trackID); err == nil && strings.TrimSpace(embedded) != "" {
 			mainLyric = embedded
+		}
+	}
+
+	// 2) 内嵌歌词为空时，回调 TS 获取在线歌词
+	if mainLyric == "" && titleStr != "" {
+		if online := fetchOnlineLyrics(trackID, titleStr, artistStr); online != nil {
+			mainLyric = online.Main
 		}
 	}
 
@@ -80,6 +130,15 @@ func GetLyricsBySongId(w http.ResponseWriter, r *http.Request) {
 
 	embedded, err := db.GetTrackLyrics(id)
 	if err != nil || strings.TrimSpace(embedded) == "" {
+		// 内嵌歌词为空时，回调 TS 获取在线歌词
+		artists := util.ParseArtists(track.ArtistsJSON)
+		artistStr := util.FirstArtist(artists)
+		if online := fetchOnlineLyrics(id, track.Title, artistStr); online != nil {
+			embedded = online.Main
+		}
+	}
+
+	if embedded == "" || strings.TrimSpace(embedded) == "" {
 		xmlutil.Send(w, r, map[string]any{"lyricsList": map[string]any{}}, nil)
 		return
 	}

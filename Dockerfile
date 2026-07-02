@@ -287,16 +287,8 @@ esac
 
 case "$cmd" in
   run)
-    /app/bin/subsonic-go &
-    subsonic_pid="$!"
-    cleanup() {
-      kill "$subsonic_pid" 2>/dev/null || true
-      wait "$subsonic_pid" 2>/dev/null || true
-    }
-    trap cleanup INT TERM EXIT
     node $NODE_ARGS index.js "$@"
     status="$?"
-    cleanup
     exit "$status"
     ;;
   api)

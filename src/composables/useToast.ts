@@ -24,6 +24,8 @@ export interface ToastItem {
   message: string;
   closable: boolean;
   icon: Component | false | undefined;
+  /** 持续时长，0 表示不自动关闭，用于进度条动画 */
+  duration: number;
 }
 
 /** 最大同时显示数量，由组件注册时设置 */
@@ -62,7 +64,7 @@ const push = (type: ToastType, message: string, options?: ToastOptions): ToastIn
     remove(toasts[0].id);
   }
   const id = nextId++;
-  toasts.push({ id, type, message, closable, icon });
+  toasts.push({ id, type, message, closable, icon, duration });
   if (duration > 0) {
     timers.set(
       id,

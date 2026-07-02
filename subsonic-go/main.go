@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/splayer/subsonic-go/db"
@@ -46,10 +50,27 @@ func main() {
 		port = "8081"
 	}
 	addr := ":" + port
+
+	srv := &http.Server{Addr: addr, Handler: r}
+
+	// SIGTERM 优雅退出（TS 进程管理器发 SIGTERM 时平滑关闭）
+	go func() {
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
+		<-sig
+		log.Printf("[subsonic-go] 收到退出信号，正在关闭...")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("[subsonic-go] 关闭异常: %v", err)
+		}
+	}()
+
 	log.Printf("[subsonic-go] Subsonic API 监听 %s", addr)
-	if err := http.ListenAndServe(addr, r); err != nil {
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("[subsonic-go] 服务启动失败: %v", err)
 	}
+	log.Printf("[subsonic-go] 已安全退出")
 }
 
 // dispatch 统一端点分发（与 TS 版 switch 逻辑一致）

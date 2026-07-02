@@ -86,3 +86,8 @@ export const setMatchedId = (
 export const clearLyricMatchCache = (): void => {
   getDb().prepare("DELETE FROM lyric_match_cache").run();
 };
+
+/** 删除指定指纹的缓存 */
+export const deleteMatchedId = (fingerprint: string, platform: string): void => {
+  getDb().prepare("DELETE FROM lyric_match_cache WHERE fingerprint = ? AND platform = ?").run(fingerprint, platform);
+};

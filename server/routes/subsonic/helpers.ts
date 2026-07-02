@@ -3,14 +3,14 @@
  *
  * 响应封装、数据映射、封面/流媒体服务。
  */
-import { existsSync } from "node:fs";
+import { createReadStream, existsSync } from "node:fs";
+import { open } from "node:fs/promises";
+import { Readable } from "node:stream";
 import path from "node:path";
-import sharp from "sharp";
 import type { Context } from "hono";
 import { albumIdOf, artistIdOf, isStarred, findAlbumNameById, findArtistNameById } from "@main/database/subsonic";
-import { getAlbumTracks, getArtistTracks, getTracksByIds } from "@main/database";
+import { getAlbumTracks, getArtistTracks } from "@main/database";
 import { getCoverCacheDir } from "@main/utils/config";
-import { serverLog } from "@main/utils/logger";
 import { serveAudioStream } from "@main/utils/stream";
 import { toXml } from "./xml";
 import type { Track, Artist } from "@shared/types/player";
@@ -159,7 +159,7 @@ export const collectIds = (q: Record<string, string>, key: string): string[] => 
 /* 封面服务                                                            */
 /* ------------------------------------------------------------------ */
 
-export const serveCover = async (c: Context, id: string, size: number): Promise<Response> => {
+export const serveCover = async (c: Context, id: string, _size: number): Promise<Response> => {
   let coverPath = path.join(getCoverCacheDir(), `${id}.img`);
   if (!existsSync(coverPath)) {
     let track: Track | undefined;
@@ -175,19 +175,23 @@ export const serveCover = async (c: Context, id: string, size: number): Promise<
   if (!existsSync(coverPath)) {
     return c.body("cover not found", 404);
   }
+  // 流式直出，无 sharp 重编码，零内存膨胀
+  let fd: Awaited<ReturnType<typeof open>> | undefined;
+  let mime = "image/jpeg";
   try {
-    const pipeline = size > 0
-      ? sharp(coverPath).resize(size, size, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 85 })
-      : sharp(coverPath).jpeg({ quality: 90 });
-    const buf = await pipeline.toBuffer();
-    return new Response(buf, {
-      status: 200,
-      headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400" },
-    });
-  } catch (err) {
-    serverLog.warn(`[subsonic] 封面处理失败 ${id}:`, err);
-    return c.body("cover error", 500);
-  }
+    fd = await open(coverPath, "r");
+    const buf = Buffer.alloc(4);
+    const { bytesRead } = await fd.read(buf, 0, 4, 0);
+    if (bytesRead >= 4) {
+      if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) mime = "image/png";
+    }
+  } catch { /* fallback to jpeg */ }
+  finally { await fd?.close(); }
+  const stream = Readable.toWeb(createReadStream(coverPath)) as ReadableStream;
+  return new Response(stream, {
+    status: 200,
+    headers: { "Content-Type": mime, "Cache-Control": "public, max-age=86400" },
+  });
 };
 
 /* ------------------------------------------------------------------ */

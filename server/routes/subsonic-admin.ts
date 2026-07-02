@@ -28,6 +28,7 @@ import {
   type SubsonicUser,
 } from "@main/database/subsonic";
 import { randomUUID } from "node:crypto";
+import * as goBackend from "./go-backend";
 
 const app = new Hono();
 
@@ -76,18 +77,17 @@ const requireAdmin: MiddlewareHandler = async (c, next) => {
 /* 公开端点                                                            */
 /* ------------------------------------------------------------------ */
 
-/** GET /status —— 服务状态（端点、版本、是否已初始化） */
+/** GET /status —— 服务状态（端点、版本、是否已初始化、Go 后端状态） */
 app.get("/status", (c) => {
   const users = listUsers();
   const host = c.req.header("host") ?? "localhost";
   const proto = c.req.header("x-forwarded-proto") ?? (c.req.url.startsWith("https") ? "https" : "http");
   const adminExists = users.some((u) => u.isAdmin);
   const baseUrl = `${proto}://${host}`;
+  const go = goBackend.getStatus();
   return c.json(
     ok({
       enabled: true,
-      // 服务器根地址：填入 Subsonic 客户端"服务器地址"字段
-      // 客户端会自动追加 /rest/<endpoint>，服务端同时兼容双重 /rest 前缀
       endpoint: baseUrl,
       restEndpoint: `${baseUrl}/rest`,
       apiVersion: "1.16.1",
@@ -95,6 +95,7 @@ app.get("/status", (c) => {
       initialized: adminExists,
       userCount: users.length,
       adminExists,
+      goBackend: go,
     }),
   );
 });
@@ -255,6 +256,38 @@ app.delete("/shares/:id", requireAdmin, (c) => {
     deleteShare(id, u.id);
   }
   return c.json(ok({ deleted: true }));
+});
+
+/* ------------------------------------------------------------------ */
+/* Go 后端管理                                                        */
+/* ------------------------------------------------------------------ */
+
+app.get("/go/status", (c) => {
+  return c.json(ok(goBackend.getStatus()));
+});
+
+app.post("/go/start", requireAdmin, async (c) => {
+  if (goBackend.isRunning()) {
+    return c.json(fail("go backend 已在运行"));
+  }
+  try {
+    await goBackend.start();
+    return c.json(ok(goBackend.getStatus()));
+  } catch (err) {
+    return c.json(fail(err instanceof Error ? err.message : "启动失败"));
+  }
+});
+
+app.post("/go/stop", requireAdmin, async (c) => {
+  if (!goBackend.isRunning()) {
+    return c.json(fail("go backend 未运行"));
+  }
+  try {
+    await goBackend.stop();
+    return c.json(ok(goBackend.getStatus()));
+  } catch (err) {
+    return c.json(fail(err instanceof Error ? err.message : "停止失败"));
+  }
 });
 
 export default app;

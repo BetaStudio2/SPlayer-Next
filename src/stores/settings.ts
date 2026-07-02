@@ -28,6 +28,31 @@ const reconcileOrder = <T>(stored: T[], all: readonly T[]): T[] => {
   return [...known, ...missing];
 };
 
+/** 是否运行在 Web（服务端）模式 */
+const isWeb = typeof window !== "undefined" && !window.navigator.userAgent.includes("Electron");
+
+/**
+ * 服务端配置 API 路径前缀（Web 模式使用）
+ */
+const CONFIG_API = "/api/config";
+
+/**
+ * 防抖：延迟 delay ms 后执行 fn，每次调用重置计时器
+ */
+const debounce = <T extends (...args: unknown[]) => void>(
+  fn: T,
+  delay: number,
+): ((...args: Parameters<T>) => void) => {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return (...args: Parameters<T>) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn(...args);
+      timer = null;
+    }, delay);
+  };
+};
+
 export const useSettingsStore = defineStore(
   "settings",
   () => {
@@ -42,6 +67,7 @@ export const useSettingsStore = defineStore(
       sidebarCollapsed: false,
       sidebarPlaylistCover: false,
       showQualitySwitch: false,
+      toastStyle: "default",
       closeAction: "hide",
       rememberCloseChoice: false,
       fontFamily: "",
@@ -146,6 +172,20 @@ export const useSettingsStore = defineStore(
 
     /** 从主进程拉取后端配置 */
     const syncSystem = async (): Promise<void> => {
+      if (isWeb) {
+        try {
+          const resp = await fetch(CONFIG_API);
+          if (resp.ok) {
+            deepAssign(
+              system as unknown as Record<string, unknown>,
+              (await resp.json()) as unknown as Record<string, unknown>,
+            );
+          }
+        } catch {
+          // 服务端配置不可达时忽略，保持默认值
+        }
+        return;
+      }
       try {
         deepAssign(
           system as unknown as Record<string, unknown>,
@@ -205,10 +245,22 @@ export const useSettingsStore = defineStore(
 
     /**
      * 写入后端配置并同步本地
-     * 先就地 mutate 叶子保证 UI 即时反馈，IPC 落盘异步执行
+     * 先就地 mutate 叶子保证 UI 即时反馈，IPC/HTTP 落盘异步执行
      */
     const setSystem = async (keyPath: string, value: unknown): Promise<void> => {
       setByPath(system, keyPath, value);
+      if (isWeb) {
+        try {
+          await fetch(`${CONFIG_API}/${keyPath}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(value),
+          });
+        } catch {
+          console.error("[settings] config.set failed", keyPath);
+        }
+        return;
+      }
       window.api.config.set(keyPath, value).catch((err) => {
         console.error("[settings] config.set failed", keyPath, err);
       });
@@ -241,7 +293,67 @@ export const useSettingsStore = defineStore(
         lyric.springDamping = params.damping;
         lyric.springStiffness = params.stiffness;
       }
+      // Web（服务端）模式下，用户偏好变化同步到服务端
+      if (isWeb) {
+        syncUserPreferencesDebounced();
+      }
     };
+
+    /* ---- Web 模式：服务端用户偏好同步 ---- */
+
+    /** 将 appearance / player / lyric 写入服务端配置 */
+    const syncUserPreferencesToServer = async (): Promise<void> => {
+      try {
+        await fetch(`${CONFIG_API}/replace`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            appearance: toRaw(appearance),
+            player: toRaw(player),
+            lyric: toRaw(lyric),
+            locale: toRaw(locale),
+          }),
+        });
+      } catch {
+        // 静默失败，下次还会尝试
+      }
+    };
+
+    const syncUserPreferencesDebounced = debounce(syncUserPreferencesToServer, 1000);
+
+    /** Web 模式初始化时从服务端拉取用户偏好 */
+    const syncUserPreferencesFromServer = async (): Promise<void> => {
+      try {
+        const resp = await fetch(CONFIG_API);
+        if (!resp.ok) return;
+        const data = (await resp.json()) as Record<string, unknown>;
+        if (data.appearance && typeof data.appearance === "object") {
+          deepAssign(appearance as unknown as Record<string, unknown>, data.appearance as Record<string, unknown>);
+        }
+        if (data.player && typeof data.player === "object") {
+          deepAssign(player as unknown as Record<string, unknown>, data.player as Record<string, unknown>);
+        }
+        if (data.lyric && typeof data.lyric === "object") {
+          deepAssign(lyric as unknown as Record<string, unknown>, data.lyric as Record<string, unknown>);
+        }
+        if (data.locale && typeof data.locale === "string") {
+          locale.value = data.locale as LocaleCode;
+        }
+      } catch {
+        // 静默失败
+      }
+    };
+
+    // Web 模式：首次加载时从服务端拉取偏好
+    if (isWeb) {
+      syncUserPreferencesFromServer();
+      // 深度监听外观/播放器/歌词变化，自动同步到服务端
+      watch(
+        [appearance, player, lyric],
+        () => syncUserPreferencesDebounced(),
+        { deep: true },
+      );
+    }
 
     return {
       locale,

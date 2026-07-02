@@ -75,29 +75,23 @@ onMounted(load);
   >
     <div class="min-w-0 flex-1">
       <div class="text-base">{{ t("settings.downloadDir.label") }}</div>
-      <div v-if="isWeb" class="mt-2 inline-flex rounded-lg bg-on-surface/6 p-1">
-        <button
-          class="px-3 py-1.5 rounded-md text-sm transition-colors"
-          :class="
-            target === 'browser'
-              ? 'bg-primary text-on-primary'
-              : 'text-on-surface-variant hover:text-on-surface'
-          "
+      <div v-if="isWeb" class="mt-2 flex items-center gap-2">
+        <SButton
+          variant="secondary"
+          :type="target === 'browser' ? 'primary' : 'default'"
+          size="small"
           @click="setTarget('browser')"
         >
           {{ t("settings.downloadTarget.browser", "浏览器保存") }}
-        </button>
-        <button
-          class="px-3 py-1.5 rounded-md text-sm transition-colors"
-          :class="
-            target === 'server'
-              ? 'bg-primary text-on-primary'
-              : 'text-on-surface-variant hover:text-on-surface'
-          "
+        </SButton>
+        <SButton
+          variant="secondary"
+          :type="target === 'server' ? 'primary' : 'default'"
+          size="small"
           @click="setTarget('server')"
         >
           {{ t("settings.downloadTarget.server", "保存到服务器") }}
-        </button>
+        </SButton>
       </div>
       <!-- Web 模式：内联编辑 -->
       <div v-if="isWeb && target === 'server' && editing" class="mt-1.5 flex items-center gap-2">

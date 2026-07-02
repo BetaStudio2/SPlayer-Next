@@ -39,6 +39,7 @@ export const scannedToUpsert = (track: JsScannedTrack): UpsertTrack => {
     fileSize: track.fileSize,
     mtime: track.mtime,
     ctime: track.ctime,
+    lyrics: track.lyrics,
   };
 };
 

@@ -137,6 +137,16 @@ const appearanceCategory: SettingCategory = {
           defaultValue: "default",
         },
         {
+          key: "sidebarNavStyle",
+          type: "select",
+          binding: { store: "settings", path: "appearance.sidebarNavStyle" },
+          options: [
+            { value: "default", labelKey: "settings.sidebarNavStyle.default" },
+            { value: "animated", labelKey: "settings.sidebarNavStyle.animated" },
+          ],
+          defaultValue: "default",
+        },
+        {
           key: "routeTransition",
           type: "select",
           binding: { store: "settings", path: "appearance.routeTransition" },
@@ -149,12 +159,12 @@ const appearanceCategory: SettingCategory = {
           defaultValue: "fade",
         },
         {
-          key: "sidebarNavStyle",
+          key: "toastStyle",
           type: "select",
-          binding: { store: "settings", path: "appearance.sidebarNavStyle" },
+          binding: { store: "settings", path: "appearance.toastStyle" },
           options: [
-            { value: "default", labelKey: "settings.sidebarNavStyle.default" },
-            { value: "animated", labelKey: "settings.sidebarNavStyle.animated" },
+            { value: "default", labelKey: "settings.toastStyle.default" },
+            { value: "classic", labelKey: "settings.toastStyle.classic" },
           ],
           defaultValue: "default",
         },
@@ -163,16 +173,6 @@ const appearanceCategory: SettingCategory = {
           type: "switch",
           binding: { store: "settings", path: "appearance.sidebarCollapsed" },
           defaultValue: false,
-        },
-        {
-          key: "sidebarNavStyle",
-          type: "select",
-          binding: { store: "settings", path: "appearance.sidebarNavStyle" },
-          options: [
-            { value: "default", labelKey: "settings.sidebarNavStyle.default" },
-            { value: "animated", labelKey: "settings.sidebarNavStyle.animated" },
-          ],
-          defaultValue: "default",
         },
         {
           key: "sidebarPlaylistCover",

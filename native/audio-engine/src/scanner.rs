@@ -48,6 +48,8 @@ pub struct ScannedTrack {
     pub file_size: u64,
     pub mtime: u64,
     pub ctime: u64,
+    /// 内嵌歌词（USLT / LYRICS 标签）
+    pub lyrics: Option<String>,
 }
 
 /// 扫描事件
@@ -98,6 +100,7 @@ pub(crate) fn probe_fast(path: &str, cover_cache_dir: Option<&str>) -> Option<Sc
 
     let raw_metadata = reader.metadata();
     let tags = metadata::extract_tags(&raw_metadata);
+    let lyrics = metadata::extract_embedded_lyric(&raw_metadata);
 
     let cover =
         cover_cache_dir.and_then(|dir| metadata::extract_cover_thumbnail(&reader, path, dir));
@@ -118,6 +121,7 @@ pub(crate) fn probe_fast(path: &str, cover_cache_dir: Option<&str>) -> Option<Sc
         file_size: 0, // 由调用方填充
         mtime: 0,
         ctime: 0,
+        lyrics,
     })
 }
 

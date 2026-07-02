@@ -101,30 +101,42 @@ export const useStreamingStore = defineStore("streaming", () => {
   const currentCacheKey = (): string | null =>
     activeServerId.value ? cacheKey(activeServerId.value) : null;
 
-  /** 落盘前剥离 cover/avatar URL 上的鉴权参数；落盘的不是可重放凭据 */
-  const stripCacheAuth = (snapshot: ServerCache, type: StreamingServerType): ServerCache => ({
-    songs: snapshot.songs.map((track) =>
-      track.cover ? { ...track, cover: client.stripCoverAuth(track.cover, type) } : track,
-    ),
-    albums: snapshot.albums.map((album) =>
-      album.cover ? { ...album, cover: client.stripCoverAuth(album.cover, type) } : album,
-    ),
-    artists: snapshot.artists.map((artist) =>
-      artist.avatar ? { ...artist, avatar: client.stripCoverAuth(artist.avatar, type) } : artist,
-    ),
-    playlists: snapshot.playlists.map((playlist) =>
-      playlist.cover
-        ? { ...playlist, cover: client.stripCoverAuth(playlist.cover, type) }
-        : playlist,
-    ),
-    updatedAt: snapshot.updatedAt,
-  });
+  /** 落盘前剥离 cover/avatar URL 上的鉴权参数；只在 URL 确实变化时才克隆对象 */
+  const stripCacheAuth = (snapshot: ServerCache, type: StreamingServerType): ServerCache => {
+    const strip = <T>(
+      arr: readonly T[],
+      getUrl: (item: T) => string | undefined,
+      setUrl: (item: T, url: string | undefined) => T,
+    ): T[] => {
+      let changed = false;
+      const result = new Array<T>(arr.length);
+      for (let i = 0; i < arr.length; i++) {
+        const item = arr[i];
+        const oldUrl = getUrl(item);
+        if (!oldUrl) { result[i] = item; continue; }
+        const newUrl = client.stripCoverAuth(oldUrl, type);
+        if (newUrl !== oldUrl) {
+          result[i] = setUrl(item, newUrl);
+          changed = true;
+        } else {
+          result[i] = item;
+        }
+      }
+      return changed ? result : arr as T[];
+    };
+    return {
+      songs: strip(snapshot.songs, (t) => t.cover, (t, u) => ({ ...t, cover: u })),
+      albums: strip(snapshot.albums, (a) => a.cover, (a, u) => ({ ...a, cover: u })),
+      artists: strip(snapshot.artists, (a) => a.avatar ?? undefined, (a, u) => ({ ...a, avatar: u })),
+      playlists: strip(snapshot.playlists, (p) => p.cover, (p, u) => ({ ...p, cover: u })),
+      updatedAt: snapshot.updatedAt,
+    };
+  };
 
   /** 用当前 cfg 凭据为内存中的 cover/avatar URL 重新贴上鉴权 */
   const refreshCoverUrlsForActive = (): void => {
     const cfg = activeServer.value;
     if (!cfg) return;
-    // Web 服务端模式：cover 走服务端代理，strip auth 后交给 /api/streaming/cover 注入凭据
     const isWeb = !window.navigator.userAgent.includes("Electron");
     const rewrite = (url: string | undefined): string | undefined => {
       if (!url) return url;
@@ -133,18 +145,31 @@ export const useStreamingStore = defineStore("streaming", () => {
       if (!stripped) return stripped;
       return `/api/streaming/cover/${cfg.id}?url=${encodeURIComponent(stripped)}`;
     };
-    songs.value = songs.value.map((track) =>
-      track.cover ? { ...track, cover: rewrite(track.cover) } : track,
-    );
-    albums.value = albums.value.map((album) =>
-      album.cover ? { ...album, cover: rewrite(album.cover) } : album,
-    );
-    artists.value = artists.value.map((artist) =>
-      artist.avatar ? { ...artist, avatar: rewrite(artist.avatar) } : artist,
-    );
-    playlists.value = playlists.value.map((playlist) =>
-      playlist.cover ? { ...playlist, cover: rewrite(playlist.cover) } : playlist,
-    );
+    // 只在 URL 确实变化时才创建新对象，避免全量内存分配
+    const remap = <T>(
+      arr: readonly T[],
+      getUrl: (item: T) => string | undefined,
+      setUrl: (item: T, url: string | undefined) => T,
+    ): T[] => {
+      let changed = false;
+      const result = new Array<T>(arr.length);
+      for (let i = 0; i < arr.length; i++) {
+        const item = arr[i];
+        const oldUrl = getUrl(item);
+        const newUrl = rewrite(oldUrl);
+        if (newUrl !== oldUrl) {
+          result[i] = setUrl(item, newUrl);
+          changed = true;
+        } else {
+          result[i] = item;
+        }
+      }
+      return changed ? result : arr as T[];
+    };
+    songs.value = remap(songs.value, (t) => t.cover, (t, u) => ({ ...t, cover: u }));
+    albums.value = remap(albums.value, (a) => a.cover, (a, u) => ({ ...a, cover: u }));
+    artists.value = remap(artists.value, (a) => a.avatar, (a, u) => ({ ...a, avatar: u }));
+    playlists.value = remap(playlists.value, (p) => p.cover, (p, u) => ({ ...p, cover: u }));
   };
 
   const persistCache = (): void => {
@@ -508,10 +533,6 @@ export const useStreamingStore = defineStore("streaming", () => {
    * @param seq - 启动时绑定的 songsFetchSeq
    */
   const fetchRemainingSongs = async (serverId: string | null, seq: number): Promise<void> => {
-    // 每 4 批落盘一次而非每批：每次落盘都对四个完整数组克隆 + 序列化，逐批落
-    // 是 O(n²) 写放大；完全不落则进程中途退出会丢掉本轮全部进度
-    const PERSIST_EVERY_BATCHES = 4;
-    let batchesSincePersist = 0;
     try {
       while (
         seq === songsFetchSeq &&
@@ -528,10 +549,6 @@ export const useStreamingStore = defineStore("streaming", () => {
           if (next.length === 0) return;
           songs.value = [...songs.value, ...next];
           if (next.length < SONGS_PAGE_SIZE) return;
-          if (++batchesSincePersist >= PERSIST_EVERY_BATCHES) {
-            batchesSincePersist = 0;
-            persistCache();
-          }
         } catch (err) {
           console.error("[streaming] fetchRemainingSongs failed:", err);
           return;

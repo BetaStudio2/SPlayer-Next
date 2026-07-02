@@ -10,8 +10,7 @@
  */
 import { existsSync } from "node:fs";
 import { Hono } from "hono";
-import { upsertTracks, deleteTracksByPaths, type UpsertTrack } from "@main/database";
-import { getDb, getScraperDb } from "@main/database";
+import { getDb, upsertTracks, deleteTracksByPaths, type UpsertTrack } from "@main/database";
 import { libraryLog } from "@main/utils/logger";
 import type { DownloadTask } from "@shared/types/download";
 

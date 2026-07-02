@@ -116,6 +116,7 @@ export interface UpsertTrack {
   fileSize: number;
   mtime: number;
   ctime: number;
+  lyrics?: string;
 }
 
 /** 批量插入/更新曲目（使用事务） */
@@ -124,9 +125,9 @@ export const upsertTracks = (tracks: UpsertTrack[]): void => {
   const d = getDb();
   const stmt = d.prepare(`
     INSERT OR REPLACE INTO tracks
-      (id, path, title, track, artists, album, duration, cover, codec, sample_rate, bit_rate, channels, bits_per_sample, file_size, file_mtime, file_ctime, scanned_at)
+      (id, path, title, track, artists, album, duration, cover, codec, sample_rate, bit_rate, channels, bits_per_sample, file_size, file_mtime, file_ctime, scanned_at, lyrics)
     VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const now = Date.now();
   const tx = d.transaction(() => {
@@ -149,6 +150,7 @@ export const upsertTracks = (tracks: UpsertTrack[]): void => {
         t.mtime,
         t.ctime,
         now,
+        t.lyrics ?? null,
       );
     }
   });

@@ -4,7 +4,7 @@ import Database from "better-sqlite3";
 import { libraryLog } from "@main/utils/logger";
 import { databaseDir } from "@main/utils/paths";
 import { migrate } from "./migration";
-import { initScraperDb, closeScraperDb, getScraperDb, isScraperDbOpen } from "./scraper-db";
+import { initScraperDb, closeScraperDb } from "./scraper-db";
 
 /** 数据库文件路径 */
 const dbPath = path.join(databaseDir, "library.db");

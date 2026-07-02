@@ -224,6 +224,8 @@ export interface JsScannedTrack {
   mtime: number
   /** 创建时间（Unix ms） */
   ctime: number
+  /** 内嵌歌词 */
+  lyrics?: string
 }
 
 /**

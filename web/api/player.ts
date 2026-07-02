@@ -165,8 +165,9 @@ class WebAudioPlayer implements PlayerApi {
 
   private bindAudioEvents(): void {
     const a = this.audio;
-    a.addEventListener("play", () => this.emit({ type: "play" }));
-    a.addEventListener("pause", () => this.emit({ type: "pause" }));
+    // 不 emit play/pause 事件：events.ts handleEvent 的 case "play"/"pause"
+    // 会调用 play()/pause() → window.api.player.play()/pause() 导致无限递归。
+    // 播放状态由 events.ts 中显式调用 play()/pause() 时管理。
     a.addEventListener("ended", () => this.emit({ type: "ended" }));
     a.addEventListener("error", () => this.emit({ type: "sourceError" }));
     a.addEventListener("stalled", () => this.emit({ type: "status", data: this.snapshot() }));
@@ -287,19 +288,18 @@ class WebAudioPlayer implements PlayerApi {
       this.fadeTimer = window.setTimeout(() => {
         this.audio.pause();
         this.audio.currentTime = 0;
-        this.emit({ type: "status", data: this.snapshot() });
         this.fadeTimer = 0;
       }, this.fadeMs);
       return ok();
     }
     this.audio.pause();
     this.audio.currentTime = 0;
-    this.emit({ type: "status", data: this.snapshot() });
     return ok();
   }
 
   async seek(positionMs: number): Promise<IpcResponse> {
     this.audio.currentTime = positionMs / 1000;
+    this.emit({ type: "seek", data: { position: positionMs } });
     return ok();
   }
 

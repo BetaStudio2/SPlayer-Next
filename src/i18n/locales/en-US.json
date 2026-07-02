@@ -1384,6 +1384,12 @@
       "label": "Show Quick Quality Switch",
       "description": "Show the online audio quality tag in the player bar for quick switching"
     },
+    "toastStyle": {
+      "label": "Toast Message Style",
+      "description": "Visual style of notification messages",
+      "default": "Modern",
+      "classic": "Classic"
+    },
     "fontConfig": {
       "label": "Font Settings",
       "description": "Configure fonts for the app, lyrics, and external lyric windows",

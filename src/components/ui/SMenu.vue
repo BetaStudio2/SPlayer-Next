@@ -50,23 +50,38 @@ const setItemEl = (key: string, el: Element | ComponentPublicInstance | null): v
 
 /** 滑动高亮条的位置 */
 const highlighterStyle = ref<{ top: string; height: string }>({ top: "0", height: "0" });
+/** 首次定位前不渲染高亮条，避免从 top:0 过渡动画 */
+const highlighterReady = ref(false);
+/** 组件是否已挂载，挂载前 watch 不触发高亮计算，避免与 centerActiveOnMount 中的 scrollIntoView 竞争 */
+const isMounted = ref(false);
 
 const updateHighlighter = () => {
-  if (props.navStyle !== "animated" || !props.modelValue || !navRef.value) return;
+  if (props.navStyle !== "animated" || !props.modelValue || !navRef.value) {
+    highlighterReady.value = false;
+    return;
+  }
   const activeEl = itemEls.get(props.modelValue);
-  if (!activeEl) return;
-  const navRect = navRef.value.getBoundingClientRect();
-  const elRect = activeEl.getBoundingClientRect();
+  if (!activeEl) {
+    highlighterReady.value = false;
+    return;
+  }
+  // 用 offsetTop / offsetHeight 而非 getBoundingClientRect，
+  // 因为前者不受 CSS transform 影响（对话框打开时有 scale 动画）
   highlighterStyle.value = {
-    top: `${elRect.top - navRect.top + 8}px`,
-    height: `${elRect.height - 16}px`,
+    top: `${activeEl.offsetTop + 8}px`,
+    height: `${activeEl.offsetHeight - 16}px`,
   };
+  highlighterReady.value = true;
 };
 
 /** 当 modelValue / collapsed / items 变化时重新计算高亮位置 */
 watch(
   () => [props.modelValue, props.collapsed, props.items] as const,
-  () => nextTick(updateHighlighter),
+  () => {
+    // 挂载前不计算，让 centerActiveOnMount 的 scrollIntoView + rAF 负责首次定位
+    if (!isMounted.value) return;
+    nextTick(updateHighlighter);
+  },
   { deep: true },
 );
 
@@ -83,13 +98,22 @@ watch(
 );
 
 onMounted(() => {
-  if (!props.centerActiveOnMount) return;
-  const key = props.modelValue;
-  if (!key) return;
-  nextTick(() => {
-    itemEls.get(key)?.scrollIntoView({ block: "center" });
-    updateHighlighter();
-  });
+  isMounted.value = true;
+  if (!props.centerActiveOnMount) {
+    // 不需要滚动居中，直接计算高亮位置
+    if (props.navStyle === "animated") {
+      nextTick(updateHighlighter);
+    }
+  } else {
+    const key = props.modelValue;
+    if (key) {
+      nextTick(() => {
+        itemEls.get(key)?.scrollIntoView({ block: "center" });
+        // scrollIntoView 是异步的，等一帧让浏览器完成滚动布局后再计算高亮位置
+        requestAnimationFrame(updateHighlighter);
+      });
+    }
+  }
 
   // 窗口大小变化时重新定位高亮条（由 navStyle watch 统一管理）
   if (props.navStyle === "animated") {
@@ -147,7 +171,7 @@ const handleSelect = (item: SMenuItem) => {
   >
     <!-- 滑动高亮条（animated 模式） -->
     <div
-      v-if="navStyle === 'animated' && !collapsed"
+      v-if="navStyle === 'animated' && !collapsed && highlighterReady"
       class="absolute left-0 w-0.75 rounded-full bg-primary pointer-events-none z-1 transition-[top,height] duration-250"
       :style="{ top: highlighterStyle.top, height: highlighterStyle.height }"
     />

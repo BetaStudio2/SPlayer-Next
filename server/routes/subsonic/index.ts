@@ -11,14 +11,12 @@
  *   album id   = md5(album.name) hex
  *   artist id  = md5(artist.name) hex
  */
-import { Hono, type Context } from "hono";
+import { Hono } from "hono";
 import { existsSync } from "node:fs";
 import {
-  getUserByUsername,
   listUsers,
   star,
   unstar,
-  isStarred,
   getStarredIds,
   listPlaylists,
   getPlaylist,
@@ -59,7 +57,7 @@ import {
   collectIds,
   OPEN_SUBSONIC_EXTENSIONS,
 } from "./helpers";
-import type { Track, Artist } from "@shared/types/player";
+import type { Track } from "@shared/types/player";
 import type { AlbumSummary, ArtistSummary } from "@shared/types/library";
 
 const app = new Hono();

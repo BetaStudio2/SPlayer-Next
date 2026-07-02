@@ -17,6 +17,7 @@ import streaming from "./routes/streaming";
 import download from "./routes/download";
 import subsonic from "./routes/subsonic-proxy";
 import subsonicAdmin from "./routes/subsonic-admin";
+import subsonicInject from "./routes/subsonic-inject";
 import dbProxy from "./routes/db";
 import scraper from "./routes/scraper";
 import { attachWebSocket } from "./routes/ws";
@@ -45,6 +46,8 @@ app.route("/api/download", download);
 app.route("/rest", subsonic);
 /** Subsonic 服务管理（/api/subsonic/*，供 Web GUI 管理用户/分享） */
 app.route("/api/subsonic", subsonicAdmin);
+/** Subsonic 在线歌词注入（/api/subsonic-inject/*，供 Go 后端回调） */
+app.route("/api/subsonic-inject", subsonicInject);
 /** SQLite 写入代理（/api/db/*，供 C#/C++ 子进程统一写入） */
 app.route("/api/db", dbProxy);
 /** 音乐刮削（/api/scraper/*，供 Web GUI 启动/取消刮削） */

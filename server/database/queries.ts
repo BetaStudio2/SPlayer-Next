@@ -81,28 +81,29 @@ export const getAllTracks = (): Track[] => {
   return tracksCache;
 };
 
-/** 获取曲目总数 */
+/** 获取曲目总数（从缓存派生） */
 export const getTrackCount = (): number => {
-  const row = getDb().prepare("SELECT COUNT(*) as count FROM tracks").get() as { count: number };
-  return row.count;
+  if (tracksCache) return tracksCache.length;
+  return getAllTracks().length;
 };
 
-/** 随机取一首曲目，库为空时返回 null */
+/** 随机取一首曲目，库为空时返回 null（从缓存派生） */
 export const getRandomTrack = (): Track | null => {
-  const row = getDb().prepare("SELECT * FROM tracks ORDER BY RANDOM() LIMIT 1").get() as
-    | TrackRow
-    | undefined;
-  return row ? rowToTrack(row) : null;
+  const all = getAllTracks();
+  if (!all.length) return null;
+  return all[Math.floor(Math.random() * all.length)];
 };
 
-/** 随机取多首曲目 */
+/** 随机取多首曲目（从缓存派生，Fisher-Yates 部分洗牌） */
 export const getRandomTracks = (limit: number): Track[] => {
-  const safe = Math.max(0, Math.min(limit | 0, 500));
-  if (safe === 0) return [];
-  const rows = getDb()
-    .prepare("SELECT * FROM tracks ORDER BY RANDOM() LIMIT ?")
-    .all(safe) as TrackRow[];
-  return rows.map(rowToTrack);
+  const all = getAllTracks();
+  const result = all.slice();
+  const n = Math.min(limit | 0, result.length);
+  for (let i = 0; i < n; i++) {
+    const j = i + Math.floor(Math.random() * (result.length - i));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result.slice(0, n);
 };
 
 /** 用于增量扫描比对的文件记录 */
@@ -232,16 +233,16 @@ export const deleteTracksByPaths = (paths: string[]): void => {
   invalidateTracksCache();
 };
 
-/** 模糊搜索曲目（title / artists / album） */
+/** 按关键词模糊搜索曲目（从缓存派生，避免重复 DB + rowToTrack） */
 export const searchTracks = (query: string): Track[] => {
-  const escaped = query.replace(/[%_\\]/g, "\\$&");
-  const pattern = `%${escaped}%`;
-  const rows = getDb()
-    .prepare(
-      "SELECT * FROM tracks WHERE title LIKE ? ESCAPE '\\' OR artists LIKE ? ESCAPE '\\' OR album LIKE ? ESCAPE '\\'",
-    )
-    .all(pattern, pattern, pattern) as TrackRow[];
-  return rows.map(rowToTrack);
+  if (!query) return getAllTracks();
+  const q = query.toLowerCase();
+  return getAllTracks().filter(
+    (t) =>
+      t.title.toLowerCase().includes(q) ||
+      t.artists.some((a) => a.name.toLowerCase().includes(q)) ||
+      (t.album?.name ?? "").toLowerCase().includes(q),
+  );
 };
 
 /** 删除指定目录下的所有曲目（同时清理 scrape_queue 孤儿） */
@@ -310,32 +311,22 @@ export const getArtistList = (): ArtistSummary[] => {
   return artistCache;
 };
 
-/** 按专辑名获取全部曲目 */
+/** 按专辑名获取全部曲目（从缓存派生，避免重复 DB 查询 + rowToTrack 创建临时对象） */
 export const getAlbumTracks = (albumName: string): Track[] => {
-  const rows = getDb()
-    .prepare("SELECT * FROM tracks WHERE json_extract(album, '$.name') = ?")
-    .all(albumName) as TrackRow[];
-  return rows.map(rowToTrack);
+  return getAllTracks().filter((t) => t.album?.name === albumName);
 };
 
-/** 按歌手名获取全部曲目 */
+/** 按歌手名获取全部曲目（从缓存派生，避免重复 DB 查询 + rowToTrack 创建临时对象） */
 export const getArtistTracks = (artistName: string): Track[] => {
-  const rows = getDb()
-    .prepare(
-      `SELECT DISTINCT t.* FROM tracks t, json_each(t.artists) a
-       WHERE LOWER(json_extract(a.value, '$.name')) = LOWER(?)`,
-    )
-    .all(artistName) as TrackRow[];
-  return rows.map(rowToTrack);
+  const lowerName = artistName.toLowerCase();
+  return getAllTracks().filter((t) =>
+    t.artists.some((a) => a.name.toLowerCase() === lowerName),
+  );
 };
 
-/** 按 ID 批量获取曲目 */
+/** 按 ID 批量获取曲目（从缓存派生，避免重复 DB + rowToTrack） */
 export const getTracksByIds = (ids: string[]): Track[] => {
   if (ids.length === 0) return [];
-  const placeholders = ids.map(() => "?").join(",");
-  const rows = getDb()
-    .prepare(`SELECT * FROM tracks WHERE id IN (${placeholders})`)
-    .all(...ids) as TrackRow[];
-  const byId = new Map(rows.map((row) => [row.id, rowToTrack(row)]));
-  return ids.map((id) => byId.get(id)).filter((track): track is Track => !!track);
+  const idSet = new Set(ids);
+  return getAllTracks().filter((t) => idSet.has(t.id));
 };

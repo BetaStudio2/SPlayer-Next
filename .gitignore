@@ -31,3 +31,10 @@ transmission.md
 
 # 本地数据库文件（开发调试用）
 library.db
+
+# C# scanner 构建产物
+scanner-cs/.dotnet-home/
+scanner-cs/.nuget/
+scanner-cs/.artifacts/
+scanner-cs/bin/
+scanner-cs/obj/

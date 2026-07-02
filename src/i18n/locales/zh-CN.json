@@ -1372,6 +1372,12 @@
       "label": "显示快捷音质切换",
       "description": "在播放栏显示在线音质标签，可点击快速切换音质"
     },
+    "toastStyle": {
+      "label": "Toast 消息特效",
+      "description": "通知消息的视觉风格",
+      "default": "现代风格",
+      "classic": "经典风格"
+    },
     "fontConfig": {
       "label": "字体配置",
       "description": "统一配置应用、歌词和外部歌词窗口的字体",
