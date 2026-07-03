@@ -14,6 +14,8 @@ export interface Thumbar {
 let thumbar: Thumbar | null = null;
 
 const thumbarIcon = (name: string) => loadThemedIcon("thumbar", name);
+const REGISTER_RETRY_MAX = 8;
+const REGISTER_RETRY_DELAY_MS = 500;
 
 // 创建缩略图工具栏
 class ThumbarImpl implements Thumbar {
@@ -27,6 +29,10 @@ class ThumbarImpl implements Thumbar {
   private isLiked: boolean = false;
   private onThemeUpdated: () => void;
   private onWindowShown: () => void;
+  private onWindowRestore: () => void;
+  private retryTimeout: NodeJS.Timeout | null = null;
+  private hasRegistered: boolean = false;
+  private disposed: boolean = false;
 
   constructor(win: BrowserWindow) {
     this.win = win;
@@ -67,26 +73,54 @@ class ThumbarImpl implements Thumbar {
     };
     nativeTheme.on("updated", this.onThemeUpdated);
     // 窗口从托盘恢复显示后系统会清空任务栏按钮，需重新下发一次
-    this.onWindowShown = () => this.updateThumbar(this.isPlaying);
+    this.onWindowShown = () => {
+      this.hasRegistered = false;
+      this.updateThumbar(this.isPlaying);
+    };
+    this.onWindowRestore = () => {
+      this.hasRegistered = false;
+      this.updateThumbar(this.isPlaying);
+    };
     win.on("show", this.onWindowShown);
+    win.on("restore", this.onWindowRestore);
     // 窗口销毁时移除监听
     win.on("closed", () => {
+      this.disposed = true;
       nativeTheme.removeListener("updated", this.onThemeUpdated);
       win.removeListener("show", this.onWindowShown);
+      win.removeListener("restore", this.onWindowRestore);
+      if (this.retryTimeout) clearTimeout(this.retryTimeout);
     });
   }
 
   // 下发当前按钮组，喜欢按钮随状态切换图标与提示
-  private renderButtons(): void {
-    if (this.win.isDestroyed()) return;
+  private renderButtons(retryCount = 0): void {
+    if (this.disposed || this.win.isDestroyed()) return;
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+      this.retryTimeout = null;
+    }
+
     this.like.icon = thumbarIcon(this.isLiked ? "like" : "unlike");
     this.like.tooltip = t(this.isLiked ? "removeFromLiked" : "addToLiked");
-    this.win.setThumbarButtons([
-      this.prev,
-      this.isPlaying ? this.pause : this.play,
-      this.next,
-      this.like,
-    ]);
+    const buttons = [this.prev, this.isPlaying ? this.pause : this.play, this.next, this.like];
+    const success = this.win.setThumbarButtons(buttons);
+
+    if (success) {
+      this.hasRegistered = true;
+      if (retryCount > 0) thumbarLog.info(`Thumbar 第 ${retryCount} 次重试后注册成功`);
+    }
+
+    // 未注册成功进行重试
+    if (!success && !this.hasRegistered && retryCount < REGISTER_RETRY_MAX) {
+      thumbarLog.warn(`Thumbar 注册失败，准备进行第 ${retryCount + 1} 次重试...`);
+      this.retryTimeout = setTimeout(
+        () => this.renderButtons(retryCount + 1),
+        REGISTER_RETRY_DELAY_MS,
+      );
+    } else if (!success) {
+      thumbarLog.warn("Thumbar 注册失败，已达到重试上限");
+    }
   }
 
   // 更新播放状态
