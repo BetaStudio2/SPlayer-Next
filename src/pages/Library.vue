@@ -140,11 +140,14 @@ onUnmounted(() => {
               class="flex items-center gap-2 text-sm text-on-surface-variant/50"
             >
               <SLoading class="size-3.5 text-primary shrink-0" />
-              <span class="tabular-nums">
+              <span v-if="scanProgress.total === 0" class="text-on-surface-variant/40">
+                {{ scanProgress.current || t("library.countingFiles", "正在统计文件...") }}
+              </span>
+              <span v-else class="tabular-nums">
                 {{
                   t("library.scanProgress", {
                     scanned: scanProgress.scanned,
-                    total: scanProgress.total > 0 ? scanProgress.total : "?",
+                    total: scanProgress.total,
                   })
                 }}
               </span>
@@ -158,7 +161,10 @@ onUnmounted(() => {
               class="flex items-center gap-2 text-sm text-on-surface-variant/50"
             >
               <SLoading class="size-3.5 text-secondary shrink-0" />
-              <span class="tabular-nums">
+              <span v-if="scrapeProgress.total === 0 && !scrapeProgress.organizing" class="text-on-surface-variant/40">
+                {{ scrapeProgress.current || t("library.countingFiles", "正在统计文件...") }}
+              </span>
+              <span v-else class="tabular-nums">
                 {{
                   t("library.scrapeProgress", {
                     scraped: scrapeProgress.scraped,

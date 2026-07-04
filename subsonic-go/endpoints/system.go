@@ -2,7 +2,11 @@ package endpoints
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/splayer/subsonic-go/db"
+	"github.com/splayer/subsonic-go/middleware"
+	"github.com/splayer/subsonic-go/util"
 	"github.com/splayer/subsonic-go/xmlutil"
 )
 
@@ -43,10 +47,24 @@ func GetMusicFolders(w http.ResponseWriter, r *http.Request) {
 	}, nil)
 }
 
-// GetGenres /rest/getGenres.view（简化：返回空）
+// GetGenres /rest/getGenres.view
+// 从 tracks.genre 聚合，返回流派列表及歌曲/专辑数
 func GetGenres(w http.ResponseWriter, r *http.Request) {
+	genres, err := db.GetGenres()
+	if err != nil {
+		xmlutil.Send(w, r, map[string]any{}, &xmlutil.SubError{Code: 0, Message: err.Error()})
+		return
+	}
+	list := make([]any, 0, len(genres))
+	for _, g := range genres {
+		list = append(list, map[string]any{
+			"#text":      g.Name,
+			"songCount":  g.TrackCount,
+			"albumCount": g.AlbumCount,
+		})
+	}
 	xmlutil.Send(w, r, map[string]any{
-		"genres": map[string]any{"genre": []any{}},
+		"genres": map[string]any{"genre": list},
 	}, nil)
 }
 
@@ -73,7 +91,27 @@ func GetSimilarArtists(w http.ResponseWriter, r *http.Request, endpoint string) 
 
 // GetSongsByGenre /rest/getSongsByGenre.view
 func GetSongsByGenre(w http.ResponseWriter, r *http.Request) {
-	xmlutil.Send(w, r, map[string]any{"songsByGenre": map[string]any{"song": []any{}}}, nil)
+	q := r.URL.Query()
+	genre := strings.TrimSpace(q.Get("genre"))
+	if genre == "" {
+		xmlutil.Send(w, r, map[string]any{}, &xmlutil.SubError{Code: 10, Message: "Missing genre"})
+		return
+	}
+	count := middleware.ParseIntOr(q.Get("count"), 10)
+	offset := middleware.ParseIntOr(q.Get("offset"), 0)
+	tracks, err := db.GetTracksByGenre(genre, count, offset)
+	if err != nil {
+		xmlutil.Send(w, r, map[string]any{}, &xmlutil.SubError{Code: 0, Message: err.Error()})
+		return
+	}
+	user := middleware.GetUser(r)
+	songs := make([]any, 0, len(tracks))
+	for _, t := range tracks {
+		songs = append(songs, util.TrackToChild(t, user.ID, true, isStarredHelper))
+	}
+	xmlutil.Send(w, r, map[string]any{
+		"songsByGenre": map[string]any{"song": songs},
+	}, nil)
 }
 
 // Scrobble /rest/scrobble.view（简化：仅日志）

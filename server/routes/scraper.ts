@@ -46,7 +46,7 @@ app.post("/start", async (c) => {
     return c.json({ ok: false, error: "no valid scrape directories" }, 400);
   }
 
-  return c.json({ ok: true, dirs: scrapeDirs, progress: getScrapeProgress() });
+  return c.json({ ok: true, dirs: scrapeDirs });
 });
 
 /** POST /cancel —— 取消刮削任务 */

@@ -94,8 +94,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 # 配置 npm 国内源 & better-sqlite3 二进制镜像
 RUN if [ "${CN_MIRROR}" = "1" ]; then \
       npm config set registry https://registry.npmmirror.com && \
-      echo "better_sqlite3_binary_host_mirror=https://registry.npmmirror.com/-/binary/better-sqlite3" >> /root/.npmrc && \
-      echo "sharp_libvips_binary_host=https://registry.npmmirror.com/-/binary/sharp-libvips" >> /root/.npmrc; \
+      echo "better_sqlite3_binary_host_mirror=https://registry.npmmirror.com/-/binary/better-sqlite3" >> /root/.npmrc; \
     fi
 
 WORKDIR /app/server
@@ -234,6 +233,53 @@ RUN CARGO_BUILD_JOBS="${BUILD_JOBS}" cargo build --release --manifest-path Cargo
     cp target/release/splayer-downloader /out/splayer-downloader && \
     cargo clean --manifest-path Cargo.toml && rm -rf /usr/local/cargo/registry
 
+# ===== Subsonic Transcoder Builder（服务端专用，独立于桌面端 workspace） =====
+FROM ${RUST_IMAGE} AS transcoder-builder
+ARG BUILD_JOBS
+ARG CN_MIRROR
+
+# 配置 Debian 国内源
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources; \
+    fi && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 配置 GitHub 镜像（国内加速：阿里云镜像）
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"; \
+    fi
+
+# 配置 Cargo 国内源（阿里云，CDN 加速最稳定）
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      mkdir -p /usr/local/cargo && \
+      echo '[source.crates-io]' >> /usr/local/cargo/config.toml && \
+      echo 'replace-with = "aliyun"' >> /usr/local/cargo/config.toml && \
+      echo '' >> /usr/local/cargo/config.toml && \
+      echo '[source.aliyun]' >> /usr/local/cargo/config.toml && \
+      echo 'registry = "sparse+https://mirrors.aliyun.com/crates.io-index/"' >> /usr/local/cargo/config.toml && \
+      echo '' >> /usr/local/cargo/config.toml && \
+      echo '[net]' >> /usr/local/cargo/config.toml && \
+      echo 'git-fetch-with-cli = true' >> /usr/local/cargo/config.toml; \
+    fi
+
+WORKDIR /src
+RUN mkdir -p /out
+# 转码器是 subsonic-go 服务端的组成部分，源码位于 subsonic-go/subsonic-transcoder
+
+# 第 1 层：仅复制 Cargo.toml + stub → fetch 依赖（层缓存，源码不变时不重编）
+COPY subsonic-go/subsonic-transcoder/Cargo.toml ./Cargo.toml
+RUN mkdir -p src && echo "fn main() {}" > src/main.rs
+RUN cargo fetch
+
+# 第 2 层：用真实源码覆盖 stub → 编译（仅改 src/ 时才重编）
+COPY subsonic-go/subsonic-transcoder/src/ ./src/
+RUN CARGO_BUILD_JOBS="${BUILD_JOBS}" cargo build --release --frozen && \
+    cp target/release/subsonic-transcoder /out/subsonic-transcoder && \
+    cargo clean && rm -rf /usr/local/cargo/registry
+
 # ===== All-In-One Runtime =====
 FROM fedora-base AS runtime
 ARG CN_MIRROR
@@ -258,6 +304,7 @@ COPY --from=subsonic-builder /out/subsonic-go /app/bin/subsonic-go
 COPY --from=scanner-builder /out/ /app/bin/
 COPY --from=scraper-builder /out/splayer-scraper /app/bin/splayer-scraper
 COPY --from=downloader-builder /out/splayer-downloader /app/bin/splayer-downloader
+COPY --from=transcoder-builder /out/subsonic-transcoder /app/bin/subsonic-transcoder
 
 RUN cat > /usr/local/bin/splayer-entrypoint <<'EOF' && chmod +x /usr/local/bin/splayer-entrypoint
 #!/bin/bash

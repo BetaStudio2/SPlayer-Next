@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
+	"time"
 
 	_ "modernc.org/sqlite"
 
@@ -144,7 +147,7 @@ func scanTrack(row interface{ Scan(...any) error }) (model.Track, error) {
 		&t.ID, &t.Path, &t.Title, &t.TrackNo, &t.ArtistsJSON, &t.AlbumJSON,
 		&t.Duration, &t.Cover, &t.Codec, &rawSampleRate, &rawBitRate,
 		&rawChannels, &rawBitsPerSample, &t.FileSize, &rawFileMtime, &rawFileCtime,
-		&t.ScannedAt, &t.Lyrics,
+		&t.ScannedAt, &t.Lyrics, &t.Genre,
 	)
 	if err != nil {
 		return t, err
@@ -172,7 +175,7 @@ func scanTrack(row interface{ Scan(...any) error }) (model.Track, error) {
 
 const trackColumns = `id, path, title, track, artists, album, duration, cover,
 	codec, sample_rate, bit_rate, channels, bits_per_sample,
-	file_size, file_mtime, file_ctime, scanned_at, lyrics`
+	file_size, file_mtime, file_ctime, scanned_at, lyrics, genre`
 
 // GetAllTracks 获取全部曲目
 func GetAllTracks() ([]model.Track, error) {
@@ -362,6 +365,109 @@ func GetTrackLyrics(id string) (string, error) {
 }
 
 /* ------------------------------------------------------------------ */
+/* 流派                                                                */
+/* ------------------------------------------------------------------ */
+
+// GenreSummary 流派摘要
+type GenreSummary struct {
+	Name       string
+	TrackCount int
+	AlbumCount int
+}
+
+// GetGenres 聚合 tracks.genre 列，返回非空流派及其歌曲/专辑数
+// genre 列可能存储单个流派或以 ; / , / / 分隔的多个流派，做拆分处理
+func GetGenres() ([]GenreSummary, error) {
+	rows, err := pool.Query(`
+		SELECT genre, COUNT(*) AS track_count,
+		       COUNT(DISTINCT json_extract(album, '$.name')) AS album_count
+		FROM tracks
+		WHERE genre IS NOT NULL AND TRIM(genre) != ''
+		GROUP BY genre`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// 由于 genre 列可能含多个流派，先聚合原始值再拆分
+	rawMap := make(map[string]*GenreSummary)
+	for rows.Next() {
+		var g string
+		var tc, ac int
+		if err := rows.Scan(&g, &tc, &ac); err != nil {
+			return nil, err
+		}
+		for _, name := range splitGenres(g) {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				continue
+			}
+			if s, ok := rawMap[name]; ok {
+				s.TrackCount += tc
+				s.AlbumCount += ac
+			} else {
+				rawMap[name] = &GenreSummary{Name: name, TrackCount: tc, AlbumCount: ac}
+			}
+		}
+	}
+
+	list := make([]GenreSummary, 0, len(rawMap))
+	for _, s := range rawMap {
+		list = append(list, *s)
+	}
+	// 按歌曲数降序
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].TrackCount > list[j].TrackCount
+	})
+	return list, nil
+}
+
+// splitGenres 拆分流派字符串（支持 ; , / 作为分隔符）
+func splitGenres(s string) []string {
+	out := []string{}
+	s = strings.ReplaceAll(s, ";", "|")
+	s = strings.ReplaceAll(s, ",", "|")
+	s = strings.ReplaceAll(s, "/", "|")
+	for _, p := range strings.Split(s, "|") {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// GetTracksByGenre 按 genre 模糊匹配获取曲目（支持分页）
+func GetTracksByGenre(genre string, limit, offset int) ([]model.Track, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 500 {
+		limit = 500
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	pattern := "%" + genre + "%"
+	rows, err := pool.Query(
+		"SELECT "+trackColumns+" FROM tracks WHERE genre LIKE ? ORDER BY id LIMIT ? OFFSET ?",
+		pattern, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var tracks []model.Track
+	for rows.Next() {
+		t, err := scanTrack(rows)
+		if err != nil {
+			return nil, err
+		}
+		tracks = append(tracks, t)
+	}
+	return tracks, nil
+}
+
+/* ------------------------------------------------------------------ */
 /* 专辑/歌手聚合查询                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -456,7 +562,7 @@ func GetArtistTracks(artistName string) ([]model.Track, error) {
 		SELECT DISTINCT t.id, t.path, t.title, t.track, t.artists, t.album,
 			t.duration, t.cover, t.codec, t.sample_rate, t.bit_rate,
 			t.channels, t.bits_per_sample, t.file_size, t.file_mtime, t.file_ctime,
-			t.scanned_at, t.lyrics
+			t.scanned_at, t.lyrics, t.genre
 		FROM tracks t, json_each(t.artists) a
 		WHERE LOWER(json_extract(a.value, '$.name')) = LOWER(?)`, artistName)
 	if err != nil {
@@ -642,4 +748,242 @@ func ListShares(userID string) ([]model.Share, error) {
 		list = append(list, s)
 	}
 	return list, nil
+}
+
+// CreatePlaylist 创建播放列表，返回新 ID
+// playlistID 由调用方传入（通常为 uuid），便于事务一致性
+func CreatePlaylist(playlistID, userID, name string, comment sql.NullString, public bool, trackIDs []string) error {
+	now := nowMs()
+	isPublic := 0
+	if public {
+		isPublic = 1
+	}
+	tx, err := pool.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.Exec(
+		"INSERT INTO subsonic_playlists (id, user_id, name, comment, public, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		playlistID, userID, name, comment, isPublic, now, now,
+	); err != nil {
+		return err
+	}
+
+	for i, tid := range trackIDs {
+		if _, err := tx.Exec(
+			"INSERT INTO subsonic_playlist_entries (playlist_id, track_id, position) VALUES (?, ?, ?)",
+			playlistID, tid, i,
+		); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+// UpdatePlaylist 更新播放列表（任意字段为空/nil 表示不更新）
+// trackIDsToAdd 追加到末尾；trackIndexesToRemove 删除指定位置（0-based）的条目
+func UpdatePlaylist(id, name string, comment sql.NullString, public *bool, trackIDsToAdd []string, trackIndexesToRemove []int) error {
+	tx, err := pool.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if name != "" {
+		if _, err := tx.Exec("UPDATE subsonic_playlists SET name = ?, updated_at = ? WHERE id = ?", name, nowMs(), id); err != nil {
+			return err
+		}
+	}
+	if comment.Valid {
+		if _, err := tx.Exec("UPDATE subsonic_playlists SET comment = ?, updated_at = ? WHERE id = ?", comment.String, nowMs(), id); err != nil {
+			return err
+		}
+	}
+	if public != nil {
+		isPublic := 0
+		if *public {
+			isPublic = 1
+		}
+		if _, err := tx.Exec("UPDATE subsonic_playlists SET public = ?, updated_at = ? WHERE id = ?", isPublic, nowMs(), id); err != nil {
+			return err
+		}
+	}
+
+	// 删除指定位置条目（倒序删除避免索引漂移）
+	if len(trackIndexesToRemove) > 0 {
+		// 收集现有位置
+		rows, err := tx.Query("SELECT rowid FROM subsonic_playlist_entries WHERE playlist_id = ? ORDER BY position", id)
+		if err != nil {
+			return err
+		}
+		var rowids []int64
+		for rows.Next() {
+			var rid int64
+			rows.Scan(&rid)
+			rowids = append(rowids, rid)
+		}
+		rows.Close()
+		// 倒序删除
+		sorted := append([]int(nil), trackIndexesToRemove...)
+		sort.Sort(sort.Reverse(sort.IntSlice(sorted)))
+		for _, idx := range sorted {
+			if idx >= 0 && idx < len(rowids) {
+				if _, err := tx.Exec("DELETE FROM subsonic_playlist_entries WHERE rowid = ?", rowids[idx]); err != nil {
+					return err
+				}
+			}
+		}
+		// 重新编号 position
+		if _, err := tx.Exec(`
+			UPDATE subsonic_playlist_entries
+			SET position = (
+				SELECT COUNT(*) FROM subsonic_playlist_entries AS t2
+				WHERE t2.playlist_id = subsonic_playlist_entries.playlist_id
+				  AND t2.rowid < subsonic_playlist_entries.rowid
+			)
+			WHERE playlist_id = ?
+		`, id); err != nil {
+			return err
+		}
+	}
+
+	// 追加新条目
+	if len(trackIDsToAdd) > 0 {
+		var maxPos sql.NullInt64
+		_ = tx.QueryRow("SELECT MAX(position) FROM subsonic_playlist_entries WHERE playlist_id = ?", id).Scan(&maxPos)
+		startPos := 0
+		if maxPos.Valid {
+			startPos = int(maxPos.Int64) + 1
+		}
+		for i, tid := range trackIDsToAdd {
+			if _, err := tx.Exec(
+				"INSERT INTO subsonic_playlist_entries (playlist_id, track_id, position) VALUES (?, ?, ?)",
+				id, tid, startPos+i,
+			); err != nil {
+				return err
+			}
+		}
+		if _, err := tx.Exec("UPDATE subsonic_playlists SET updated_at = ? WHERE id = ?", nowMs(), id); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+// DeletePlaylist 删除播放列表及其条目
+func DeletePlaylist(id string) error {
+	tx, err := pool.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.Exec("DELETE FROM subsonic_playlist_entries WHERE playlist_id = ?", id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM subsonic_playlists WHERE id = ?", id); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+/* ------------------------------------------------------------------ */
+/* 分享 CRUD                                                            */
+/* ------------------------------------------------------------------ */
+
+// CreateShare 创建分享，返回新 ID（由调用方传入）
+func CreateShare(shareID, userID, name string, description sql.NullString, url string, expiresAt sql.NullInt64, trackIDs []string) error {
+	now := nowMs()
+	tx, err := pool.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.Exec(
+		"INSERT INTO subsonic_shares (id, user_id, name, description, url, expires_at, created_at, visit_count) VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
+		shareID, userID, name, description, url, expiresAt, now,
+	); err != nil {
+		return err
+	}
+
+	for i, tid := range trackIDs {
+		if _, err := tx.Exec(
+			"INSERT INTO subsonic_share_entries (share_id, track_id, position) VALUES (?, ?, ?)",
+			shareID, tid, i,
+		); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+// UpdateShare 更新分享（空值不更新）
+func UpdateShare(id, name string, description sql.NullString, expiresAt sql.NullInt64) error {
+	tx, err := pool.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if name != "" {
+		if _, err := tx.Exec("UPDATE subsonic_shares SET name = ? WHERE id = ?", name, id); err != nil {
+			return err
+		}
+	}
+	if description.Valid {
+		if _, err := tx.Exec("UPDATE subsonic_shares SET description = ? WHERE id = ?", description.String, id); err != nil {
+			return err
+		}
+	}
+	if expiresAt.Valid {
+		if _, err := tx.Exec("UPDATE subsonic_shares SET expires_at = ? WHERE id = ?", expiresAt.Int64, id); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// DeleteShare 删除分享及其条目
+func DeleteShare(id string) error {
+	tx, err := pool.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.Exec("DELETE FROM subsonic_share_entries WHERE share_id = ?", id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM subsonic_shares WHERE id = ?", id); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+/* ------------------------------------------------------------------ */
+/* 扫描状态                                                             */
+/* ------------------------------------------------------------------ */
+
+// GetLastScanTime 返回 tracks 表中最大的 scanned_at（毫秒），0 表示无数据
+func GetLastScanTime() (int64, error) {
+	var t sql.NullInt64
+	err := pool.QueryRow("SELECT MAX(scanned_at) FROM tracks").Scan(&t)
+	if err != nil {
+		return 0, err
+	}
+	if !t.Valid {
+		return 0, nil
+	}
+	return t.Int64, nil
+}
+
+// nowMs 当前毫秒时间戳
+func nowMs() int64 {
+	return time.Now().UnixMilli()
 }

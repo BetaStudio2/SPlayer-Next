@@ -48,10 +48,114 @@ let progress: ScrapeProgress = {
   skipped: 0,
   notFound: 0,
   canceled: false,
+  current: "",
 };
 
 /** 当前刮削使用的目录（用于完成后触发扫描） */
 let currentScrapeDirs: string[] = [];
+
+/** 是否已通过 stdout JSON 协议发出 scrape:done（防止 close 兜底重复） */
+let doneEmitted = false;
+
+/** C++ 刮削器 stdout JSON lines 协议 */
+interface ScraperEvent {
+  type: "progress" | "done" | "empty" | "error";
+  total?: number;
+  scraped?: number;
+  success?: number;
+  failed?: number;
+  skipped?: number;
+  notFound?: number;
+  canceled?: boolean;
+  current?: string;
+  status?: string;
+  message?: string;
+}
+
+/** 解析单条 stdout JSON → 更新进度 */
+const handleLine = (line: string): void => {
+  const trimmed = line.trim();
+  if (!trimmed) return;
+  let evt: ScraperEvent;
+  try {
+    evt = JSON.parse(trimmed) as ScraperEvent;
+  } catch {
+    libraryLog.debug(`[scraper] stdout: ${trimmed}`);
+    return;
+  }
+
+  switch (evt.type) {
+    case "progress": {
+      if (typeof evt.total === "number" && evt.total > 0) {
+        progress.total = evt.total;
+      }
+      if (typeof evt.scraped === "number") {
+        progress.scraped = evt.scraped;
+      }
+      if (typeof evt.success === "number") progress.success = evt.success;
+      if (typeof evt.failed === "number") progress.failed = evt.failed;
+      if (typeof evt.skipped === "number") progress.skipped = evt.skipped;
+      if (typeof evt.notFound === "number") progress.notFound = evt.notFound;
+      if (typeof evt.current === "string") progress.current = evt.current;
+      progress.scraping = true;
+      emit({ type: "scrape:progress", data: getScrapeProgress() });
+      break;
+    }
+    case "empty": {
+      progress.scraping = false;
+      progress.total = 0;
+      progress.scraped = 0;
+      progress.success = 0;
+      progress.failed = 0;
+      progress.skipped = 0;
+      progress.notFound = 0;
+      progress.canceled = false;
+      progress.current = "目录中无音频文件";
+      emit({ type: "scrape:progress", data: getScrapeProgress() });
+      break;
+    }
+    case "done": {
+      progress.scraping = false;
+      if (typeof evt.total === "number") progress.total = evt.total;
+      if (typeof evt.scraped === "number") progress.scraped = evt.scraped;
+      if (typeof evt.success === "number") progress.success = evt.success;
+      if (typeof evt.failed === "number") progress.failed = evt.failed;
+      if (typeof evt.skipped === "number") progress.skipped = evt.skipped;
+      if (typeof evt.notFound === "number") progress.notFound = evt.notFound;
+      if (typeof evt.canceled === "boolean") progress.canceled = evt.canceled;
+      doneEmitted = true;
+      emit({ type: "scrape:progress", data: getScrapeProgress() });
+      emit({ type: "scrape:done", data: { ...progress } });
+      break;
+    }
+    case "error": {
+      progress.scraping = false;
+      doneEmitted = true;
+      libraryLog.error(`[scraper] ${evt.message ?? "未知错误"}`);
+      emit({ type: "scrape:progress", data: getScrapeProgress() });
+      emit({ type: "scrape:done", data: { ...progress, canceled: false } });
+      break;
+    }
+  }
+};
+
+/** 将子进程 stdout 流按行拆分回调 */
+const attachLineReader = (stream: NodeJS.ReadableStream | null): void => {
+  if (!stream) return;
+  let buf = "";
+  stream.on("data", (chunk: Buffer) => {
+    buf += chunk.toString();
+    let idx: number;
+    while ((idx = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, idx);
+      buf = buf.slice(idx + 1);
+      handleLine(line);
+    }
+  });
+  stream.on("end", () => {
+    if (buf.trim()) handleLine(buf);
+  });
+};
 
 /**
  * 刮削队列管理（DB 队列模式用）
@@ -145,6 +249,7 @@ export async function startScrape(
 
   // 立即设置进度并广播，不等 C++ 扫描（C++ 会通过 stderr 上报实际总数）
   // hasAnyAudioFile 已移除：重复目录遍历会增加数秒延迟，由 C++ 自行处理空目录
+  doneEmitted = false;
   progress = {
     scraping: true,
     total: 0,
@@ -154,6 +259,7 @@ export async function startScrape(
     skipped: 0,
     notFound: 0,
     canceled: false,
+    current: "正在统计文件...",
   };
   emit({ type: "scrape:progress", data: progress });
 
@@ -192,112 +298,47 @@ export async function startScrape(
     },
   });
 
-  let stdoutBuffer = "";
+  // stdout 输出结构化 JSON lines（进度/空目录/完成/错误）
+  attachLineReader(child.stdout);
 
-  child.stdout?.on("data", (data) => {
-    stdoutBuffer += data.toString();
-    const lines = stdoutBuffer.split("\n");
-    stdoutBuffer = lines.pop() || "";
-
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      libraryLog.debug(`[scraper] stdout: ${line}`);
-    }
-  });
-
-  let stderrBuffer = "";
-  child.stderr?.on("data", (data) => {
-    stderrBuffer += data.toString();
-    const lines = stderrBuffer.split("\n");
-    stderrBuffer = lines.pop() || "";
-
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-      if (!line) continue;
-
-      libraryLog.info(`[scraper] ${line}`);
-
-      // 解析「取到 N 个待处理文件」——最早设置 total，避免前端 0/?
-      // 同时兼容 DB 队列模式的 "取到 N 个待刮削项"
-      const countMatch = line.match(/取到\s+(\d+)\s+个待处理文件/) || line.match(/取到\s+(\d+)\s+个待刮削项/);
-      if (countMatch) {
-        const total = parseInt(countMatch[1], 10);
-        if (total > 0) {
-          progress.total = total;
-          emit({ type: "scrape:progress", data: progress });
-        }
-        continue;
+  // stderr 仅保留人类可读日志，不再用于状态解析
+  if (child.stderr) {
+    let stderrBuf = "";
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderrBuf += chunk.toString();
+      let idx: number;
+      while ((idx = stderrBuf.indexOf("\n")) >= 0) {
+        const line = stderrBuf.slice(0, idx).trim();
+        stderrBuf = stderrBuf.slice(idx + 1);
+        if (line) libraryLog.info(`[scraper] ${line}`);
       }
-
-      // 解析「目录中无音频文件」—— C++ 端扫描发现空目录，正常结束
-      // 注意：空目录属于正常完成，不应设置 canceled=true，否则前端状态卡住
-      if (line.includes("目录中无音频文件")) {
-        progress.scraping = false;
-        emit({ type: "scrape:progress", data: progress });
-        continue;
-      }
-
-      // 解析精确完成标记：[scraper] [done N/Total] status=success|failed|skipped|not_found
-      // C++ 端每个文件处理完成后输出一次，作为进度更新的唯一依据
-      const doneMatch = line.match(/\[done\s+(\d+)\/(\d+)\]\s+status=(\w+)/);
-      if (doneMatch) {
-        const current = parseInt(doneMatch[1], 10);
-        const total = parseInt(doneMatch[2], 10);
-        const status = doneMatch[3];
-        if (total > 0) {
-          progress.total = total;
-          progress.scraped = Math.min(current, total);
-        }
-        switch (status) {
-          case "success":  progress.success++; break;
-          case "failed":   progress.failed++; break;
-          case "skipped":  progress.skipped++; break;
-          case "not_found": progress.notFound++; break;
-        }
-        emit({ type: "scrape:progress", data: progress });
-        continue;
-      }
-
-      // 解析“开始处理第 N 个”提示：仅用于提前暴露 total，不增加 scraped
-      // C++ 端输出格式：[scraper] [N/Total] artist - title (album)
-      const progressMatch = line.match(/\[(\d+)\/(\d+)\]/);
-      if (progressMatch) {
-        const total = parseInt(progressMatch[2], 10);
-        if (total > 0 && progress.total === 0) {
-          progress.total = total;
-          emit({ type: "scrape:progress", data: progress });
-        }
-      }
-    }
-
-    // 旧的 ✓ / ✗ 标记不再用于进度计数，避免一个文件触发多次 increment
-    // （成功文件可能同时输出“封面/歌词/标签写入成功”等多个 ✓）
-  });
+    });
+  }
 
   child.on("close", async (code) => {
     libraryLog.info(`[scraper] 刮削器退出: code=${code}`);
     child = null;
-    progress.scraping = false;
+
+    // 若 stdout 未输出 done/error（异常退出/崩溃等），兜底发送终态
+    if (!doneEmitted) {
+      progress.scraping = false;
+      emit({ type: "scrape:progress", data: progress });
+      emit({ type: "scrape:done", data: { 
+        total: progress.total, 
+        scraped: progress.scraped, 
+        success: progress.success, 
+        failed: progress.failed, 
+        skipped: progress.skipped, 
+        notFound: progress.notFound, 
+        canceled: progress.canceled 
+      }});
+    }
 
     // 空目录（0 文件）属于正常完成，不应标记为 canceled
     // canceled 仅由用户主动调用 cancelScrape() 时设置
     if (progress.total === 0 && progress.scraped === 0) {
       libraryLog.info("[scraper] 未找到音频文件，正常结束");
     }
-
-    emit({ type: "scrape:progress", data: progress });
-    emit({
-      type: "scrape:done",
-      data: {
-        total: progress.total,
-        scraped: progress.scraped,
-        success: progress.success,
-        failed: progress.failed,
-        skipped: progress.skipped,
-        notFound: progress.notFound,
-        canceled: progress.canceled,
-      },
-    });
 
     // 刮削成功完成后，根据配置决定是否整理文件，再触发扫描
     // 至少有一个文件刮削成功才触发后续整理/扫描
@@ -308,6 +349,10 @@ export async function startScrape(
         const organizeTargetDir = store.get("library.organizeTargetDir") || scanDirs[0] || "";
 
         let scanTargetDirs = currentScrapeDirs;
+
+        if (organizeEnabled && !organizeTargetDir) {
+          libraryLog.warn("[scraper] organizeAfterScrape 已启用但 organizeTargetDir / scanDirs[0] 为空，跳过整理");
+        }
 
         if (organizeEnabled && organizeTargetDir) {
           // 整理文件：从刮削目录移动到音乐库目录
@@ -398,6 +443,7 @@ export async function startScrape(
   child.on("error", (err) => {
     libraryLog.error(`[scraper] 启动失败:`, err);
     child = null;
+    doneEmitted = true;
     progress.scraping = false;
     progress.canceled = true;
     emit({ type: "scrape:progress", data: progress });
@@ -546,6 +592,7 @@ export async function startOrganize(
     skipped: 0,
     notFound: 0,
     canceled: false,
+    current: "正在整理文件...",
     organizing: true,
     organizeDone: 0,
     organizeTotal: 0,

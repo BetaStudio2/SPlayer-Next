@@ -95,6 +95,7 @@ export const useSettingsStore = defineStore(
       showProgressTooltip: true,
       showProgressLyric: false,
       snapToLyric: false,
+      transitionStyle: "scale",
     });
 
     /** 歌词 */

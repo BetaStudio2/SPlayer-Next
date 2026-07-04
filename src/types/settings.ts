@@ -182,6 +182,8 @@ export interface PlayerSettings {
   showProgressLyric: boolean;
   /** 进度调节吸附最近歌词 */
   snapToLyric: boolean;
+  /** 全屏播放器媒体信息切换动效 */
+  transitionStyle: "scale" | "slide";
 }
 
 /** Toast 消息风格 */

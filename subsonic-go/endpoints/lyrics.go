@@ -108,8 +108,8 @@ func GetLyrics(w http.ResponseWriter, r *http.Request) {
 		"lyrics": map[string]any{
 			"artist": artistStr,
 			"title":  titleStr,
-			"synced":  boolStr(prepared.Synced),
-			"value":   prepared.ClassicText,
+			"synced": prepared.Synced,
+			"value":  prepared.ClassicText,
 		},
 	}, nil)
 }
@@ -159,21 +159,14 @@ func GetLyricsBySongId(w http.ResponseWriter, r *http.Request) {
 		"lyricsList": map[string]any{
 			"structuredLyrics": []any{
 				map[string]any{
-					"lang":           "und",
-					"displayArtist":  util.FirstArtist(artists),
-					"displayTitle":   track.Title,
-					"synced":          boolStr(prepared.Synced),
-					"offset":         0,
-					"line":           lines,
+					"lang":          "und",
+					"displayArtist": util.FirstArtist(artists),
+					"displayTitle":  track.Title,
+					"synced":        prepared.Synced,
+					"offset":        0,
+					"line":          lines,
 				},
 			},
 		},
 	}, nil)
-}
-
-func boolStr(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }

@@ -1,0 +1,30 @@
+[package]
+name = "subsonic-transcoder"
+version = "0.1.0"
+edition = "2021"
+description = "Subsonic 转码器：symphonia 解码 + mp3lame 编码"
+publish = false
+
+[[bin]]
+name = "subsonic-transcoder"
+path = "src/main.rs"
+
+[dependencies]
+symphonia = { version = "0.5", default-features = false, features = [
+  "mp3",
+  "flac",
+  "ogg",
+  "vorbis",
+  "wav",
+  "aac",
+  "isomp4",
+  "pcm",
+] }
+mp3lame-encoder = "0.2"
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+
+[profile.release]
+lto = true
+strip = "symbols"
+opt-level = "s"

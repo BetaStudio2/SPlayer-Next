@@ -49,6 +49,22 @@ const initialLyricTimeMs = ref(0);
 const hasLyric = computed(() => media.parsedLyric.length > 0 || media.lyricLoading);
 const hasTrack = computed(() => !!media.track);
 
+/** 切歌方向（用于滑动动效） */
+const slideDirection = ref<"next" | "prev">("next");
+watch(
+  () => status.playIndex,
+  (current, previous) => {
+    if (previous === undefined) return;
+    slideDirection.value = current > previous ? "next" : "prev";
+  },
+);
+
+/** 封面与媒体信息区的 Transition 名称 */
+const coverTransitionName = computed(() => {
+  if (settings.player.transitionStyle !== "slide") return "scale-switch";
+  return slideDirection.value === "next" ? "slide-edge-next" : "slide-edge-prev";
+});
+
 /** 精确播放时间（毫秒） */
 const { start: startTick, stop: stopTick } = usePlaybackTime((currentMs) => {
   if (!status.trackLoading && !media.lyricLoading) {
@@ -254,7 +270,7 @@ const toggleLyric = (): void => {
             :style="coverCentered ? 'transform: translateX(calc(100% * 11 / 18))' : undefined"
           >
             <div class="relative w-[clamp(200px,85%,50vh)] -translate-y-[11vh]">
-              <Transition name="scale-switch" mode="out-in">
+              <Transition :name="coverTransitionName" mode="out-in">
                 <div :key="media.track?.id">
                   <PlayerCover />
                   <div class="absolute top-full left-0 w-full pt-6">

@@ -14,6 +14,8 @@ export interface ScrapeProgress {
   skipped?: number;
   notFound?: number;
   canceled: boolean;
+  /** 当前处理文件/阶段描述 */
+  current?: string;
   /** 整理阶段标记（刮削完成后整理文件时置 true，结束后置 false） */
   organizing?: boolean;
   /** 整理阶段文件总数 */
@@ -39,7 +41,6 @@ export interface OrganizeResult {
 export interface StartScrapeResult {
   ok: boolean;
   dirs?: string[];
-  progress?: ScrapeProgress;
 }
 
 const json = async <T>(res: Response): Promise<T> => {

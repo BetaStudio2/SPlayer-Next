@@ -107,6 +107,8 @@ func dispatch(w http.ResponseWriter, r *http.Request) {
 		endpoints.GetSong(w, r)
 	case "getrandomsongs":
 		endpoints.GetRandomSongs(w, r)
+	case "getmusicdirectory":
+		endpoints.GetMusicDirectory(w, r)
 
 	/* ---- 媒体 ---- */
 	case "getcoverart":
@@ -137,16 +139,40 @@ func dispatch(w http.ResponseWriter, r *http.Request) {
 		endpoints.GetPlaylists(w, r)
 	case "getplaylist":
 		endpoints.GetPlaylist(w, r)
+	case "createplaylist":
+		endpoints.CreatePlaylist(w, r)
+	case "updateplaylist":
+		endpoints.UpdatePlaylist(w, r)
+	case "deleteplaylist":
+		endpoints.DeletePlaylist(w, r)
 
 	/* ---- 分享 ---- */
 	case "getshares":
 		endpoints.GetShares(w, r)
+	case "createshare":
+		endpoints.CreateShare(w, r)
+	case "updateshare":
+		endpoints.UpdateShare(w, r)
+	case "deleteshare":
+		endpoints.DeleteShare(w, r)
 
 	/* ---- 用户 ---- */
 	case "getusers":
 		endpoints.GetUsers(w, r)
 	case "getuser":
 		endpoints.GetUser(w, r)
+
+	/* ---- 扫描 ---- */
+	case "getscanstatus":
+		endpoints.GetScanStatus(w, r)
+	case "startscan":
+		endpoints.StartScan(w, r)
+
+	/* ---- 元信息 ---- */
+	case "getartistinfo", "getartistinfo2":
+		endpoints.GetArtistInfo(w, r, ep)
+	case "getalbuminfo", "getalbuminfo2":
+		endpoints.GetAlbumInfo(w, r, ep)
 
 	/* ---- 其他（简化实现） ---- */
 	case "getgenres":

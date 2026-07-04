@@ -16,7 +16,6 @@
     "chokidar": "^4.0.3",
     "hono": "^4.6.14",
     "music-metadata": "^11.0.2",
-    "sharp": "^0.33.5",
     "ws": "^8.21.0"
   },
   "devDependencies": {

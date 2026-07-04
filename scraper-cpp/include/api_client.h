@@ -30,6 +30,7 @@
 #include <functional>
 #include <condition_variable>
 #include <ctime>
+#include <unordered_map>
 
 namespace splayer::scraper {
 
@@ -46,6 +47,76 @@ inline static size_t writeBinaryCb(char* ptr, size_t size, size_t nmemb, void* u
     buf->insert(buf->end(), reinterpret_cast<uint8_t*>(ptr), 
                 reinterpret_cast<uint8_t*>(ptr) + size * nmemb);
     return size * nmemb;
+}
+
+/// 从图片二进制数据头部检测 MIME 类型
+inline static std::string detectImageMime(const std::vector<uint8_t>& data) {
+    if (data.size() < 4) return "image/jpeg";
+    if (data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF) return "image/jpeg";
+    if (data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47) return "image/png";
+    if (data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38) return "image/gif";
+    if (data.size() >= 12 && data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
+        data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50) return "image/webp";
+    return "image/jpeg";
+}
+
+/// 归一化字符串：小写 + 移除非字母数字 ASCII 字符 + 保留 UTF-8 多字节字符
+inline static std::string normalize(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (size_t i = 0; i < s.size(); ) {
+        unsigned char c = static_cast<unsigned char>(s[i]);
+        if (c < 0x80) {
+            if (std::isalnum(c)) {
+                out.push_back(static_cast<char>(std::tolower(c)));
+            }
+            ++i;
+        } else {
+            size_t charLen = 1;
+            if ((c & 0xE0) == 0xC0) charLen = 2;
+            else if ((c & 0xF0) == 0xE0) charLen = 3;
+            else if ((c & 0xF8) == 0xF0) charLen = 4;
+            for (size_t k = 0; k < charLen && i < s.size(); ++k, ++i) {
+                out.push_back(s[i]);
+            }
+        }
+    }
+    return out;
+}
+
+/// 计算编辑距离相似度（0~1）
+inline static double similarity(const std::string& a, const std::string& b) {
+    std::string na = normalize(a);
+    std::string nb = normalize(b);
+    if (na.empty() && nb.empty()) return 1.0;
+    if (na.empty() || nb.empty()) return 0.0;
+    if (na == nb) return 1.0;
+    if (na.find(nb) != std::string::npos || nb.find(na) != std::string::npos) return 0.85;
+
+    std::vector<int> prev(nb.size() + 1), curr(nb.size() + 1);
+    for (size_t j = 0; j <= nb.size(); ++j) prev[j] = static_cast<int>(j);
+    for (size_t i = 1; i <= na.size(); ++i) {
+        curr[0] = static_cast<int>(i);
+        for (size_t j = 1; j <= nb.size(); ++j) {
+            int cost = (na[i - 1] == nb[j - 1]) ? 0 : 1;
+            curr[j] = std::min({prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost});
+        }
+        std::swap(prev, curr);
+    }
+    int dist = prev[nb.size()];
+    int maxLen = static_cast<int>(std::max(na.size(), nb.size()));
+    return maxLen > 0 ? 1.0 - static_cast<double>(dist) / maxLen : 0.0;
+}
+
+/// URL 编码（curl_easy_escape 包装）
+inline static std::string urlEncode(const std::string& raw) {
+    CURL* curl = curl_easy_init();
+    if (!curl) return raw;
+    char* escaped = curl_easy_escape(curl, raw.c_str(), raw.size());
+    std::string result(escaped ? escaped : raw);
+    curl_free(escaped);
+    curl_easy_cleanup(curl);
+    return result;
 }
 
 /// MusicBrainz API 客户端
@@ -266,79 +337,10 @@ public:
     }
 
  private:
-    /// 归一化字符串：小写 + 移除非字母数字字符
-    ///
-    /// 必须保留 UTF-8 多字节字符（中文/日文/韩文等）。
-    /// 旧实现用 std::isalnum 逐字节过滤，会把中文字节（>= 0x80）全部移除，
-    /// 导致 normalize("封茗囧菌") 返回空串，进而让 similarity 在两种情况下都失效：
-    ///   - 中文 vs 中文（相同）：na="" 且 nb="" → 误返回 1.0
-    ///   - 中文 vs 英文：na="" → 返回 0.0
-    /// 这会让 MusicBrainz/Deezer/iTunes 的相似度校验形同虚设，
-    /// 错误结果（如把"封茗囧菌"机翻成"Enclosure fungus"）得以混入并写入文件标签。
-    static std::string normalize(const std::string& s) {
-        std::string out;
-        out.reserve(s.size());
-        for (size_t i = 0; i < s.size(); ) {
-            unsigned char c = static_cast<unsigned char>(s[i]);
-            if (c < 0x80) {
-                // ASCII：保留字母数字，小写化
-                if (std::isalnum(c)) {
-                    out.push_back(static_cast<char>(std::tolower(c)));
-                }
-                ++i;
-            } else {
-                // UTF-8 多字节字符：保留所有字节（中文 CJK 主要是 3 字节）
-                size_t charLen = 1;
-                if ((c & 0xE0) == 0xC0) charLen = 2;
-                else if ((c & 0xF0) == 0xE0) charLen = 3;
-                else if ((c & 0xF8) == 0xF0) charLen = 4;
-                for (size_t k = 0; k < charLen && i < s.size(); ++k, ++i) {
-                    out.push_back(s[i]);
-                }
-            }
-        }
-        return out;
-    }
-
-    /// 计算两个字符串的编辑距离相似度（0~1）
-    static double similarity(const std::string& a, const std::string& b) {
-        std::string na = normalize(a);
-        std::string nb = normalize(b);
-        if (na.empty() && nb.empty()) return 1.0;
-        if (na.empty() || nb.empty()) return 0.0;
-        if (na == nb) return 1.0;
-        if (na.find(nb) != std::string::npos || nb.find(na) != std::string::npos) return 0.85;
-
-        // Levenshtein 距离
-        std::vector<int> prev(nb.size() + 1), curr(nb.size() + 1);
-        for (size_t j = 0; j <= nb.size(); ++j) prev[j] = static_cast<int>(j);
-        for (size_t i = 1; i <= na.size(); ++i) {
-            curr[0] = static_cast<int>(i);
-            for (size_t j = 1; j <= nb.size(); ++j) {
-                int cost = (na[i - 1] == nb[j - 1]) ? 0 : 1;
-                curr[j] = std::min({
-                    prev[j] + 1,
-                    curr[j - 1] + 1,
-                    prev[j - 1] + cost
-                });
-            }
-            std::swap(prev, curr);
-        }
-        int dist = prev[nb.size()];
-        int maxLen = static_cast<int>(std::max(na.size(), nb.size()));
-        return maxLen == 0 ? 1.0 : 1.0 - static_cast<double>(dist) / maxLen;
-    }
 
     /// 判断两个字符串是否相似（阈值 0.65）
     static bool isSimilar(const std::string& a, const std::string& b) {
         return similarity(a, b) >= 0.65;
-    }
-
-    std::string urlEncode(const std::string& s) {
-        char* encoded = curl_easy_escape(curl_, s.c_str(), static_cast<int>(s.length()));
-        std::string result(encoded);
-        curl_free(encoded);
-        return result;
     }
 
     CURL* curl_ = nullptr;
@@ -372,9 +374,13 @@ public:
         long code = 0;
         if (httpGetBinary(url, data, &code) && code == 200 && !data.empty()) {
             result.coverData = std::move(data);
-            result.coverMime = "image/jpeg"; // Cover Art Archive 默认返回 JPEG
+            result.coverMime = detectImageMime(result.coverData);
+            std::cerr << "[scraper]   Cover Art Archive 封面下载成功: " << result.coverData.size()
+                      << " bytes, mime=" << result.coverMime << std::endl;
             return true;
         }
+        std::cerr << "[scraper]   Cover Art Archive 下载失败: HTTP " << code
+                  << ", 数据大小=" << data.size() << std::endl;
         return false;
     }
 
@@ -468,13 +474,6 @@ private:
         CURLcode res = curl_easy_perform(curl_);
         if (code) curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, code);
         return res == CURLE_OK;
-    }
-
-    std::string urlEncode(const std::string& s) {
-        char* encoded = curl_easy_escape(curl_, s.c_str(), static_cast<int>(s.length()));
-        std::string result(encoded);
-        curl_free(encoded);
-        return result;
     }
 
     CURL* curl_ = nullptr;
@@ -577,9 +576,13 @@ public:
         long code = 0;
         if (httpGetBinary(coverUrl, data, &code) && code == 200 && !data.empty()) {
             result.coverData = std::move(data);
-            result.coverMime = "image/jpeg"; // Deezer 封面通常为 JPEG
+            result.coverMime = detectImageMime(result.coverData);
+            std::cerr << "[scraper]   Deezer 封面下载成功: " << result.coverData.size()
+                      << " bytes, mime=" << result.coverMime << std::endl;
             return true;
         }
+        std::cerr << "[scraper]   Deezer 封面下载失败: HTTP " << code
+                  << ", 数据大小=" << data.size() << std::endl;
         return false;
     }
 
@@ -610,52 +613,6 @@ private:
         CURLcode res = curl_easy_perform(curl_);
         if (code) curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, code);
         return res == CURLE_OK;
-    }
-
-    std::string urlEncode(const std::string& s) {
-        char* encoded = curl_easy_escape(curl_, s.c_str(), static_cast<int>(s.length()));
-        std::string result(encoded);
-        curl_free(encoded);
-        return result;
-    }
-
-    // 复用 MusicBrainzClient 的相似度逻辑
-    static std::string normalize(const std::string& s) {
-        std::string out;
-        out.reserve(s.size());
-        for (unsigned char c : s) {
-            if (std::isalnum(c)) {
-                out.push_back(static_cast<char>(std::tolower(c)));
-            }
-        }
-        return out;
-    }
-
-    static double similarity(const std::string& a, const std::string& b) {
-        std::string na = normalize(a);
-        std::string nb = normalize(b);
-        if (na.empty() && nb.empty()) return 1.0;
-        if (na.empty() || nb.empty()) return 0.0;
-        if (na == nb) return 1.0;
-        if (na.find(nb) != std::string::npos || nb.find(na) != std::string::npos) return 0.85;
-
-        std::vector<int> prev(nb.size() + 1), curr(nb.size() + 1);
-        for (size_t j = 0; j <= nb.size(); ++j) prev[j] = static_cast<int>(j);
-        for (size_t i = 1; i <= na.size(); ++i) {
-            curr[0] = static_cast<int>(i);
-            for (size_t j = 1; j <= nb.size(); ++j) {
-                int cost = (na[i - 1] == nb[j - 1]) ? 0 : 1;
-                curr[j] = std::min({
-                    prev[j] + 1,
-                    curr[j - 1] + 1,
-                    prev[j - 1] + cost
-                });
-            }
-            std::swap(prev, curr);
-        }
-        int dist = prev[nb.size()];
-        int maxLen = static_cast<int>(std::max(na.size(), nb.size()));
-        return maxLen == 0 ? 1.0 : 1.0 - static_cast<double>(dist) / maxLen;
     }
 
     CURL* curl_ = nullptr;
@@ -741,9 +698,13 @@ public:
         long code = 0;
         if (httpGetBinary(coverUrl, data, &code) && code == 200 && !data.empty()) {
             result.coverData = std::move(data);
-            result.coverMime = "image/jpeg";
+            result.coverMime = detectImageMime(result.coverData);
+            std::cerr << "[scraper]   iTunes 封面下载成功: " << result.coverData.size()
+                      << " bytes, mime=" << result.coverMime << std::endl;
             return true;
         }
+        std::cerr << "[scraper]   iTunes 封面下载失败: HTTP " << code
+                  << ", 数据大小=" << data.size() << std::endl;
         return false;
     }
 
@@ -774,51 +735,6 @@ private:
         CURLcode res = curl_easy_perform(curl_);
         if (code) curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, code);
         return res == CURLE_OK;
-    }
-
-    std::string urlEncode(const std::string& s) {
-        char* encoded = curl_easy_escape(curl_, s.c_str(), static_cast<int>(s.length()));
-        std::string result(encoded);
-        curl_free(encoded);
-        return result;
-    }
-
-    static std::string normalize(const std::string& s) {
-        std::string out;
-        out.reserve(s.size());
-        for (unsigned char c : s) {
-            if (std::isalnum(c)) {
-                out.push_back(static_cast<char>(std::tolower(c)));
-            }
-        }
-        return out;
-    }
-
-    static double similarity(const std::string& a, const std::string& b) {
-        std::string na = normalize(a);
-        std::string nb = normalize(b);
-        if (na.empty() && nb.empty()) return 1.0;
-        if (na.empty() || nb.empty()) return 0.0;
-        if (na == nb) return 1.0;
-        if (na.find(nb) != std::string::npos || nb.find(na) != std::string::npos) return 0.85;
-
-        std::vector<int> prev(nb.size() + 1), curr(nb.size() + 1);
-        for (size_t j = 0; j <= nb.size(); ++j) prev[j] = static_cast<int>(j);
-        for (size_t i = 1; i <= na.size(); ++i) {
-            curr[0] = static_cast<int>(i);
-            for (size_t j = 1; j <= nb.size(); ++j) {
-                int cost = (na[i - 1] == nb[j - 1]) ? 0 : 1;
-                curr[j] = std::min({
-                    prev[j] + 1,
-                    curr[j - 1] + 1,
-                    prev[j - 1] + cost
-                });
-            }
-            std::swap(prev, curr);
-        }
-        int dist = prev[nb.size()];
-        int maxLen = static_cast<int>(std::max(na.size(), nb.size()));
-        return maxLen == 0 ? 1.0 : 1.0 - static_cast<double>(dist) / maxLen;
     }
 
     CURL* curl_ = nullptr;
@@ -862,16 +778,28 @@ public:
     /// 获取歌词（同步歌词优先）
     virtual std::string fetchLyrics(const std::string& songId) { (void)songId; return ""; }
 
-    /// 下载封面图片
-    bool fetchCover(const std::string& coverUrl, ScrapeResult& result) {
+    /// 下载封面图片（带防盗链 Referer）
+    bool fetchCover(const std::string& coverUrl, ScrapeResult& result,
+                    const std::string& referer = "") {
         if (coverUrl.empty()) return false;
         std::vector<uint8_t> data;
         long code = 0;
-        if (httpGetBinary(coverUrl, data, &code) && code == 200 && !data.empty()) {
+        // 构建请求头：部分中文源封面需要 Referer 防盗链
+        std::vector<std::pair<std::string, std::string>> hdrs;
+        if (!referer.empty()) {
+            hdrs.push_back({"Referer", referer});
+        }
+        if (httpGetBinaryWithHeaders(coverUrl, data, &code, hdrs) && code == 200 && !data.empty()) {
             result.coverData = std::move(data);
-            result.coverMime = "image/jpeg";
+            result.coverMime = ::splayer::scraper::detectImageMime(result.coverData);
+            std::cerr << "[scraper]   中文源封面下载成功: " << result.coverData.size()
+                      << " bytes, mime=" << result.coverMime << std::endl;
             return true;
         }
+        std::cerr << "[scraper]   中文源封面下载失败: HTTP " << code
+                  << ", 数据大小=" << data.size()
+                  << (referer.empty() ? "" : ", referer=" + referer)
+                  << std::endl;
         return false;
     }
 
@@ -952,12 +880,14 @@ protected:
 
         CURLcode res = curl_easy_perform(curl_);
         if (code) curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, code);
+        curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, nullptr);
         if (hdrList) curl_slist_free_all(hdrList);
         return res == CURLE_OK;
     }
 
     bool httpGetBinary(const std::string& url, std::vector<uint8_t>& data, long* code) {
         data.clear();
+        curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, nullptr);  // 清除上次请求残留的请求头
         curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, writeBinaryCb);
         curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &data);
@@ -966,6 +896,30 @@ protected:
         curl_easy_setopt(curl_, CURLOPT_FOLLOWLOCATION, 1L);
         CURLcode res = curl_easy_perform(curl_);
         if (code) curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, code);
+        return res == CURLE_OK;
+    }
+
+    /// HTTP GET 二进制数据（支持自定义请求头，用于封面防盗链 Referer）
+    bool httpGetBinaryWithHeaders(const std::string& url, std::vector<uint8_t>& data, long* code,
+                                  const std::vector<std::pair<std::string, std::string>>& headers = {}) {
+        data.clear();
+        curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, writeBinaryCb);
+        curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &data);
+        curl_easy_setopt(curl_, CURLOPT_USERAGENT, cfg_.userAgent.c_str());
+        curl_easy_setopt(curl_, CURLOPT_TIMEOUT_MS, cfg_.requestTimeoutMs);
+        curl_easy_setopt(curl_, CURLOPT_FOLLOWLOCATION, 1L);
+
+        struct curl_slist* hdrList = nullptr;
+        for (const auto& h : headers) {
+            hdrList = curl_slist_append(hdrList, (h.first + ": " + h.second).c_str());
+        }
+        if (hdrList) curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, hdrList);
+
+        CURLcode res = curl_easy_perform(curl_);
+        if (code) curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, code);
+        curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, nullptr);
+        if (hdrList) curl_slist_free_all(hdrList);
         return res == CURLE_OK;
     }
 
@@ -994,18 +948,12 @@ protected:
         CURLcode res = curl_easy_perform(curl_);
         if (code) curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, code);
 
-        // 重置为 GET 模式
+        // 重置为 GET 模式并清除自定义请求头
         curl_easy_setopt(curl_, CURLOPT_HTTPGET, 1L);
+        curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, nullptr);
         if (hdrList) curl_slist_free_all(hdrList);
 
         return res == CURLE_OK;
-    }
-
-    std::string urlEncode(const std::string& s) {
-        char* encoded = curl_easy_escape(curl_, s.c_str(), static_cast<int>(s.length()));
-        std::string result(encoded);
-        curl_free(encoded);
-        return result;
     }
 
     CURL* curl_ = nullptr;
@@ -1024,19 +972,50 @@ public:
         (void)artist;
         std::vector<ChineseSong> songs;
 
-        if (encryptedSearch(title, songs)) return songs;
-
-        // 回退到公开搜索 API
+        // 优先使用公开 API（不需要加密，更稳定）
         std::string url = "https://music.163.com/api/search/get/web?s=" +
                           urlEncode(title) + "&type=1&limit=10&offset=0";
         std::string body;
         long code = 0;
-        std::vector<std::pair<std::string, std::string>> hdrs = {
-            {"Referer", "https://music.163.com"},
-            {"Content-Type", "application/x-www-form-urlencoded"},
+        std::vector<std::pair<std::string, std::string>> pubHdrs = {
+            {"Referer", "https://music.163.com/"},
+            {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},
         };
-        if (!httpGet(url, body, &code, hdrs) || code != 200) return songs;
-        parsePublicSearch(body, songs);
+        if (httpGet(url, body, &code, pubHdrs) && code == 200) {
+            parsePublicSearch(body, songs);
+            std::cerr << "[scraper]   网易云公开 API 返回 " << songs.size() << " 条结果" << std::endl;
+        } else {
+            std::cerr << "[scraper]   网易云公开 API 失败: HTTP " << code
+                      << "，尝试 weapi..." << std::endl;
+        }
+
+        // 公开 API 无结果时回退到 weapi 加密搜索
+        if (songs.empty() && encryptedSearch(title, songs)) {
+            std::cerr << "[scraper]   网易云 weapi 搜索返回 " << songs.size() << " 条结果" << std::endl;
+        }
+        // weapi 失败时回退到 linuxapi（AES-128-ECB，无需 RSA，更可靠）
+        if (songs.empty()) {
+            linuxapiSearch(title, songs);
+        }
+
+        // 公开 API 缺少 picUrl（只有 picId），用 linuxapi 获取正确封面 URL
+        if (!songs.empty() && songs[0].albumImg.empty()) {
+            std::vector<ChineseSong> lsongs;
+            if (linuxapiSearch(title, lsongs) && !lsongs.empty()) {
+                // 按 song id 匹配，覆盖 albumImg
+                for (auto& song : songs) {
+                    for (const auto& ls : lsongs) {
+                        if (song.id == ls.id && !ls.albumImg.empty()) {
+                            song.albumImg = ls.albumImg;
+                            break;
+                        }
+                    }
+                }
+                std::cerr << "[scraper]   网易云 linuxapi 回填封面: "
+                          << lsongs.size() << " 条结果" << std::endl;
+            }
+        }
+
         return songs;
     }
 
@@ -1074,11 +1053,109 @@ private:
     // 加密常量来自 NetEase Music 网页版客户端代码，为公开 API 规范
     // ====================================================================
 
-    /// 加密搜索请求，返回是否成功
+    /// AES-128-ECB 加密 + PKCS7 填充 + 大写 Hex 输出（linuxapi 使用）
+    static std::string aes128ecbHex(const std::string& input, const std::string& key) {
+        if (key.size() != 16) return "";
+
+        std::string padded = input;
+        unsigned char padVal = static_cast<unsigned char>(16 - input.size() % 16);
+        padded.append(padVal, static_cast<char>(padVal));
+
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx) return "";
+        if (EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), nullptr,
+                               (const unsigned char*)key.data(), nullptr) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            return "";
+        }
+        EVP_CIPHER_CTX_set_padding(ctx, 0);
+
+        unsigned char cipherBuf[8192];
+        int outLen = 0;
+        if (EVP_EncryptUpdate(ctx, cipherBuf, &outLen,
+                              (unsigned char*)padded.data(), padded.size()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            return "";
+        }
+        int finalLen = 0;
+        if (EVP_EncryptFinal_ex(ctx, cipherBuf + outLen, &finalLen) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            return "";
+        }
+        outLen += finalLen;
+        EVP_CIPHER_CTX_free(ctx);
+
+        std::string hex;
+        hex.reserve(outLen * 2);
+        for (int i = 0; i < outLen; i++) {
+            char buf[4];
+            std::snprintf(buf, sizeof(buf), "%02X", cipherBuf[i]);
+            hex += buf;
+        }
+        return hex;
+    }
+
+    /// linuxapi 搜索（AES-128-ECB，无需 RSA——weapi 失败时的可靠回退）
+    bool linuxapiSearch(const std::string& keyword, std::vector<ChineseSong>& songs) {
+        static const char* LINUX_API_KEY = "rFgB&h#%2?^eDg:Q";
+        json payload = {
+            {"method", "POST"},
+            {"url", "https://music.163.com/api/cloudsearch/pc"},
+            {"params", {{"s", keyword}, {"type", 1}, {"limit", 10}, {"offset", 0}}}
+        };
+        std::string encrypted = aes128ecbHex(payload.dump(), LINUX_API_KEY);
+        if (encrypted.empty()) return false;
+
+        std::string postData = "eparams=" + encrypted;
+        std::string body;
+        long code = 0;
+
+        std::vector<std::pair<std::string, std::string>> hdrs = {
+            {"Referer", "https://music.163.com"},
+            {"Content-Type", "application/x-www-form-urlencoded"},
+            {"User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},
+            {"Cookie", "os=linux; deviceId=NMUSIC"},
+        };
+        if (!httpPost("https://music.163.com/api/linux/forward",
+                       postData, body, &code, hdrs) || code != 200) {
+            std::cerr << "[scraper]   网易云 linuxapi 失败: HTTP " << code
+                      << ", body=" << body.substr(0, 200) << std::endl;
+            return false;
+        }
+
+        try {
+            auto j = json::parse(body);
+            auto result = j.value("result", json::object());
+            for (auto& entry : result.value("songs", json::array())) {
+                ChineseSong cs;
+                cs.id = std::to_string(entry.value("id", 0));
+                cs.name = entry.value("name", "");
+                std::string singers;
+                for (auto& a : entry.value("ar", json::array())) {
+                    if (!singers.empty()) singers += ",";
+                    singers += a.value("name", "");
+                }
+                cs.artist = singers;
+                auto al = entry.value("al", json::object());
+                cs.album = al.value("name", "");
+                cs.albumImg = al.value("picUrl", "");
+                cs.resource = "netease";
+                songs.push_back(std::move(cs));
+            }
+            std::cerr << "[scraper]   网易云 linuxapi 返回 " << songs.size() << " 条结果" << std::endl;
+            return !songs.empty();
+        } catch (const json::exception& e) {
+            std::cerr << "[scraper]   网易云 linuxapi 解析失败: " << e.what() << std::endl;
+            return false;
+        }
+    }
+
+    /// 加密搜索请求（weapi），返回是否成功
     bool encryptedSearch(const std::string& keyword, std::vector<ChineseSong>& songs) {
         json params = {
             {"s", keyword}, {"type", 1},
-            {"limit", 10}, {"offset", 0}
+            {"limit", 10}, {"offset", 0},
+            {"csrf_token", ""}
         };
         auto formData = buildWeapiForm(params.dump());
         if (formData.empty()) return false;
@@ -1086,39 +1163,50 @@ private:
         std::string body;
         long code = 0;
         std::vector<std::pair<std::string, std::string>> hdrs = {
-            {"Referer", "https://music.163.com"},
+            {"Referer", "https://music.163.com/"},
             {"Content-Type", "application/x-www-form-urlencoded"},
+            {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},
             {"Cookie", "__remember_me=true"},
         };
         if (!httpPost("https://music.163.com/weapi/cloudsearch/get/web",
                        formData, body, &code, hdrs) || code != 200) {
+            std::cerr << "[scraper]   网易云 weapi POST 失败: HTTP " << code
+                      << ", body=" << body.substr(0, 200) << std::endl;
             return false;
         }
         parseWeapiSearch(body, songs);
+        if (songs.empty()) {
+            std::cerr << "[scraper]   网易云 weapi 返回 0 条结果, body=" << body.substr(0, 300) << std::endl;
+        }
         return !songs.empty();
     }
 
-    /// 加密歌词请求
+    /// 加密歌词请求（linuxapi：AES-128-ECB，比 weapi 更可靠）
     std::string encryptedLyrics(const std::string& songId) {
         int64_t sid = 0;
         try { sid = std::stoll(songId); } catch (...) { return ""; }
 
-        json params = {
-            {"id", sid}, {"lv", -1},
-            {"kv", -1}, {"tv", -1}, {"os", "pc"}
+        static const char* LINUX_API_KEY = "rFgB&h#%2?^eDg:Q";
+        json payload = {
+            {"method", "POST"},
+            {"url", "https://music.163.com/api/song/lyric?id=" + std::to_string(sid) + "&lv=-1&kv=-1&tv=-1"},
+            {"params", {{"id", std::to_string(sid)}}}
         };
-        auto formData = buildWeapiForm(params.dump());
-        if (formData.empty()) return "";
+        std::string encrypted = aes128ecbHex(payload.dump(), LINUX_API_KEY);
+        if (encrypted.empty()) return "";
 
+        std::string postData = "eparams=" + encrypted;
         std::string body;
         long code = 0;
+
         std::vector<std::pair<std::string, std::string>> hdrs = {
             {"Referer", "https://music.163.com"},
             {"Content-Type", "application/x-www-form-urlencoded"},
-            {"Cookie", "__remember_me=true"},
+            {"User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36"},
+            {"Cookie", "os=linux; deviceId=NMUSIC"},
         };
-        if (!httpPost("https://music.163.com/weapi/song/lyric",
-                       formData, body, &code, hdrs) || code != 200) {
+        if (!httpPost("https://music.163.com/api/linux/forward",
+                       postData, body, &code, hdrs) || code != 200) {
             return "";
         }
         try {
@@ -1266,7 +1354,7 @@ private:
     // 搜索结果解析
     // ====================================================================
 
-    /// 解析公开 API 搜索结果（字段：artists/album/img1v1Url）
+    /// 解析公开 API 搜索结果（字段：artists/album/picUrl）
     static void parsePublicSearch(const std::string& body,
                                    std::vector<ChineseSong>& songs) {
         try {
@@ -1283,7 +1371,26 @@ private:
                 }
                 cs.artist = singers;
                 cs.album = entry.value("album", json::object()).value("name", "");
-                cs.albumImg = entry.value("album", json::object()).value("img1v1Url", "");
+                // Netease public API: 优先取 picUrl, 否则取 pic
+                // 注意: picId 不是 CDN hash，不能用 picId 构造 URL
+                auto album = entry.value("album", json::object());
+                cs.albumImg = album.value("picUrl", "");
+                if (cs.albumImg.empty()) {
+                    cs.albumImg = album.value("pic", "");
+                }
+                // picId 无法构造有效封面 URL，albumImg 为空时由 linuxapi 回退填充
+                // 首个结果输出调试信息
+                if (songs.empty()) {
+                    std::cerr << "[scraper]   网易云公开 API 首个结果: name=" << cs.name
+                              << ", artist=" << cs.artist
+                              << ", album=" << cs.album
+                              << ", albumImg=" << (cs.albumImg.empty() ? "(空，需要linuxapi回填)" : cs.albumImg)
+                              << ", album.keys=";
+                    for (auto& [k, v] : album.items()) {
+                        std::cerr << k << ",";
+                    }
+                    std::cerr << std::endl;
+                }
                 cs.resource = "netease";
                 songs.push_back(std::move(cs));
             }
@@ -1310,6 +1417,13 @@ private:
                 auto al = entry.value("al", json::object());
                 cs.album = al.value("name", "");
                 cs.albumImg = al.value("picUrl", "");
+                // 首个结果输出调试信息
+                if (songs.empty()) {
+                    std::cerr << "[scraper]   网易云 weapi 首个结果: name=" << cs.name
+                              << ", artist=" << cs.artist
+                              << ", album=" << cs.album
+                              << ", albumImg=" << cs.albumImg << std::endl;
+                }
                 // 从毫秒时间戳提取年份
                 if (entry.contains("publishTime") && entry["publishTime"].is_number()) {
                     auto pts = entry["publishTime"].get<int64_t>();
@@ -1354,35 +1468,57 @@ public:
         std::vector<ChineseSong> songs;
         std::string url = "https://u.y.qq.com/cgi-bin/musicu.fcg";
 
-        // 构造搜索请求体
+        // 构造搜索请求体（匹配 QQMusic API 要求的完整字段）
         json payload = {
             {"comm", {
+                {"wid", ""},
+                {"tmeAppID", "qqmusic"},
+                {"authst", ""},
+                {"uid", ""},
+                {"gray", "0"},
+                {"OpenUDID", "2d484d3157d4ed482e406e6c5fdcf8c3d3275deb"},
                 {"ct", "6"},
+                {"patch", "2"},
+                {"psrf_qqopenid", ""},
+                {"sid", ""},
+                {"psrf_access_token_expiresAt", ""},
                 {"cv", "80600"},
-                {"format", "json"}
+                {"gzip", "0"},
+                {"qq", ""},
+                {"nettype", "2"},
+                {"psrf_qqunionid", ""},
+                {"psrf_qqaccess_token", ""},
+                {"tmeLoginType", "2"}
             }},
             {"music.search.SearchCgiService.DoSearchForQQMusicDesktop", {
                 {"module", "music.search.SearchCgiService"},
                 {"method", "DoSearchForQQMusicDesktop"},
                 {"param", {
-                    {"query", title},
+                    {"num_per_page", 10},
                     {"page_num", 1},
-                    {"page_size", 10},
-                    {"search_type", 0}
+                    {"remoteplace", "txt.mac.search"},
+                    {"search_type", 0},
+                    {"query", title},
+                    {"grp", 1},
+                    {"searchid", generateUUID()},
+                    {"nqc_flag", 0}
                 }}
             }}
         };
 
-        std::string jsonBody = payload.dump(-1, ' ', false, json::error_handler_t::replace);
+        std::string jsonBody = payload.dump();
 
         std::string body;
         long code = 0;
         std::vector<std::pair<std::string, std::string>> hdrs = {
-            {"Referer", "https://y.qq.com"},
-            {"Content-Type", "application/json"},
-            {"User-Agent", "Mozilla/5.0"},
+            {"Referer", "https://y.qq.com/portal/profile.html"},
+            {"Content-Type", "application/json; charset=UTF-8"},
+            {"User-Agent", "QQ%E9%9F%B3%E4%B9%90/73222 CFNetwork/1406.0.3 Darwin/22.4.0"},
         };
-        if (!httpPost(url, jsonBody, body, &code, hdrs) || code != 200) return songs;
+        if (!httpPost(url, jsonBody, body, &code, hdrs) || code != 200) {
+            std::cerr << "[scraper]   QQ音乐 POST 失败: HTTP " << code << std::endl;
+            return songs;
+        }
 
         try {
             auto j = json::parse(body);
@@ -1413,6 +1549,9 @@ public:
                 cs.resource = "qmusic";
                 songs.push_back(std::move(cs));
             }
+            std::cerr << "[scraper]   QQ音乐返回 " << songs.size() << " 条结果"
+                      << (songs.empty() ? "" : ", 首个albumImg=" + songs[0].albumImg)
+                      << std::endl;
         } catch (const json::exception& e) {
             lastError_ = std::string("QQ音乐 JSON 解析失败: ") + e.what();
         }
@@ -1443,6 +1582,21 @@ public:
     }
 
 private:
+    /// 生成 UUID 格式的 searchid（QQ 音乐搜索请求需要）
+    static std::string generateUUID() {
+        unsigned char buf[16];
+        RAND_bytes(buf, sizeof(buf));
+        // 格式: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        char hex[37];
+        std::snprintf(hex, sizeof(hex),
+            "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+            buf[0], buf[1], buf[2], buf[3],
+            buf[4], buf[5], buf[6], buf[7],
+            buf[8], buf[9], buf[10], buf[11],
+            buf[12], buf[13], buf[14], buf[15]);
+        return hex;
+    }
+
     /// Base64 解码（QQ 音乐歌词为 Base64 编码）
     static std::string decodeBase64(const std::string& encoded) {
         static const std::string table =
@@ -1537,9 +1691,12 @@ private:
         long code = 0;
         std::vector<std::pair<std::string, std::string>> hdrs = {
             {"Referer", "https://www.kugou.com"},
-            {"User-Agent", "Mozilla/5.0"},
+            {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},
         };
-        if (!httpGet(url, body, &code, hdrs) || code != 200) return false;
+        if (!httpGet(url, body, &code, hdrs) || code != 200) {
+            std::cerr << "[scraper]   酷狗签名 API 失败: HTTP " << code << std::endl;
+            return false;
+        }
 
         try {
             auto j = json::parse(body);
@@ -1557,6 +1714,9 @@ private:
                 cs.resource = "kugou";
                 songs.push_back(std::move(cs));
             }
+            std::cerr << "[scraper]   酷狗返回 " << songs.size() << " 条结果"
+                      << (songs.empty() ? "" : ", 首个albumImg=" + songs[0].albumImg)
+                      << std::endl;
         } catch (const json::exception& e) {
             lastError_ = std::string("酷狗 JSON 解析失败: ") + e.what();
         }
@@ -1573,6 +1733,7 @@ private:
         long code = 0;
         std::vector<std::pair<std::string, std::string>> hdrs = {
             {"Referer", "https://m.kugou.com"},
+            {"User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"},
         };
         if (!httpGet(url, body, &code, hdrs) || code != 200) return songs;
 
@@ -1608,12 +1769,15 @@ private:
         return out;
     }
 
-    /// 规范化歌手字符串（清理分隔符）
+    /// 规范化歌手字符串（将 、 分隔符替换为英文逗号）
     static std::string normalizeArtists(const std::string& raw) {
         std::string out = sanitizeHighlight(raw);
-        // 将中文分隔符统一为英文逗号
-        for (auto& c : out) {
-            if (c == '\xe3' || c == '\x81' || c == '\x80') c = ',';
+        // 替换全角顿号 、 (U+3001, UTF-8: \xE3\x80\x81) 为英文逗号
+        // 注意：必须匹配完整 UTF-8 序列，逐字节替换会损坏其他中文字符
+        std::string::size_type pos = 0;
+        while ((pos = out.find("\xE3\x80\x81", pos)) != std::string::npos) {
+            out.replace(pos, 3, ",");
+            pos += 1;
         }
         // 清理多余逗号
         std::string cleaned;
@@ -1657,7 +1821,10 @@ public:
         std::string body;
         long code = 0;
         auto hdrs = buildHeaders();
-        if (!httpGet(url, body, &code, hdrs) || code != 200) return songs;
+        if (!httpGet(url, body, &code, hdrs) || code != 200) {
+            std::cerr << "[scraper]   酷我 API 失败: HTTP " << code << std::endl;
+            return songs;
+        }
 
         try {
             auto j = json::parse(body);
@@ -1673,6 +1840,9 @@ public:
                 cs.resource = "kuwo";
                 songs.push_back(std::move(cs));
             }
+            std::cerr << "[scraper]   酷我返回 " << songs.size() << " 条结果"
+                      << (songs.empty() ? "" : ", 首个albumImg=" + songs[0].albumImg)
+                      << std::endl;
         } catch (const json::exception& e) {
             lastError_ = std::string("酷我 JSON 解析失败: ") + e.what();
         }
@@ -1716,7 +1886,7 @@ private:
         if (token_.empty()) token_ = generateToken();
         if (cross_.empty()) cross_ = computeCross(token_);
         return {
-            {"User-Agent", "Mozilla/5.0"},
+            {"User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"},
             {"Referer", "http://www.kuwo.cn/"},
             {"Cross", cross_},
             {"Cookie", "Hm_token=" + token_},
@@ -1733,13 +1903,6 @@ private:
             tok.push_back(chars[std::rand() % (sizeof(chars) - 1)]);
         }
         return tok;
-    }
-
-    /// 生成 Cross 头：SHA1(token) → MD5(hex)
-    std::string generateCross() {
-        if (token_.empty()) token_ = generateToken();
-        if (cross_.empty()) cross_ = computeCross(token_);
-        return cross_;
     }
 
     static std::string computeCross(const std::string& token);
@@ -1764,9 +1927,12 @@ public:
         long code = 0;
         std::vector<std::pair<std::string, std::string>> hdrs = {
             {"Referer", "https://m.music.migu.cn/"},
-            {"User-Agent", "Mozilla/5.0"},
+            {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0"},
         };
-        if (!httpGet(url, body, &code, hdrs) || code != 200) return songs;
+        if (!httpGet(url, body, &code, hdrs) || code != 200) {
+            std::cerr << "[scraper]   咪咕 API 失败: HTTP " << code << std::endl;
+            return songs;
+        }
 
         try {
             auto j = json::parse(body);
@@ -1780,6 +1946,9 @@ public:
                 cs.resource = "migu";
                 songs.push_back(std::move(cs));
             }
+            std::cerr << "[scraper]   咪咕返回 " << songs.size() << " 条结果"
+                      << (songs.empty() ? "" : ", 首个albumImg=" + songs[0].albumImg)
+                      << std::endl;
         } catch (const json::exception& e) {
             lastError_ = std::string("咪咕 JSON 解析失败: ") + e.what();
         }
@@ -1795,7 +1964,7 @@ public:
         long code = 0;
         std::vector<std::pair<std::string, std::string>> hdrs = {
             {"Referer", "https://m.music.migu.cn/"},
-            {"User-Agent", "Mozilla/5.0"},
+            {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0"},
         };
         if (!httpGet(url, body, &code, hdrs) || code != 200) return "";
         try {
@@ -1870,9 +2039,6 @@ private:
 /// 整合 MusicBrainz + Deezer + iTunes + Cover Art Archive + LRCLIB
 /// 以及中文音乐源（网易云/QQ/酷狗/酷我/咪咕），多源并发查询
 /// 支持 AcoustID 音频指纹回退（无标签文件识别）
-
-// 前置声明
-class AcoustIDClient;
 
 // ============================================================================
 // AcoustID 客户端 —— 音频指纹识别
@@ -2019,20 +2185,13 @@ private:
         lastReq_ = std::chrono::steady_clock::now();
     }
 
-    std::string urlEncode(const std::string& s) {
-        char* encoded = curl_easy_escape(curl_, s.c_str(), static_cast<int>(s.length()));
-        std::string result(encoded);
-        curl_free(encoded);
-        return result;
-    }
-
     bool httpPost(const std::string& url, const std::string& data,
                   const std::string& contentType, std::string& body, long* code) {
         body.clear();
         curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl_, CURLOPT_POSTFIELDS, data.c_str());
         curl_easy_setopt(curl_, CURLOPT_POSTFIELDSIZE, static_cast<long>(data.size()));
-        curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, writeCb);
+        curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, ::splayer::scraper::writeCb);
         curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &body);
         curl_easy_setopt(curl_, CURLOPT_USERAGENT, cfg_.userAgent.c_str());
         curl_easy_setopt(curl_, CURLOPT_TIMEOUT_MS, cfg_.requestTimeoutMs);
@@ -2047,13 +2206,6 @@ private:
         if (code) curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, code);
         if (headers) curl_slist_free_all(headers);
         return res == CURLE_OK;
-    }
-
-    static size_t writeCb(char* ptr, size_t size, size_t nmemb, void* userdata) {
-        auto* str = static_cast<std::string*>(userdata);
-        size_t total = size * nmemb;
-        str->append(ptr, total);
-        return total;
     }
 
     CURL* curl_ = nullptr;
@@ -2155,9 +2307,15 @@ public:
         std::vector<ScoredSource> scoredSources;
 
         // 封面/歌词辅助 URL
-        std::string dzCoverUrl, itCoverUrl;
-        std::string bestChineseCoverUrl;
-        std::string bestChineseSource;
+          std::string dzCoverUrl, itCoverUrl;
+          std::string bestChineseSource;
+          // 所有中文源封面候选（按评分降序，下载时逐个回退）
+          struct ChineseCoverCandidate {
+              std::string source;
+              std::string url;
+              int score;
+          };
+          std::vector<ChineseCoverCandidate> chineseCoverCandidates;
 
         // 2.1 MusicBrainz（永久最高评分 100，直接作为基础）
         //     MusicBrainz 内部已校验 isSimilar 双向匹配，不匹配会清空元数据
@@ -2293,21 +2451,46 @@ public:
         }
 
         static constexpr int CHINESE_MIN_SCORE = 2;
+        int bestChineseScore = -1;  // 记录最高评分，用于选择最佳封面源
+        int totalPassed = 0;        // 通过评分门槛的歌曲数
         for (const auto& cr : chineseResults) {
+            int srcPassed = 0;
             for (const auto& song : cr.songs) {
                 int rawScore = scoreChineseSong(song, track);
                 if (rawScore < CHINESE_MIN_SCORE) continue;
+                ++srcPassed; ++totalPassed;
                 // 归一化到 0-100：原始分 0-14，乘 7 = 0-98，加源优先级（0-5）
                 int score = rawScore * 7 + cr.priority;
                 ScrapeResult sr;
                 ChineseMusicClientBase::toScrapeResult(song, sr, cr.name);
                 scoredSources.push_back({sr, cr.name, score});
-                // 记住最佳中文源的封面
-                if (score > 0 && bestChineseSource.empty()) {
-                    bestChineseCoverUrl = song.albumImg;
+                // 收集所有有封面的中文源候选（按评分降序回退）
+                if (!song.albumImg.empty()) {
+                    chineseCoverCandidates.push_back({cr.name, song.albumImg, score});
+                }
+                // 记住评分最高的中文源（用于歌词回退等）
+                if (score > bestChineseScore) {
+                    bestChineseScore = score;
                     bestChineseSource = cr.name;
                 }
             }
+            std::cerr << "[scraper]   " << cr.name << ": " << cr.songs.size()
+                      << " 结果, " << srcPassed << " 通过评分" << std::endl;
+        }
+
+        // 按评分降序排序中文封面候选
+        std::sort(chineseCoverCandidates.begin(), chineseCoverCandidates.end(),
+            [](const ChineseCoverCandidate& a, const ChineseCoverCandidate& b) {
+                return a.score > b.score;
+            });
+
+        if (!chineseCoverCandidates.empty()) {
+            std::cerr << "[scraper]   中文源封面候选: " << chineseCoverCandidates.size() << " 个"
+                      << " (最佳: " << chineseCoverCandidates[0].source
+                      << " score=" << chineseCoverCandidates[0].score << ")" << std::endl;
+        } else {
+            std::cerr << "[scraper]   中文源未返回有效封面 URL（"
+                      << chineseResults.size() << " 个源）" << std::endl;
         }
 
         // ====================================================================
@@ -2316,10 +2499,14 @@ public:
         std::sort(scoredSources.begin(), scoredSources.end(),
             [](const ScoredSource& a, const ScoredSource& b) { return a.score > b.score; });
 
-        // 首个（最高分）合并核心身份字段（title/artist/album/albumArtist/mbid）
+        // 合并核心身份字段（title/artist/album/albumArtist/mbid）
+        // 按评分遍历，取首个有实际身份数据的源
+        // 避免 MusicBrainz 对中文歌返回空结果时阻塞中文源的身份字段
         for (const auto& ss : scoredSources) {
-            mergeIdentity(result, ss.sr);
-            break;  // 仅最高分源
+            if (ss.sr.title || ss.sr.artist || ss.sr.mbid) {
+                mergeIdentity(result, ss.sr);
+                break;
+            }
         }
 
         // 所有通过严格匹配的源合并辅助字段（按评分顺序：高分优先）
@@ -2331,19 +2518,44 @@ public:
         // 阶段 3：封面获取（按优先级：Cover Art Archive → Deezer → iTunes → 中文源）
         // ====================================================================
         if (cfg_.embedCover && result.coverData.empty()) {
+            std::cerr << "[scraper]   封面来源状态: albumMbid=" << (result.albumMbid ? *result.albumMbid : "(无)")
+                      << ", dzCoverUrl=" << (dzCoverUrl.empty() ? "(空)" : dzCoverUrl)
+                      << ", itCoverUrl=" << (itCoverUrl.empty() ? "(空)" : itCoverUrl)
+                      << ", chineseCandidates=" << chineseCoverCandidates.size() << " 个"
+                      << std::endl;
             bool gotCover = false;
             if (result.albumMbid) {
                 gotCover = cover_.fetchCover(*result.albumMbid, result);
+                if (!gotCover) {
+                    std::cerr << "[scraper]   ⚠ Cover Art Archive 获取失败 (albumMbid=" << *result.albumMbid << ")" << std::endl;
+                }
             }
             if (!gotCover && !dzCoverUrl.empty()) {
+                std::cerr << "[scraper]   尝试 Deezer 封面: " << dzCoverUrl << std::endl;
                 gotCover = dz_.fetchCover(dzCoverUrl, result);
+                if (!gotCover) {
+                    std::cerr << "[scraper]   ⚠ Deezer 封面下载失败" << std::endl;
+                }
             }
             if (!gotCover && !itCoverUrl.empty()) {
+                std::cerr << "[scraper]   尝试 iTunes 封面: " << itCoverUrl << std::endl;
                 gotCover = it_.fetchCover(itCoverUrl, result);
+                if (!gotCover) {
+                    std::cerr << "[scraper]   ⚠ iTunes 封面下载失败" << std::endl;
+                }
             }
-            if (!gotCover && !bestChineseCoverUrl.empty()) {
-                // 使用最佳中文源的封面（需找到对应的客户端实例）
-                gotCover = fetchChineseCover(bestChineseSource, bestChineseCoverUrl, result);
+            // 中文源：按评分降序逐个尝试，任一成功即停止
+            for (const auto& cc : chineseCoverCandidates) {
+                if (gotCover) break;
+                std::cerr << "[scraper]   尝试 " << cc.source << " 封面 (score=" << cc.score << "): "
+                          << cc.url.substr(0, 80) << (cc.url.size() > 80 ? "..." : "") << std::endl;
+                gotCover = fetchChineseCover(cc.source, cc.url, result);
+                if (!gotCover) {
+                    std::cerr << "[scraper]   ⚠ " << cc.source << " 封面下载失败" << std::endl;
+                }
+            }
+            if (!gotCover) {
+                std::cerr << "[scraper]   ⚠ 未获取到封面（所有源均失败或 URL 为空）" << std::endl;
             }
         }
 
@@ -2433,65 +2645,14 @@ private:
         }
     }
 
-    /// 统一字符串相似度（0.0-1.0），供评分使用
-    /// normalize：保留 UTF-8 多字节字符，用于中文/日文/韩文等非 ASCII 内容
-    static std::string normalize(const std::string& s) {
-        std::string out;
-        out.reserve(s.size());
-        for (size_t i = 0; i < s.size(); ) {
-            unsigned char c = static_cast<unsigned char>(s[i]);
-            // UTF-8 多字节序列（首字节 >= 0xC0）
-            if (c >= 0xC0) {
-                size_t len = 0;
-                if ((c & 0xE0) == 0xC0) len = 2;
-                else if ((c & 0xF0) == 0xE0) len = 3;
-                else if ((c & 0xF8) == 0xF0) len = 4;
-                if (len >= 2 && i + len <= s.size()) {
-                    for (size_t j = 0; j < len; ++j) out.push_back(s[i + j]);
-                    i += len;
-                    continue;
-                }
-                out.push_back(std::tolower(c));
-                ++i;
-                continue;
-            }
-            if (std::isalnum(c)) out.push_back(std::tolower(c));
-            ++i;
-        }
-        return out;
-    }
-
-    /// 统一字符串相似度（0.0-1.0），供评分使用
-    static double similarity(const std::string& a, const std::string& b) {
-        std::string na = MetadataResolver::normalize(a);
-        std::string nb = MetadataResolver::normalize(b);
-        if (na.empty() && nb.empty()) return 1.0;
-        if (na.empty() || nb.empty()) return 0.0;
-        if (na == nb) return 1.0;
-        if (na.find(nb) != std::string::npos || nb.find(na) != std::string::npos) return 0.85;
-        std::vector<int> prev(nb.size() + 1), curr(nb.size() + 1);
-        for (size_t j = 0; j <= nb.size(); ++j) prev[j] = static_cast<int>(j);
-        for (size_t i = 1; i <= na.size(); ++i) {
-            curr[0] = static_cast<int>(i);
-            for (size_t j = 1; j <= nb.size(); ++j) {
-                int cost = (na[i - 1] == nb[j - 1]) ? 0 : 1;
-                curr[j] = std::min({prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost});
-            }
-            std::swap(prev, curr);
-        }
-        int dist = prev[nb.size()];
-        int maxLen = static_cast<int>(std::max(na.size(), nb.size()));
-        return maxLen == 0 ? 1.0 : 1.0 - static_cast<double>(dist) / maxLen;
-    }
-
     /// 统一评分：按文件名 artist+title 对任何 ScrapeResult 打分（0-100）
     /// artist 与 title 各自独立匹配，任一低于 0.5 视为不相关（返回 0）
     static int scoreResult(const ScrapeResult& r, const TrackInfo& track) {
         std::string rArtist = r.artist.value_or("");
         std::string rTitle = r.title.value_or("");
         if (rArtist.empty() || rTitle.empty()) return 0;
-        double aSim = similarity(rArtist, track.artist);
-        double tSim = similarity(rTitle, track.title);
+        double aSim = ::splayer::scraper::similarity(rArtist, track.artist);
+        double tSim = ::splayer::scraper::similarity(rTitle, track.title);
         if (aSim < 0.5 || tSim < 0.5) return 0;  // 任一不匹配
         // artist 权重 40%，title 权重 60%（标题更能区分曲目）
         return static_cast<int>(aSim * 40 + tSim * 60);
@@ -2517,14 +2678,26 @@ private:
         return titleScore * 4 + artistScore * 2 + albumScore;
     }
 
-    /// 根据源名称获取封面
+    /// 根据源名称获取封面（带防盗链 Referer）
     bool fetchChineseCover(const std::string& source, const std::string& coverUrl,
                            ScrapeResult& result) {
-        if (source == "netease") return ne_.fetchCover(coverUrl, result);
-        if (source == "qmusic") return qq_.fetchCover(coverUrl, result);
-        if (source == "kugou") return kg_.fetchCover(coverUrl, result);
-        if (source == "kuwo") return kw_.fetchCover(coverUrl, result);
-        if (source == "migu") return mg_.fetchCover(coverUrl, result);
+        // 各中文源的 Referer 防盗链要求
+        static const std::unordered_map<std::string, std::string> refererMap = {
+            {"netease", "https://music.163.com"},
+            {"qmusic", "https://y.qq.com"},
+            {"kugou", "https://www.kugou.com"},
+            {"kuwo", "http://www.kuwo.cn"},
+            {"migu", "https://m.music.migu.cn"},
+        };
+        std::string referer;
+        auto it = refererMap.find(source);
+        if (it != refererMap.end()) referer = it->second;
+
+        if (source == "netease") return ne_.fetchCover(coverUrl, result, referer);
+        if (source == "qmusic") return qq_.fetchCover(coverUrl, result, referer);
+        if (source == "kugou") return kg_.fetchCover(coverUrl, result, referer);
+        if (source == "kuwo") return kw_.fetchCover(coverUrl, result, referer);
+        if (source == "migu") return mg_.fetchCover(coverUrl, result, referer);
         return false;
     }
 

@@ -319,6 +319,9 @@ export const useLibraryStore = defineStore("library", () => {
   /** 开始刮削
    * @param mode 运行模式 once | daemon
    * @param dirs 刮削目录列表。为空时使用已配置的 scrapeDirs
+   *
+   * 进度推送完全由 C++ 刮削器 → stdout → 服务端 → WebSocket 驱动，
+   * 前端仅负责展示，不参与进度逻辑。
    */
   const startScrape = async (mode: "once" | "daemon" = "once", dirs?: string[]): Promise<boolean> => {
     if (scraping.value) return false;
@@ -336,38 +339,7 @@ export const useLibraryStore = defineStore("library", () => {
         scrapeProgress.value = null;
         return false;
       }
-      if (res.progress) {
-        const current = scrapeProgress.value;
-        const currentDone = !!current && !current.scraping && !current.organizing;
-        // 空目录等“秒退”场景里，WS 终态可能先于 start 响应到达；避免旧快照把终态覆盖回运行中。
-        if (currentDone) {
-          return true;
-        }
-        // 只合并进度数据，不覆盖 scraping 状态 —— WS 是权威来源
-        // HTTP 响应先于 C++ 退出返回时 scraping=true，如果之后 WS scrape:done 已设为 false，
-        // 用 HTTP 值覆盖会导致前端卡在"刮削中"
-        scrapeProgress.value = {
-          ...current,
-          ...res.progress,
-          scraping: scraping.value, // 保留 WS 已更新的 scraping 状态
-        };
-        // 安全网：total=0 表示空目录/C++已秒退，WS 事件可能已丢失
-        // 延迟拉取服务端实际状态，防止前端永久卡在"正在刮削"
-        if (res.progress.total === 0) {
-          setTimeout(async () => {
-            if (!scraping.value) return; // 已被 WS 事件纠正，无需兜底
-            try {
-              const latest = await scraperApi.getProgress();
-              if (!latest.scraping && !latest.organizing) {
-                scrapeProgress.value = latest;
-                scraping.value = false;
-              }
-            } catch {
-              // 静默忽略，前端仍可通过取消按钮强制退出
-            }
-          }, 2000);
-        }
-      }
+
       return true;
     } catch (err) {
       console.error("[library] startScrape failed:", err);
@@ -722,18 +694,6 @@ export const useLibraryStore = defineStore("library", () => {
           cacheTracks(res.data);
         }
       });
-    });
-    void scraperApi.getProgress().then((progress) => {
-      const current = scrapeProgress.value;
-      const currentDone = !!current && !current.scraping && !current.organizing;
-      // 订阅建立后，HTTP 快照可能晚于 WS 终态到达；忽略过期的运行中快照。
-      if (currentDone && (progress.scraping || progress.organizing)) {
-        return;
-      }
-      scrapeProgress.value = progress;
-      scraping.value = progress.scraping || !!progress.organizing;
-    }).catch(() => {
-      // WS 仍是主通道；这里仅作首次订阅兜底
     });
     scrapeUnsubscribe = () => {
       unsubProgress();

@@ -37,14 +37,22 @@ public sealed class ScannerEngine
     private readonly IScannerDatabase _db;
     private readonly string _coverCacheDir;
     private readonly string _quarantineDir;
-    private readonly int _batchSize;
+    private readonly AdaptiveBatchSize _adaptiveBatch;
     private readonly bool _incremental;
 
     private readonly long _maxFileSizeBytes;
     private readonly int _maxScanFiles;
     private readonly int _maxScanErrors;
     private readonly int _maxParallelism;
-    private readonly object _lock = new();
+
+    private sealed class ScanCounters
+    {
+        public int Scanned;
+        public int Upserted;
+        public int Errors;
+        public int Trained;
+        public int ConsecutiveErrors;
+    }
 
     public ScannerEngine(
         IScannerDatabase db,
@@ -60,7 +68,7 @@ public sealed class ScannerEngine
         _db = db;
         _coverCacheDir = coverCacheDir;
         _quarantineDir = quarantineDir;
-        _batchSize = Math.Max(1, batchSize);
+        _adaptiveBatch = new AdaptiveBatchSize(batchSize); // batchSize = 0 不限，作为用户上限
         _incremental = incremental;
 
         // 安全限制：默认与 C++ 刮削器保持一致
@@ -94,10 +102,11 @@ public sealed class ScannerEngine
         var sw = Stopwatch.StartNew();
         var result = new ScanResult();
         var progress = new ScanProgress { Scanning = true, StartedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+        var counters = new ScanCounters();
 
         // 1. 收集文件（自动去重，防止重叠目录导致同一文件被处理两次）
         LogInfo($"开始扫描 (incremental={_incremental}, parallelism={_maxParallelism}): {string.Join(", ", dirs)}");
-        var files = await CollectFilesAsync(dirs, ct);
+        var files = await CollectFilesAsync(dirs, progress, ct);
         if (files.Count > _maxScanFiles)
         {
             LogWarn($"文件数量 {files.Count} 超过上限 {_maxScanFiles}，将截断处理");
@@ -131,7 +140,7 @@ public sealed class ScannerEngine
             FullMode = BoundedChannelFullMode.Wait,
             SingleWriter = false,
         });
-        var writer = Task.Run(async () => await ChannelWriterAsync(channel.Reader, result, ct), ct);
+        var writer = Task.Run(async () => await ChannelWriterAsync(channel.Reader, counters, ct), ct);
 
         // 2.5 一次性加载错误路径快照到内存（全量模式已清空，增量模式加载 fail_count >= 3 的路径）
         //     避免并行循环中每文件查 DB 导致的锁竞争串行化
@@ -155,8 +164,8 @@ public sealed class ScannerEngine
         // seenPaths：线程安全地跟踪已处理文件，防止 Parallel.ForEachAsync 重复处理
         var seenPaths = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
 
-        int consecutiveErrors = 0;
         var lastEmit = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var currentPath = string.Empty;
 
         try
         {
@@ -168,7 +177,7 @@ public sealed class ScannerEngine
                 if (!seenPaths.TryAdd(file, 0))
                     return;
 
-                lock (_lock) { progress.Current = file; }
+                Volatile.Write(ref currentPath, file);
 
                 // 增量扫描：从内存快照 TryRemove，不变跳过
                 bool shouldSkip = false;
@@ -185,8 +194,8 @@ public sealed class ScannerEngine
                 }
                 if (shouldSkip)
                 {
-                    lock (_lock) { progress.Scanned++; result.Scanned++; }
-                    TryEmitProgress(ref lastEmit, progress, result);
+                    Interlocked.Increment(ref counters.Scanned);
+                    TryEmitProgress(ref lastEmit, progress, counters, Volatile.Read(ref currentPath));
                     return;
                 }
 
@@ -197,23 +206,23 @@ public sealed class ScannerEngine
                     LogWarn($"标记损坏文件（待隔离 trained）: {file}");
                     try { await _db.MarkTrainedAsync(file, itemCt); }
                     catch (Exception ex) { LogWarn($"标记隔离失败 {file}: {ex.Message}"); }
-                    lock (_lock) { progress.Scanned++; result.Scanned++; result.Trained++; progress.Trained = result.Trained; }
-                    TryEmitProgress(ref lastEmit, progress, result);
+                    Interlocked.Increment(ref counters.Trained);
+                    Interlocked.Increment(ref counters.Scanned);
+                    TryEmitProgress(ref lastEmit, progress, counters, Volatile.Read(ref currentPath));
                     return;
                 }
 
-                var track = await Task.Run(() => ParseFile(file), itemCt);
+                var track = ParseFile(file);
                 if (track != null)
                 {
-                    lock (_lock) { consecutiveErrors = 0; }
+                    Interlocked.Exchange(ref counters.ConsecutiveErrors, 0);
                     await channel.Writer.WriteAsync(track, itemCt);
-                    lock (_lock) { result.Upserted++; }
+                    Interlocked.Increment(ref counters.Upserted);
                 }
                 else
                 {
-                    int errCount;
-                    lock (_lock) { errCount = ++consecutiveErrors; }
-                    lock (_lock) { result.Errors++; }
+                    var errCount = Interlocked.Increment(ref counters.ConsecutiveErrors);
+                    Interlocked.Increment(ref counters.Errors);
                     // 记录解析失败到 _scanner_errors 表（含具体原因）
                     try { await _db.RecordParseErrorAsync(file, "parse_failed", itemCt); }
                     catch { /* 非致命错误 */ }
@@ -224,8 +233,8 @@ public sealed class ScannerEngine
                     }
                 }
 
-                lock (_lock) { progress.Scanned++; result.Scanned++; }
-                TryEmitProgress(ref lastEmit, progress, result);
+                Interlocked.Increment(ref counters.Scanned);
+                TryEmitProgress(ref lastEmit, progress, counters, Volatile.Read(ref currentPath));
             });
         }
         catch (OperationCanceledException)
@@ -235,7 +244,7 @@ public sealed class ScannerEngine
         catch (Exception ex)
         {
             LogError($"扫描异常: {ex.Message}");
-            result.Errors++;
+            Interlocked.Increment(ref counters.Errors);
         }
         finally
         {
@@ -243,6 +252,10 @@ public sealed class ScannerEngine
         }
 
         await writer;
+        result.Scanned = Volatile.Read(ref counters.Scanned);
+        result.Upserted = Volatile.Read(ref counters.Upserted);
+        result.Errors = Volatile.Read(ref counters.Errors);
+        result.Trained = Volatile.Read(ref counters.Trained);
 
         // 4. 清理快照残留（＝磁盘已删除的文件）
         if (!ct.IsCancellationRequested && trackSnapshot != null && !trackSnapshot.IsEmpty)
@@ -360,23 +373,34 @@ public sealed class ScannerEngine
     }
 
     /// <summary>
-    /// Channel 消费者：攒批写入 TS 层
+    /// Channel 消费者：攒批写入 SQLite，根据写入耗时 + 系统内存动态调整批量大小。
+    /// 目标每批写入 ~300ms，快则加量、慢则减量，每批都评估。
     /// </summary>
-    private async Task ChannelWriterAsync(ChannelReader<TrackMetadata> reader, ScanResult result, CancellationToken ct)
+    private async Task ChannelWriterAsync(ChannelReader<TrackMetadata> reader, ScanCounters counters, CancellationToken ct)
     {
-        var batch = new List<TrackMetadata>(_batchSize);
+        var dynamicBatchSize = _adaptiveBatch.Initial();
+        LogInfo($"写入线程启动，初始批量大小: {dynamicBatchSize}");
+        var batch = new List<TrackMetadata>(dynamicBatchSize);
+
         await foreach (var track in reader.ReadAllAsync(ct))
         {
             batch.Add(track);
-            if (batch.Count >= _batchSize)
-                await FlushBatchAsync(batch, result, ct);
+            if (batch.Count >= dynamicBatchSize)
+            {
+                var elapsedMs = await FlushBatchAsync(batch, counters, ct);
+                var previous = dynamicBatchSize;
+                dynamicBatchSize = _adaptiveBatch.Adjust(previous, elapsedMs);
+                if (dynamicBatchSize != previous)
+                    LogInfo($"批量调整: {previous} → {dynamicBatchSize} (上批耗时 {elapsedMs:F0}ms)");
+            }
         }
         if (batch.Count > 0)
-            await FlushBatchAsync(batch, result, ct);
+            await FlushBatchAsync(batch, counters, ct);
     }
 
-    private async Task FlushBatchAsync(List<TrackMetadata> batch, ScanResult result, CancellationToken ct)
+    private async Task<double> FlushBatchAsync(List<TrackMetadata> batch, ScanCounters counters, CancellationToken ct)
     {
+        var sw = Stopwatch.StartNew();
         try
         {
             await _db.UpsertTracksAsync(batch, ct);
@@ -384,30 +408,32 @@ public sealed class ScannerEngine
         catch (Exception ex)
         {
             LogError($"批量写入失败: {ex.Message}");
-            lock (_lock) { result.Errors += batch.Count; }
+            Interlocked.Add(ref counters.Errors, batch.Count);
         }
         finally
         {
             batch.Clear();
         }
+        return sw.Elapsed.TotalMilliseconds;
     }
 
     /// <summary>
-    /// 递归收集音频文件
+    /// 递归收集音频文件，枚举过程中周期性上报进度
     /// </summary>
-    private async Task<List<string>> CollectFilesAsync(List<string> dirs, CancellationToken ct)
+    private async Task<List<string>> CollectFilesAsync(List<string> dirs, ScanProgress progress, CancellationToken ct)
     {
         var result = new List<string>();
+        var lastEmit = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         foreach (var dir in dirs)
         {
             if (ct.IsCancellationRequested) break;
-            await WalkAsync(dir, result, ct);
+            WalkAsync(dir, result, progress, ref lastEmit, ct);
             if (result.Count >= _maxScanFiles) break;
         }
         return result;
     }
 
-    private async Task WalkAsync(string dir, List<string> result, CancellationToken ct)
+    private void WalkAsync(string dir, List<string> result, ScanProgress progress, ref long lastEmit, CancellationToken ct)
     {
         IEnumerable<string> entries;
         try { entries = Directory.EnumerateFileSystemEntries(dir, "*", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = false }); }
@@ -424,13 +450,23 @@ public sealed class ScannerEngine
                 var attr = File.GetAttributes(full);
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
-                    await WalkAsync(full, result, ct);
+                    WalkAsync(full, result, progress, ref lastEmit, ct);
                 }
                 else
                 {
                     var ext = Path.GetExtension(full).TrimStart('.').ToLowerInvariant();
                     if (AudioExt.Contains(ext))
+                    {
                         result.Add(full);
+                        // 每发现文件都更新 total，但限制广播频率（每 200ms 最多一次）
+                        progress.Total = result.Count;
+                        var now = NowMs();
+                        if (now - lastEmit > 200)
+                        {
+                            EmitProgress(progress);
+                            lastEmit = now;
+                        }
+                    }
                 }
             }
             catch { /* 软链接/权限等跳过 */ }
@@ -557,16 +593,24 @@ public sealed class ScannerEngine
         catch { return null; }
     }
 
-    private void TryEmitProgress(ref long lastEmit, ScanProgress p, ScanResult result)
+    private void TryEmitProgress(ref long lastEmit, ScanProgress p, ScanCounters counters, string current)
     {
-        p.Upserted = result.Upserted;
-        p.Errors = result.Errors;
         var now = NowMs();
-        if (now - lastEmit > 500)
+        var prev = Interlocked.Read(ref lastEmit);
+        if (now - prev <= 500) return;
+        if (Interlocked.CompareExchange(ref lastEmit, now, prev) != prev) return;
+
+        EmitProgress(new ScanProgress
         {
-            EmitProgress(p);
-            lastEmit = now;
-        }
+            Scanning = p.Scanning,
+            StartedAt = p.StartedAt,
+            Total = p.Total,
+            Scanned = Volatile.Read(ref counters.Scanned),
+            Current = current,
+            Upserted = Volatile.Read(ref counters.Upserted),
+            Errors = Volatile.Read(ref counters.Errors),
+            Trained = Volatile.Read(ref counters.Trained),
+        });
     }
 
     private static string Md5Hex(string input)

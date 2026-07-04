@@ -819,6 +819,12 @@
       "label": "进度调节吸附最近歌词",
       "description": "调节进度时自动吸附到最近的歌词行"
     },
+    "transitionStyle": {
+      "label": "媒体信息切换动效",
+      "description": "切歌时封面与歌曲信息的过渡动画效果",
+      "scale": "缩放",
+      "slide": "侧边滑动"
+    },
     "enableSpectrum": {
       "label": "启用音乐频谱",
       "description": "实时频谱分析会持续占用一定的 CPU，性能敏感设备建议关闭"

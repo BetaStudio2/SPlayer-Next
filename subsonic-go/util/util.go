@@ -90,8 +90,10 @@ func TrackToChild(t model.Track, userID string, includeStarred bool, isStarredFn
 		album = ParseAlbum(t.AlbumJSON.String)
 	}
 	albumName := ""
+	albumYear := 0
 	if album != nil {
 		albumName = album.Name
+		albumYear = album.Year
 	}
 
 	child := map[string]any{
@@ -110,6 +112,7 @@ func TrackToChild(t model.Track, userID string, includeStarred bool, isStarredFn
 		"discNumber":  1,
 		"type":        "music",
 		"artistId":    FirstArtistID(artists),
+		"year":        albumYear,
 	}
 	if albumName != "" {
 		child["albumId"] = AlbumIDOf(albumName)
@@ -120,6 +123,9 @@ func TrackToChild(t model.Track, userID string, includeStarred bool, isStarredFn
 	}
 	if t.BitRate.Valid {
 		child["bitRate"] = t.BitRate.Int64
+	}
+	if t.Genre.Valid && t.Genre.String != "" {
+		child["genre"] = t.Genre.String
 	}
 	if t.FileCtime.Valid {
 		child["created"] = TimestampISO(t.FileCtime.Int64)

@@ -214,8 +214,24 @@ const spawnDownloader = (req: DownloadRequest): void => {
   serverLog.info(`[download] 启动 ${req.taskId} → ${path.basename(dest)}`);
 
   attachLineReader(child, req.taskId, child.stdout);
-  // Rust 端的错误日志也尝试按行解析（panic 可能输出非 JSON，记录即可）
-  attachLineReader(child, req.taskId, child.stderr);
+  // stderr 收集非结构化日志（panic / 调试信息），不混入 JSON 解析
+  let stderrBuf = "";
+  if (child.stderr) {
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderrBuf += chunk.toString();
+      let idx: number;
+      while ((idx = stderrBuf.indexOf("\n")) >= 0) {
+        const line = stderrBuf.slice(0, idx).trim();
+        stderrBuf = stderrBuf.slice(idx + 1);
+        if (line) serverLog.warn(`[download] ${req.taskId} stderr: ${line}`);
+      }
+    });
+    child.stderr.on("end", () => {
+      if (stderrBuf.trim()) {
+        serverLog.warn(`[download] ${req.taskId} stderr: ${stderrBuf.trim()}`);
+      }
+    });
+  }
 
   child.on("exit", (code, signal) => {
     children.delete(req.taskId);

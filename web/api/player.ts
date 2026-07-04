@@ -16,6 +16,7 @@ import type {
   IpcResponse,
   AudioDevice,
 } from "@shared/types/player";
+import { registerLoudnessWorklet } from "./loudnessWorklet";
 
 const ok = <T>(data?: T): IpcResponse<T> => ({ success: true, data });
 const fail = (error: string): IpcResponse<never> => ({ success: false, error });
@@ -39,7 +40,8 @@ class WebAudioPlayer implements PlayerApi {
   private ctx: AudioContext | null = null;
   private sourceNode: MediaElementAudioSourceNode | null = null;
   private analyser: AnalyserNode | null = null;
-  private normalizer: DynamicsCompressorNode | null = null;
+  private normalizerNode: AudioWorkletNode | null = null;
+  private normalizerReady = false;
   private preamp: GainNode | null = null;
   private volumeGain: GainNode | null = null;
   private eqNodes: BiquadFilterNode[] = [];
@@ -76,12 +78,6 @@ class WebAudioPlayer implements PlayerApi {
     this.volumeGain = this.ctx.createGain();
     this.volumeGain.gain.value = this.volume;
     this.analyser = this.ctx.createAnalyser();
-    this.normalizer = this.ctx.createDynamicsCompressor();
-    this.normalizer.threshold.value = -18;
-    this.normalizer.knee.value = 18;
-    this.normalizer.ratio.value = 3;
-    this.normalizer.attack.value = 0.003;
-    this.normalizer.release.value = 0.25;
     this.analyser.fftSize = 1024;
     // 10 频段 EQ 链
     const freqs = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
@@ -99,6 +95,12 @@ class WebAudioPlayer implements PlayerApi {
     this.volumeGain.connect(this.analyser);
     this.analyser.connect(this.ctx.destination);
     this.applyProcessingChain();
+    // 异步加载响度归一化 worklet（不阻塞播放路径）
+    if (this.normalization && !this.normalizerReady) {
+      this.ensureNormalizer().catch((err) =>
+        console.warn("[WebAudioPlayer] 响度归一化 worklet 加载失败:", err),
+      );
+    }
   }
 
   /** 根据 EQ / 响度归一化状态重建处理链 */
@@ -107,14 +109,15 @@ class WebAudioPlayer implements PlayerApi {
       !this.ctx ||
       !this.preamp ||
       !this.volumeGain ||
-      !this.normalizer ||
       this.eqNodes.length === 0
     ) {
       return;
     }
     this.preamp.disconnect();
     for (const eq of this.eqNodes) eq.disconnect();
-    this.normalizer.disconnect();
+    if (this.normalizerNode) {
+      try { this.normalizerNode.disconnect(); } catch { /* 未连接时忽略 */ }
+    }
     let node: AudioNode = this.preamp;
     if (this.eqEnabled) {
       node.connect(this.eqNodes[0]);
@@ -123,11 +126,32 @@ class WebAudioPlayer implements PlayerApi {
       }
       node = this.eqNodes[this.eqNodes.length - 1];
     }
-    if (this.normalization) {
-      node.connect(this.normalizer);
-      node = this.normalizer;
+    if (this.normalization && this.normalizerNode) {
+      node.connect(this.normalizerNode);
+      node = this.normalizerNode;
     }
     node.connect(this.volumeGain);
+  }
+
+  /** 异步初始化响度归一化 AudioWorklet */
+  private async ensureNormalizer(): Promise<void> {
+    if (this.normalizerReady || !this.ctx) return;
+    try {
+      await registerLoudnessWorklet(this.ctx);
+      this.normalizerNode = new AudioWorkletNode(this.ctx, "loudness-normalizer");
+      this.normalizerReady = true;
+      // 切歌时发 reset
+      this.normalizerNode.port.onmessage = (e) => {
+        if (e.data?.type === "gainUpdate") {
+          // 保留将来用于向 UI 报告当前增益
+        }
+      };
+      // 将新节点接入已有链
+      this.applyProcessingChain();
+    } catch (err) {
+      this.normalizerReady = false;
+      throw err;
+    }
   }
 
   private clearFadeTimer(): void {
@@ -208,6 +232,10 @@ class WebAudioPlayer implements PlayerApi {
       const url = normalizeSource(source, options?.meta);
       this.ensureGraph();
       if (this.ctx?.state === "suspended") void this.ctx.resume();
+      // 切歌：重置响度归一化分析器
+      if (this.normalizerNode?.port) {
+        this.normalizerNode.port.postMessage({ type: "reset" });
+      }
       this.audio.src = url;
       this.audio.dataset.coverUrl = options?.meta?.cover ?? "";
       this.audio.load();
@@ -382,6 +410,8 @@ class WebAudioPlayer implements PlayerApi {
       this.preamp = null;
       this.volumeGain = null;
       this.eqNodes = [];
+      this.normalizerNode = null;
+      this.normalizerReady = false;
       this.ensureGraph();
     }
     return ok();
@@ -389,6 +419,14 @@ class WebAudioPlayer implements PlayerApi {
 
   async setNormalizationEnabled(enabled: boolean): Promise<IpcResponse> {
     this.normalization = enabled;
+    if (enabled && !this.normalizerReady) {
+      try {
+        await this.ensureNormalizer();
+      } catch (err) {
+        console.warn("[WebAudioPlayer] 响度归一化 worklet 加载失败:", err);
+        this.normalization = false;
+      }
+    }
     this.applyProcessingChain();
     return ok();
   }

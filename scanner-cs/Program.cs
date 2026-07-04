@@ -65,7 +65,7 @@ public static class Program
     {
         string? dirs = null;
         var full = false;
-        var batch = 50;
+        var batch = 0; // 0 = 不限，由 AdaptiveBatchSize 根据内存自动决定
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -159,7 +159,7 @@ public static class Program
             选项:
               --dirs, -d    扫描目录（逗号分隔，默认 $SPLAYER_MUSIC_DIR）
               --full, -f    全量扫描（清空数据库重新构建）
-              --batch, -b   批量写入大小（默认 50）
+              --batch, -b   批量写入上限（默认 0=不限，由系统内存自动决定）
 
             环境变量:
               SPLAYER_DB_PATH             SQLite 数据库路径（必需）

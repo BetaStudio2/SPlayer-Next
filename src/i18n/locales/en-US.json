@@ -831,6 +831,12 @@
       "label": "Snap to Nearest Lyric",
       "description": "Automatically snap to the nearest lyric line when adjusting progress"
     },
+    "transitionStyle": {
+      "label": "Track Transition",
+      "description": "Transition animation when switching tracks",
+      "scale": "Scale",
+      "slide": "Slide"
+    },
     "enableSpectrum": {
       "label": "Enable Spectrum",
       "description": "Real-time spectrum analysis adds some CPU load — consider disabling on lower-power devices"

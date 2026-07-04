@@ -1,6 +1,3 @@
-using System.Globalization;
-using System.Runtime.InteropServices;
-
 namespace SPlayer.Scanner;
 
 /// <summary>
@@ -13,7 +10,7 @@ namespace SPlayer.Scanner;
 ///   3. 可用内存比例（低内存时降低并发）
 ///   4. 工作类型 (I/O bound 可用更高并发，CPU bound 应贴近核心数)
 ///
-/// 上限 32，下限 1，默认 2。
+/// 上限 64，下限 1，默认 2。
 /// </summary>
 public static class AdaptiveConcurrency
 {
@@ -38,8 +35,8 @@ public static class AdaptiveConcurrency
     private static int Compute(bool isCpuBound, int maxOverride)
     {
         var cpuCount = Environment.ProcessorCount;
-        var totalMemMb = GetTotalPhysicalMemoryMb();
-        var availableMemMb = GetAvailableMemoryMb();
+        var totalMemMb = SystemMemoryInfo.GetTotalPhysicalMemoryMb();
+        var availableMemMb = SystemMemoryInfo.GetAvailableMemoryMb();
 
         // 1) CPU 基数
         var baseParallelism = isCpuBound
@@ -70,7 +67,7 @@ public static class AdaptiveConcurrency
             < 2048 => 4,     // 1-2GB：低端
             < 4096 => 8,     // 2-4GB：入门
             < 8192 => 16,    // 4-8GB：中端
-            _      => 32,    // ＞8GB：高端
+            _      => 64,    // ＞8GB：高端
         };
 
         // 5) 综合计算
@@ -85,67 +82,7 @@ public static class AdaptiveConcurrency
         if (maxOverride > 0)
             result = Math.Min(result, maxOverride);
 
-        return Math.Clamp(result, 1, 32);
+        return Math.Clamp(result, 1, 64);
     }
 
-    /// <summary>
-    /// 获取总物理内存（MB）。0 表示获取失败。
-    /// </summary>
-    private static long GetTotalPhysicalMemoryMb()
-    {
-        try
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                var lines = File.ReadAllLines("/proc/meminfo");
-                foreach (var line in lines)
-                {
-                    if (line.StartsWith("MemTotal:", StringComparison.Ordinal))
-                    {
-                        // "MemTotal:       16384000 kB"
-                        var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 2 && long.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var kb))
-                            return kb / 1024; // kB → MB
-                    }
-                }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Windows 通过 Microsoft.VisualBasic 或 WMI 可能更准确，
-                // 这里用 GC 信息估算
-                var info = GC.GetGCMemoryInfo();
-                return info.TotalAvailableMemoryBytes / (1024 * 1024);
-            }
-        }
-        catch
-        {
-            // 权限不足/文件不存在时静默降级
-        }
-        return 0;
-    }
-
-    /// <summary>
-    /// 获取当前可用内存（MB）。0 表示获取失败。
-    /// </summary>
-    private static long GetAvailableMemoryMb()
-    {
-        try
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                var lines = File.ReadAllLines("/proc/meminfo");
-                foreach (var line in lines)
-                {
-                    if (line.StartsWith("MemAvailable:", StringComparison.Ordinal))
-                    {
-                        var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 2 && long.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var kb))
-                            return kb / 1024;
-                    }
-                }
-            }
-        }
-        catch { }
-        return 0;
-    }
 }

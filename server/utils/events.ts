@@ -20,6 +20,8 @@ export interface ScrapeProgress {
   skipped: number;    // 已跳过（已有元数据）
   notFound: number;   // 无匹配
   canceled: boolean;
+  /** 当前处理文件/阶段描述 */
+  current?: string;
   /** 整理阶段标记（刮削完成后整理文件时置 true，结束后置 false） */
   organizing?: boolean;
   /** 整理阶段文件总数 */

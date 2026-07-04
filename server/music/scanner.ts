@@ -17,7 +17,6 @@ import { stat } from "node:fs/promises";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
-import { cpus } from "node:os";
 import { parseFile } from "music-metadata";
 import type { IAudioMetadata } from "music-metadata";
 import { type UpsertTrack, invalidateTracksCache } from "@main/database";
@@ -164,9 +163,9 @@ export const startScan = async (dirs: string[], incremental = true): Promise<voi
   }
   const targets = dirs.length > 0 ? dirs : [musicDir];
 
-  progress = { scanning: true, scanned: 0, total: 0, current: "", startedAt: Date.now() };
-  // 不在此处 emit — total=0 会导致前端显示 0/0
-  // 等 C# 扫描器发送第一帧进度（含文件总数）后再广播
+  progress = { scanning: true, scanned: 0, total: 0, current: "正在统计文件...", startedAt: Date.now() };
+  // 立即广播初始状态，让前端显示“正在统计文件...”而不是 0/0
+  emit({ type: "scan:progress", data: getScanProgress() });
   libraryLog.info(`[scanner] 启动 C# 扫描 (incremental=${incremental}): ${targets.join(", ")}`);
 
   const args = [
@@ -182,6 +181,7 @@ export const startScan = async (dirs: string[], incremental = true): Promise<voi
   let scanTimeout: NodeJS.Timeout | null = null;
 
   try {
+    const scannerMaxParallelism = store.store.library.scannerMaxParallelism;
     child = spawn(SCANNER_BIN, args, {
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
@@ -197,14 +197,11 @@ export const startScan = async (dirs: string[], incremental = true): Promise<voi
         SCANNER_MAX_SCAN_FILES: process.env.SCANNER_MAX_SCAN_FILES ?? process.env.SCRAPER_MAX_SCAN_FILES ?? "50000",
         SCANNER_MAX_FILE_SIZE_MB: process.env.SCANNER_MAX_FILE_SIZE_MB ?? process.env.SCRAPER_MAX_FILE_SIZE_MB ?? "500",
         SCANNER_MAX_SCAN_ERRORS: process.env.SCANNER_MAX_SCAN_ERRORS ?? process.env.SCRAPER_MAX_SCAN_ERRORS ?? "50",
-        SCANNER_MAX_PARALLELISM: (
-          store.store.library.scannerMaxParallelism > 0
-            ? store.store.library.scannerMaxParallelism
-            : Math.min(4, Math.max(2, Math.floor(cpus().length / 2)))
-        ).toString(),
         // C# 端单次 DB 请求超时（毫秒）：0=禁用（默认），-1=自动（>=30s），>0=指定值
         SCANNER_DB_REQUEST_TIMEOUT_MS: process.env.SCANNER_DB_REQUEST_TIMEOUT_MS ?? "0",
-
+        ...(scannerMaxParallelism > 0
+          ? { SCANNER_MAX_PARALLELISM: scannerMaxParallelism.toString() }
+          : {}),
       },
     });
 

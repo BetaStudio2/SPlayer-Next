@@ -22,10 +22,11 @@
 ///   SCRAPER_USE_KUGOU       是否使用酷狗（0=关闭，默认开启）
 ///   SCRAPER_USE_KUWO        是否使用酷我（0=关闭，默认开启）
 ///   SCRAPER_USE_MIGU        是否使用咪咕（0=关闭，默认开启）
-///   SCRAPER_CONCURRENT_WORKERS 并发查询线程数（默认 4）
+///   SCRAPER_CONCURRENT_WORKERS 并发查询线程数（默认由设备硬件自动确定）
 ///   SCRAPER_MAX_SCAN_FILES     单次扫描最大文件数（默认 50000）
 ///   SCRAPER_MAX_FILE_SIZE_MB   文件大小上限 MB（默认 500）
 ///   SCRAPER_MAX_SCAN_ERRORS    连续失败上限（默认 50）
+///   SPLAYER_COVER_CACHE_DIR    封面缓存目录（默认 {SPLAYER_DATA_DIR}/cache/covers）
 
 #include "scraper_engine.h"
 #include <iostream>
@@ -66,7 +67,8 @@ static void printUsage() {
               << "  SCRAPER_CONCURRENT_WORKERS 并发线程数（默认由设备硬件自动确定）\n"
               << "  SCRAPER_MAX_SCAN_FILES     单次扫描最大文件数（默认 50000）\n"
               << "  SCRAPER_MAX_FILE_SIZE_MB   文件大小上限 MB（默认 500）\n"
-              << "  SCRAPER_MAX_SCAN_ERRORS    连续失败上限（默认 50）\n";
+              << "  SCRAPER_MAX_SCAN_ERRORS    连续失败上限（默认 50）\n"
+              << "  SPLAYER_COVER_CACHE_DIR    封面缓存目录（默认 {SPLAYER_DATA_DIR}/cache/covers）\n";
 }
 
 /// 解析逗号分隔的路径列表
@@ -144,7 +146,7 @@ static ScraperConfig loadConfig(int argc, char* argv[]) {
     if (workers) {
         try {
             int n = std::stoi(workers);
-            if (n > 0 && n <= 32) cfg.concurrentWorkers = n;
+            if (n > 0 && n <= 8) cfg.concurrentWorkers = n;
         } catch (...) {}
     }
 
@@ -173,6 +175,18 @@ static ScraperConfig loadConfig(int argc, char* argv[]) {
             int n = std::stoi(maxErrors);
             if (n > 0 && n <= 10000) cfg.maxScanErrors = n;
         } catch (...) {}
+    }
+
+    // 封面缓存目录（默认从 SPLAYER_DATA_DIR 构造）
+    const char* coverCacheDir = std::getenv("SPLAYER_COVER_CACHE_DIR");
+    if (coverCacheDir && *coverCacheDir) {
+        cfg.coverCacheDir = coverCacheDir;
+    } else {
+        // 从 SPLAYER_DATA_DIR 构造默认缓存路径
+        const char* dataDir = std::getenv("SPLAYER_DATA_DIR");
+        if (dataDir && *dataDir) {
+            cfg.coverCacheDir = std::string(dataDir) + "/cache/covers";
+        }
     }
 
     // 解析 --dirs 参数（优先级高于环境变量）

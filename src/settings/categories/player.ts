@@ -215,6 +215,16 @@ const playerCategory: SettingCategory = {
           binding: { store: "settings", path: "player.snapToLyric" },
           defaultValue: false,
         },
+        {
+          key: "transitionStyle",
+          type: "select",
+          binding: { store: "settings", path: "player.transitionStyle" },
+          options: [
+            { value: "scale", labelKey: "settings.transitionStyle.scale" },
+            { value: "slide", labelKey: "settings.transitionStyle.slide" },
+          ],
+          defaultValue: "scale",
+        },
       ],
     },
     {

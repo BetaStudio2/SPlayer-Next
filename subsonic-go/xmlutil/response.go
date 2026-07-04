@@ -29,7 +29,7 @@ type Response struct {
 	ServerVersion string   `xml:"serverVersion,attr"`
 	OpenSubsonic  bool     `xml:"openSubsonic,attr"`
 	// 动态字段通过 payload 传递
-	Children []byte `xml:",innerxml"`
+	Children []byte    `xml:",innerxml"`
 	Error    *SubError `xml:"error,omitempty"`
 }
 
@@ -82,8 +82,13 @@ func writeJSON(w http.ResponseWriter, v any) {
 	w.Write(data)
 }
 
+// 特殊键名：值为元素的文本内容（不渲染为属性）
+const TextContentKey = "#text"
+
 // ToXML 把 map 序列化为 Subsonic XML
 // 规则：数组用单数子元素名（如 artists → artist），基本类型走属性，复杂对象走子元素
+//
+//	map 中含 "#text" 键时，其值作为元素的文本内容
 func ToXML(body map[string]any) string {
 	var sb strings.Builder
 	writeElement(&sb, "subsonic-response", body, 0)
@@ -91,22 +96,22 @@ func ToXML(body map[string]any) string {
 }
 
 var singularMap = map[string]string{
-	"artists":          "artist",
-	"albums":           "album",
-	"songs":            "song",
-	"entries":          "entry",
-	"playlists":        "playlist",
-	"shares":           "share",
-	"genres":           "genre",
-	"indexes":          "index",
-	"children":         "child",
-	"musicFolders":     "musicFolder",
-	"similarSongs":     "similarSong",
-	"similarSongs2":    "similarSong",
-	"searchResult2":    "searchResult2",
-	"searchResult3":    "searchResult3",
-	"artistsRoot":      "artists",
-	"versions":         "versions",
+	"artists":       "artist",
+	"albums":        "album",
+	"songs":         "song",
+	"entries":       "entry",
+	"playlists":     "playlist",
+	"shares":        "share",
+	"genres":        "genre",
+	"indexes":       "index",
+	"children":      "child",
+	"musicFolders":  "musicFolder",
+	"similarSongs":  "similarSong",
+	"similarSongs2": "similarSong",
+	"searchResult2": "searchResult2",
+	"searchResult3": "searchResult3",
+	"artistsRoot":   "artists",
+	"versions":      "versions",
 }
 
 func singularOf(key string) string {
@@ -205,11 +210,18 @@ func writeElement(sb *strings.Builder, name string, obj any, indent int) {
 			return
 		}
 
-		// 普通对象：属性 + 子元素
+		// 普通对象：属性 + 可选文本内容 + 子元素
 		var attrs []string
 		var children []string
+		var textContent string
+		var hasText bool
 		for k, vv := range v {
 			if vv == nil {
+				continue
+			}
+			if k == TextContentKey {
+				textContent = escapeXML(fmt.Sprintf("%v", vv))
+				hasText = true
 				continue
 			}
 			if isPrimitive(vv) {
@@ -228,7 +240,24 @@ func writeElement(sb *strings.Builder, name string, obj any, indent int) {
 		sb.WriteString("<")
 		sb.WriteString(name)
 		sb.WriteString(attrStr)
-		if len(children) == 0 {
+		if hasText {
+			sb.WriteString(">")
+			sb.WriteString(textContent)
+			if len(children) == 0 {
+				sb.WriteString("</")
+				sb.WriteString(name)
+				sb.WriteString(">\n")
+			} else {
+				sb.WriteString("\n")
+				for _, c := range children {
+					sb.WriteString(c)
+				}
+				sb.WriteString(pad)
+				sb.WriteString("</")
+				sb.WriteString(name)
+				sb.WriteString(">\n")
+			}
+		} else if len(children) == 0 {
 			sb.WriteString("/>\n")
 		} else {
 			sb.WriteString(">\n")

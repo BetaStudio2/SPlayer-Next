@@ -51,6 +51,7 @@ const getVisibleChildren = (item: DropdownMenuItem): DropdownMenuItem[] =>
   (item.children ?? []).filter((child) => child.show !== false);
 
 const setSubmenuOpen = (key: string, open: boolean): void => {
+  if (submenuOpenState.value[key] === open) return;
   submenuOpenState.value = { ...submenuOpenState.value, [key]: open };
 };
 

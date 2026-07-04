@@ -22,6 +22,7 @@ type Track struct {
 	FileCtime      sql.NullInt64
 	ScannedAt      int64
 	Lyrics         sql.NullString
+	Genre          sql.NullString
 }
 
 // Artist 简化歌手

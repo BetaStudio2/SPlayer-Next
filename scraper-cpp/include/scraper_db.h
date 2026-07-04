@@ -154,7 +154,17 @@ public:
         sqlite3_finalize(stmt);
 
         if (changes > 0) {
-            // 清理隔离项
+            // 先查询所有被隔离的 track_id 并记录日志
+            const char* selectQuarantined = "SELECT track_id, last_error FROM scrape_queue WHERE status = 'quarantined'";
+            sqlite3_stmt* selStmt = prepare(selectQuarantined);
+            while (sqlite3_step(selStmt) == SQLITE_ROW) {
+                std::string tid = colText(selStmt, 0);
+                std::string err = colText(selStmt, 1);
+                std::fprintf(stderr, "[scraper-db] 清理隔离项: %s (原因: %s)\n", tid.c_str(), err.c_str());
+            }
+            sqlite3_finalize(selStmt);
+
+            // 再删除
             exec("DELETE FROM scrape_queue WHERE status = 'quarantined'");
         }
 

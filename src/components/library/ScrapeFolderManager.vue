@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useLibraryStore } from "@/stores/library";
 import { toast } from "@/composables/useToast";
+import SSlider from "@/components/ui/SSlider.vue";
 import type { SCheckboxGroupValue } from "@/components/ui/group-context";
 import IconLucideFolder from "~icons/lucide/folder";
 import IconLucideFolderPlus from "~icons/lucide/folder-plus";
@@ -381,22 +382,23 @@ onMounted(() => {
     <div class="flex flex-col gap-2">
       <div class="text-sm text-on-surface">{{ t("library.concurrentWorkers") }}</div>
       <div class="text-xs text-on-surface-variant/70">
-        {{ t("library.concurrentWorkersDescription", "多源并发查询线程数，越大占用 CPU 越多但查询越快") }}
+        {{ t("library.concurrentWorkersDescription", "多源并发查询线程数，越大占用 CPU 越多但查询更快") }}
       </div>
-      <div class="flex items-center gap-2 mt-1">
-        <input
-          type="range"
-          min="1"
-          max="16"
-          step="1"
-          :value="concurrentWorkers"
-          class="flex-1 accent-primary"
-          @input="handleWorkersChange(Number(($event.target as HTMLInputElement).value))"
-        />
-        <span class="text-sm tabular-nums w-8 text-right text-on-surface">
-          {{ concurrentWorkers }}
-        </span>
-      </div>
+      <SSlider
+        :model-value="concurrentWorkers"
+        :min="1"
+        :max="8"
+        :step="1"
+        :marks="{ 1: '1', 2: '', 4: '4', 8: '8' }"
+        class="w-full mt-1"
+        :thumb-size="14"
+        :track-height="4"
+        always-show-thumb
+        show-popover
+        @update:model-value="handleWorkersChange"
+      >
+        <template #popover="{ value }">{{ value }}</template>
+      </SSlider>
     </div>
 
     <hr class="border-on-surface/10" />

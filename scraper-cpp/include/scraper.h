@@ -67,11 +67,9 @@ inline int detectParallelism(bool isCpuBound = false, int maxOverride = 0) {
     if (availRatio < 0.2)       memoryPressure = 0.5;
     else if (availRatio < 0.4)  memoryPressure = 0.75;
 
-    // 4) 设备等级上限
+    // 4) 设备等级上限（最多 8 个并发搜索器）
     long deviceCap = 8;
-    if (totalMemMb >= 8192)      deviceCap = 32;
-    else if (totalMemMb >= 4096) deviceCap = 16;
-    else if (totalMemMb >= 2048) deviceCap = 8;
+    if (totalMemMb >= 2048)      deviceCap = 8;
     else if (totalMemMb >= 1024) deviceCap = 4;
     else                         deviceCap = 2;
 
@@ -83,7 +81,7 @@ inline int detectParallelism(bool isCpuBound = false, int maxOverride = 0) {
     if (maxOverride > 0)
         result = std::min(result, static_cast<long>(maxOverride));
 
-    return static_cast<int>(std::clamp(result, 1L, 32L));
+    return static_cast<int>(std::clamp(result, 1L, 8L));
 }
 
 /// 曲目元数据（从 SQLite 读取，用于刮削查询）
@@ -204,6 +202,11 @@ struct ScraperConfig {
     /// 连续文件读取失败达到此数量时停止扫描
     /// 默认 50（防止大量损坏文件拖慢整个扫描）
     int maxScanErrors = 50;
+
+    /// 封面缓存目录（写入音频文件标签后，同步写入此目录供 Subsonic 等服务使用）
+    /// 格式：{coverCacheDir}/{trackId}.img
+    /// 默认空字符串表示不写入缓存
+    std::string coverCacheDir;
 };
 
 } // namespace splayer::scraper

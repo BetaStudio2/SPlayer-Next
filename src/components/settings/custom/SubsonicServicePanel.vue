@@ -383,7 +383,7 @@ const toggleGoBackend = async (): Promise<void> => {
       <div>
         <div class="flex items-center gap-2 mb-2">
           <IconLucideServer class="size-4 text-on-surface-variant" />
-          <span class="text-sm font-medium">Go Subsonic 后端</span>
+          <span class="text-sm font-medium">后端服务器</span>
           <div class="ml-auto flex items-center gap-2">
             <div v-if="status?.goBackend" class="flex items-center gap-1.5 text-xs">
               <span
@@ -410,7 +410,7 @@ const toggleGoBackend = async (): Promise<void> => {
         </div>
         <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-on-surface/4">
           <div class="flex-1 min-w-0">
-            <div class="text-sm text-on-surface">Go Subsonic 提供完整 Subsonic 协议实现</div>
+            <div class="text-sm text-on-surface">Powered By Go-Subsonic</div>
             <div class="text-xs text-on-surface-variant/60 mt-0.5">
               {{ status?.goBackend?.running
                 ? `PID ${status.goBackend.pid} · ${formatDate(status.goBackend.startTime)} 启动`

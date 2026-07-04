@@ -171,10 +171,16 @@ func GetAlbum(w http.ResponseWriter, r *http.Request) {
 
 	artistName := ""
 	artistID := ""
+	var year int
 	if len(tracks) > 0 {
 		artists := util.ParseArtists(tracks[0].ArtistsJSON)
 		artistName = util.FirstArtist(artists)
 		artistID = util.FirstArtistID(artists)
+		if tracks[0].AlbumJSON.Valid {
+			if alb := util.ParseAlbum(tracks[0].AlbumJSON.String); alb != nil {
+				year = alb.Year
+			}
+		}
 	}
 
 	created := ""
@@ -182,18 +188,23 @@ func GetAlbum(w http.ResponseWriter, r *http.Request) {
 		created = util.TimestampISO(tracks[0].FileCtime.Int64)
 	}
 
+	albumMap := map[string]any{
+		"id":        util.AlbumIDOf(name),
+		"name":      name,
+		"artist":    artistName,
+		"artistId":  artistID,
+		"coverArt":  coverID,
+		"songCount": len(tracks),
+		"duration":  duration,
+		"created":   created,
+		"song":      songs,
+	}
+	if year > 0 {
+		albumMap["year"] = year
+	}
+
 	xmlutil.Send(w, r, map[string]any{
-		"album": map[string]any{
-			"id":        util.AlbumIDOf(name),
-			"name":      name,
-			"artist":    artistName,
-			"artistId":  artistID,
-			"coverArt":  coverID,
-			"songCount": len(tracks),
-			"duration":  duration,
-			"created":   created,
-			"song":      songs,
-		},
+		"album": albumMap,
 	}, nil)
 }
 
@@ -212,11 +223,60 @@ func GetAlbumList(w http.ResponseWriter, r *http.Request, endpoint string) {
 	if offset < 0 {
 		offset = 0
 	}
+	genre := strings.TrimSpace(q.Get("genre"))
+	fromYear := middleware.ParseIntOr(q.Get("fromYear"), 0)
+	toYear := middleware.ParseIntOr(q.Get("toYear"), 0)
 
 	all, err := db.GetAlbumList()
 	if err != nil {
 		xmlutil.Send(w, r, map[string]any{}, &xmlutil.SubError{Code: 0, Message: err.Error()})
 		return
+	}
+
+	// 按 genre 过滤：查询该 genre 下的专辑名集合
+	if genre != "" {
+		tracks, err := db.GetTracksByGenre(genre, 99999, 0)
+		if err == nil {
+			matched := make(map[string]bool, len(tracks))
+			for _, t := range tracks {
+				if t.AlbumJSON.Valid {
+					if alb := util.ParseAlbum(t.AlbumJSON.String); alb != nil && alb.Name != "" {
+						matched[alb.Name] = true
+					}
+				}
+			}
+			filtered := make([]db.AlbumSummary, 0, len(matched))
+			for _, a := range all {
+				if matched[a.Name] {
+					filtered = append(filtered, a)
+				}
+			}
+			all = filtered
+		}
+	}
+
+	// 按年份范围过滤
+	if fromYear > 0 || toYear > 0 {
+		filtered := make([]db.AlbumSummary, 0, len(all))
+		for _, a := range all {
+			tracks, err := db.GetAlbumTracks(a.Name)
+			if err != nil || len(tracks) == 0 {
+				continue
+			}
+			// 取第一首曲目的专辑年份
+			alb := util.ParseAlbum(tracks[0].AlbumJSON.String)
+			if alb == nil {
+				continue
+			}
+			if fromYear > 0 && alb.Year < fromYear {
+				continue
+			}
+			if toYear > 0 && alb.Year > toYear {
+				continue
+			}
+			filtered = append(filtered, a)
+		}
+		all = filtered
 	}
 
 	list := sortAlbums(all, listType)
@@ -452,11 +512,17 @@ func albumSummaryToAlbum(row db.AlbumSummary) map[string]any {
 	tracks, _ := db.GetAlbumTracks(row.Name)
 	var duration int64
 	coverID := ""
+	var year int
 	for _, t := range tracks {
 		if t.Cover.Valid && t.Cover.String != "" && coverID == "" {
 			coverID = t.ID
 		}
 		duration += t.Duration / 1000
+		if year == 0 && t.AlbumJSON.Valid {
+			if alb := util.ParseAlbum(t.AlbumJSON.String); alb != nil {
+				year = alb.Year
+			}
+		}
 	}
 	created := ""
 	if len(tracks) > 0 && tracks[0].FileCtime.Valid {
@@ -471,7 +537,7 @@ func albumSummaryToAlbum(row db.AlbumSummary) map[string]any {
 	if coverArt == "" {
 		coverArt = util.AlbumIDOf(row.Name)
 	}
-	return map[string]any{
+	m := map[string]any{
 		"id":        util.AlbumIDOf(row.Name),
 		"name":      row.Name,
 		"artist":    artistName,
@@ -481,6 +547,10 @@ func albumSummaryToAlbum(row db.AlbumSummary) map[string]any {
 		"duration":  duration,
 		"created":   created,
 	}
+	if year > 0 {
+		m["year"] = year
+	}
+	return m
 }
 
 func findArtistNameByID(id string) string {
