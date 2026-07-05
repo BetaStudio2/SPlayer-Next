@@ -48,6 +48,11 @@ export const createMainWindow = (): BrowserWindow => {
     mainWindow.maximize();
   }
 
+  // 窗口内容就绪
+  mainWindow.once("ready-to-show", () => {
+    mainWindow?.show();
+  });
+
   // 初始化托盘
   initTray();
 
@@ -55,7 +60,7 @@ export const createMainWindow = (): BrowserWindow => {
   enableTaskbarThumbnail(mainWindow);
 
   // 缩略图工具栏
-  mainWindow.webContents.once("did-finish-load", () => {
+  mainWindow.once("show", () => {
     initThumbar(mainWindow!);
   });
 

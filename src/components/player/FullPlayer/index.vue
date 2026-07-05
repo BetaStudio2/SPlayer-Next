@@ -9,12 +9,12 @@ import { useFavorite } from "@/composables/useFavorite";
 import { useDownload, buildDownloadQualityItems } from "@/composables/useDownload";
 import { usePlaylistPicker } from "@/composables/usePlaylistPicker";
 import { useImmersiveMode } from "@/composables/useImmersiveMode";
+import { useTimeFormat } from "@/composables/useTimeFormat";
 import Lyrics from "@/components/player/Lyrics/index.vue";
 import AMLLLyrics from "@/components/player/Lyrics/AMLLLyrics.vue";
 import PlaylistPickerDialog from "@/components/modals/PlaylistPickerDialog.vue";
 import { useWindowControls } from "@/composables/useWindowControls";
 import * as player from "@/core/player";
-import { formatTime } from "@/utils/time";
 import { openExternal } from "@/utils/url";
 import IconFavorite from "~icons/material-symbols/favorite-rounded";
 import IconFavoriteOutline from "~icons/material-symbols/favorite-outline-rounded";
@@ -39,6 +39,8 @@ const {
   fmMode,
   showLyric,
 } = storeToRefs(status);
+
+const { timeDisplay, toggleTimeFormat } = useTimeFormat();
 
 const lyricRef = ref<InstanceType<typeof Lyrics> | InstanceType<typeof AMLLLyrics>>();
 const lyricMounted = ref(false);
@@ -169,6 +171,10 @@ const toggleLyric = (): void => {
   } else {
     showLyric.value = !showLyric.value;
   }
+};
+
+const showComments = (): void => {
+  if (media.track) status.showComments(media.track);
 };
 </script>
 
@@ -411,6 +417,16 @@ const toggleLyric = (): void => {
               </template>
             </SButton>
             <SButton
+              type="cover"
+              variant="ghost"
+              size="large"
+              circle
+              :disabled="!hasTrack"
+              @click="showComments"
+            >
+              <template #icon><IconLucideMessageCircle /></template>
+            </SButton>
+            <SButton
               v-if="media.track?.source === 'local' || media.track?.source === 'netease'"
               type="cover"
               variant="ghost"
@@ -506,8 +522,11 @@ const toggleLyric = (): void => {
               </SButton>
             </div>
             <div class="flex items-center gap-2 w-full">
-              <span class="text-xs text-cover/50 tabular-nums min-w-9 text-center">
-                {{ formatTime(position) }}
+              <span
+                class="text-xs text-cover/50 tabular-nums min-w-9 text-center cursor-pointer px-1.5 py-0.5 rounded-md transition-colors hover:bg-cover/10"
+                @click="toggleTimeFormat"
+              >
+                {{ timeDisplay[0] }}
               </span>
               <SSlider
                 :model-value="position"
@@ -519,8 +538,11 @@ const toggleLyric = (): void => {
                 class="flex-1"
                 @drag-end="onSeekDragEnd"
               />
-              <span class="text-xs text-cover/50 tabular-nums min-w-9 text-center">
-                {{ formatTime(duration) }}
+              <span
+                class="text-xs text-cover/50 tabular-nums min-w-9 text-center cursor-pointer px-1.5 py-0.5 rounded-md transition-colors hover:bg-cover/10"
+                @click="toggleTimeFormat"
+              >
+                {{ timeDisplay[1] }}
               </span>
             </div>
           </div>
