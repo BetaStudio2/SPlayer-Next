@@ -39,6 +39,10 @@ import user_playlist from "./user_playlist";
 import user_record from "./user_record";
 import user_subcount from "./user_subcount";
 
+// 评论
+import comment_hot from "./comment_hot";
+import comment_music from "./comment_music";
+
 // 搜索
 import cloudsearch from "./cloudsearch";
 import search from "./search";
@@ -179,4 +183,7 @@ export const modules: Record<string, NeteaseModule> = {
   album_sublist,
   artist_sub,
   artist_sublist,
+
+  comment_hot,
+  comment_music,
 };

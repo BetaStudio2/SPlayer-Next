@@ -16,6 +16,7 @@ import { cacheApi } from "./cache";
 import { themeApi } from "./theme";
 import { downloadApi } from "./download";
 import { streamingApi } from "./streaming";
+import { commentsApi } from "./comments";
 import {
   windowApi,
   desktopLyricApi,
@@ -45,6 +46,7 @@ const buildApi = () => ({
   cloud: cloudApi,
   lyrics: lyricsApi,
   download: downloadApi,
+  comments: commentsApi,
   theme: themeApi,
   cache: cacheApi,
   stats: statsApi,

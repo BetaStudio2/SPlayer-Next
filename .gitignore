@@ -38,3 +38,25 @@ scanner-cs/.nuget/
 scanner-cs/.artifacts/
 scanner-cs/bin/
 scanner-cs/obj/
+
+# Electron 打包产物
+dist/splayer-next-*.AppImage
+dist/splayer-next-*.tar.gz
+dist/splayer-next-*.deb
+dist/splayer-next-*.rpm
+
+# Pacman 包构建产物及 PKGBUILD
+PKGBUILD
+*.pkg.tar.zst
+*.pkg.tar.xz
+*.deb
+*.rpm
+
+
+
+# 本地环境变量
+.env.local
+.env.*.local
+
+# 自动生成的配置文件
+auto-eslint.mjs

@@ -20,6 +20,7 @@ import subsonicAdmin from "./routes/subsonic-admin";
 import subsonicInject from "./routes/subsonic-inject";
 import dbProxy from "./routes/db";
 import scraper from "./routes/scraper";
+import comments from "./routes/comments";
 import { attachWebSocket } from "./routes/ws";
 
 initLogger();
@@ -52,6 +53,8 @@ app.route("/api/subsonic-inject", subsonicInject);
 app.route("/api/db", dbProxy);
 /** 音乐刮削（/api/scraper/*，供 Web GUI 启动/取消刮削） */
 app.route("/api/scraper", scraper);
+/** 歌曲评论（/api/comments/*，供 Web GUI 查看评论） */
+app.route("/api/comments", comments);
 
 /** /api/cache/* 静态：服务 musicbrainz 歌手头像等缓存文件 */
 const CACHE_MIME: Record<string, string> = {
