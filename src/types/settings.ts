@@ -184,6 +184,8 @@ export interface PlayerSettings {
   snapToLyric: boolean;
   /** 全屏播放器媒体信息切换动效 */
   transitionStyle: "scale" | "slide";
+  /** 播放时底部显示歌词而非歌手名 */
+  showLyricInBar: boolean;
 }
 
 /** Toast 消息风格 */
@@ -213,4 +215,18 @@ export interface AppearanceSettings {
   fontFamily: string;
   /** 性能监视器悬浮卡片 */
   showPerformanceMonitor: boolean;
+}
+
+/** 强迫症设置 */
+export interface PresetSettings {
+  /** Fuck DJ Mode */
+  fuckDjMode: boolean;
+  /** Fuck ** Mode */
+  uncensorProfanity: boolean;
+  /** 隐藏歌曲列表的 VIP 标签 */
+  hideVipTag: boolean;
+  /** 隐藏歌曲列表的音质标签 */
+  hideQualityTag: boolean;
+  /** 显示歌曲副标题（别名） */
+  showSubtitle: boolean;
 }

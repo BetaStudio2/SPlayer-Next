@@ -188,6 +188,10 @@ const toggleLyric = (): void => {
     showLyric.value = !showLyric.value;
   }
 };
+
+const showComments = (): void => {
+  if (media.track) status.showComments(media.track);
+};
 </script>
 
 <template>
@@ -427,6 +431,16 @@ const toggleLyric = (): void => {
                   <template #off><IconFavoriteOutline /></template>
                 </SIconSwap>
               </template>
+            </SButton>
+            <SButton
+              type="cover"
+              variant="ghost"
+              size="large"
+              circle
+              :disabled="!hasTrack"
+              @click="showComments"
+            >
+              <template #icon><IconLucideMessageCircle /></template>
             </SButton>
             <SButton
               v-if="media.track?.source === 'local' || media.track?.source === 'netease'"
