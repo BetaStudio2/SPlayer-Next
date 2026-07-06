@@ -1,0 +1,49 @@
+name: Docker Dev
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "Dockerfile"
+      - "server/**"
+      - "native/download-engine/**"
+      - "scripts/**"
+      - ".github/workflows/docker-dev.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Upload
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          load: true
+          tags: splayer-dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_JOBS=4
+
+      - name: Save & Upload image artifact
+        run: docker save splayer-dev | gzip > /tmp/splayer-dev-docker.tar.gz
+
+      - name: Upload Docker Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: splayer-dev-docker
+          path: /tmp/splayer-dev-docker.tar.gz

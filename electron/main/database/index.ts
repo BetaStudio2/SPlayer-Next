@@ -49,7 +49,8 @@ export const initDatabase = (): void => {
       file_size INTEGER NOT NULL,
       file_mtime INTEGER,
       file_ctime INTEGER,
-      scanned_at INTEGER NOT NULL
+      scanned_at INTEGER NOT NULL,
+      lyrics TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_tracks_title ON tracks(title);
     CREATE INDEX IF NOT EXISTS idx_tracks_album ON tracks(album);

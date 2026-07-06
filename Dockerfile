@@ -117,12 +117,12 @@ RUN if [ "${CN_MIRROR}" = "1" ]; then \
     fi
 
 WORKDIR /src
-COPY subsonic/go.mod subsonic/go.sum ./
+COPY server/subsonic/go.mod server/subsonic/go.sum ./
 ENV GOPROXY=${GO_PROXY}
 ENV GOSUMDB=${GO_SUMDB}
 ENV CGO_ENABLED=0
 RUN go mod download
-COPY subsonic/ ./
+COPY server/subsonic/ ./
 RUN GOMAXPROCS="${BUILD_JOBS}" go build -p "${BUILD_JOBS}" -ldflags="-s -w" -o /out/subsonic-go . && \
     go clean -modcache
 
@@ -132,7 +132,7 @@ ARG BUILD_JOBS
 ARG TARGETARCH
 
 WORKDIR /src
-COPY scanner/scanner.csproj ./scanner/
+COPY server/scanner/scanner.csproj ./scanner/
 RUN case "$TARGETARCH" in \
       amd64) rid=linux-x64 ;; \
       arm64) rid=linux-arm64 ;; \
@@ -140,7 +140,7 @@ RUN case "$TARGETARCH" in \
     esac && \
     cd scanner && \
     dotnet restore -r "$rid" /m:${BUILD_JOBS}
-COPY scanner/*.cs ./scanner/
+COPY server/scanner/*.cs ./scanner/
 RUN case "$TARGETARCH" in \
       amd64) rid=linux-x64 ;; \
       arm64) rid=linux-arm64 ;; \
@@ -165,10 +165,10 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 
 WORKDIR /src
 RUN mkdir -p /out
-COPY scraper/CMakeLists.txt ./scraper/
-COPY scraper/cmake/ ./scraper/cmake/
-COPY scraper/include/ ./scraper/include/
-COPY scraper/src/ ./scraper/src/
+COPY server/scraper/CMakeLists.txt ./scraper/
+COPY server/scraper/cmake/ ./scraper/cmake/
+COPY server/scraper/include/ ./scraper/include/
+COPY server/scraper/src/ ./scraper/src/
 RUN cd scraper && \
     cmake -GNinja -DCMAKE_BUILD_TYPE=Release -B build && \
     cmake --build build -j"${BUILD_JOBS}" && \
@@ -267,15 +267,15 @@ RUN if [ "${CN_MIRROR}" = "1" ]; then \
 
 WORKDIR /src
 RUN mkdir -p /out
-# 转码器是 subsonic 服务端的组成部分，源码位于 subsonic/subsonic-transcoder
+# 转码器是 subsonic 服务端的组成部分，源码位于 server/subsonic/subsonic-transcoder
 
 # 第 1 层：仅复制 Cargo.toml + stub → fetch 依赖（层缓存，源码不变时不重编）
-COPY subsonic/subsonic-transcoder/Cargo.toml ./Cargo.toml
+COPY server/subsonic/subsonic-transcoder/Cargo.toml ./Cargo.toml
 RUN mkdir -p src && echo "fn main() {}" > src/main.rs
 RUN cargo fetch
 
 # 第 2 层：用真实源码覆盖 stub → 编译（仅改 src/ 时才重编）
-COPY subsonic/subsonic-transcoder/src/ ./src/
+COPY server/subsonic/subsonic-transcoder/src/ ./src/
 RUN CARGO_BUILD_JOBS="${BUILD_JOBS}" cargo build --release --frozen && \
     cp target/release/subsonic-transcoder /out/subsonic-transcoder && \
     cargo clean && rm -rf /usr/local/cargo/registry
