@@ -135,6 +135,11 @@ export const migrate = (d: Database.Database): void => {
   }
 
   // 版本无关部分
+  // 补 tracks.lyrics 列（兜底：旧 DB 可能在 user_version >=5 时跳过了 v4→v5 迁移）
+  if (!hasColumn(d, "tracks", "lyrics")) {
+    d.exec("ALTER TABLE tracks ADD COLUMN lyrics TEXT");
+  }
+
   // 补 lyric_match_cache.extra 列
   if (!hasColumn(d, "lyric_match_cache", "extra")) {
     d.exec("ALTER TABLE lyric_match_cache ADD COLUMN extra TEXT");
