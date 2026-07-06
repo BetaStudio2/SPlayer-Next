@@ -33,11 +33,11 @@ transmission.md
 library.db
 
 # C# scanner 构建产物
-scanner-cs/.dotnet-home/
-scanner-cs/.nuget/
-scanner-cs/.artifacts/
-scanner-cs/bin/
-scanner-cs/obj/
+scanner/.dotnet-home/
+scanner/.nuget/
+scanner/.artifacts/
+scanner/bin/
+scanner/obj/
 
 # Electron 打包产物
 dist/splayer-next-*.AppImage

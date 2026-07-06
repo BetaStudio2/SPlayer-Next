@@ -23,9 +23,9 @@ SPlayer-Next/
 │   ├── media-ctrl/       [Rust]  系统媒体控制器（napi-rs）
 │   ├── taskbar-lyric/    [Rust]  任务栏歌词（Windows napi-rs）
 │   └── taskbar-thumbnail/[Rust]  任务栏缩略图（Windows napi-rs）
-├── scraper-cpp/          [C++]   元数据刮削器（独立 CLI 二进制）
-├── scanner-cs/           [C#]    音乐扫描引擎（TagLibSharp）
-├── subsonic-go/          [Go]    Subsonic 协议层
+├── scraper/               [C++]   元数据刮削器（独立 CLI 二进制）
+├── scanner/               [C#]    音乐扫描引擎（TagLibSharp）
+├── subsonic/              [Go]    Subsonic 协议层
 ├── shared/               [TS]    前后端共享类型与工具
 ├── windows/              [Vue 3] 独立窗口应用（桌面歌词、Dynamic Island）
 ├── electron/             [配置]  electron-builder 打包配置
@@ -341,14 +341,14 @@ web/
 └── node_modules/
 ```
 
-### 2.4 C++ 元数据刮削器（`scraper-cpp/`）— 独立 CLI 二进制
+### 2.4 C++ 元数据刮削器（`scraper/`）— 独立 CLI 二进制
 
 状态：**已实现**（header-only 设计，无 .cpp 编译单元）。
 构建：CMake + g++（需 libcurl、OpenSSL、TagLib、nlohmann/json）。
 功能：多源并发元数据刮削（MusicBrainz、Deezer、iTunes、网易云、QQ 音乐、酷狗、酷我、咪咕）。
 
 ```
-scraper-cpp/
+scraper/
 ├── CMakeLists.txt
 ├── cmake/
 │   └── FindTaglib.cmake          # CMake 查找 TagLib 模块
@@ -407,14 +407,14 @@ scraper-cpp/
 - 内存管理：`AsyncResultSubmitter` 队列深度 200（背压机制），提交后 `batch.clear()` 释放封面内存
 - 降级策略：批量 `submitBatch` 失败 → 自动降级逐条 `submitResult`
 
-### 2.5 C# 音乐扫描引擎（`scanner-cs/`）
+### 2.5 C# 音乐扫描引擎（`scanner/`）
 
 状态：骨架阶段。
 框架：.NET 9 + TagLibSharp。
 功能：递归遍历目录 + TagLibSharp 元数据解析 + 通过 HTTP 代理写入 TS 层 SQLite。
 
 ```
-scanner-cs/
+scanner/
 ├── Scanner.csproj
 ├── Program.cs                    # CLI 入口 + 信号处理
 ├── Scanner.cs                    # 递归目录遍历
@@ -426,14 +426,14 @@ scanner-cs/
     └── TrackMetadata.cs          # 扫描结果模型
 ```
 
-### 2.6 Go Subsonic 协议层（`subsonic-go/`）
+### 2.6 Go Subsonic 协议层（`subsonic/`）
 
 状态：**已实现**。
 框架：Go net/http + chi 路由 + modernc.org/sqlite。
 功能：Subsonic REST 协议实现（~30 端点）。
 
 ```
-subsonic-go/
+subsonic/
 ├── main.go                       # HTTP 服务入口（:8081）
 ├── go.mod / go.sum
 ├── db/
@@ -670,7 +670,7 @@ scripts/    # 构建/部署脚本
                      │         │ stdout JSON lines                 │
                      │         │                                  │
                      │  ┌──────▼───────────────────────────────┐   │
-                     │  │  C++ 刮削器   scraper-cpp/           │   │
+                     │  │  C++ 刮削器   scraper/           │   │
                      │  │  splayer-scraper                      │   │
                      │  │  once / daemon / query               │   │
                      │  │  stderr: [done N/Total] 进度         │   │
@@ -678,7 +678,7 @@ scripts/    # 构建/部署脚本
                      │  └──────────────────────────────────────┘   │
                      │                                              │
                      │  ┌──────┬───────────────────────────────┐   │
-                     │  │  C# 扫描器   scanner-cs/            │   │
+                     │  │  C# 扫描器   scanner/            │   │
                      │  │  splayer-scanner                     │   │
                      │  │  scan --dirs ...                     │   │
                      │  │  HTTP POST → /api/db/upsert          │   │
@@ -691,7 +691,7 @@ scripts/    # 构建/部署脚本
                      │  └──────────────────────────────────────┘   │
                      │                                              │
                      │  ┌──────┬───────────────────────────────┐   │
-                     │  │  Subsonic Go   subsonic-go/ :8081    │   │
+                     │  │  Subsonic Go   subsonic/ :8081    │   │
                      │  │  net/http + chi                     │   │
                      │  │  TS 反向代理 /rest/* → :8081         │   │
                      │  └──────────────────────────────────────┘   │
@@ -772,14 +772,14 @@ scripts/    # 构建/部署脚本
 | Vue 3 前端（`web/`） | ✅ 生产稳定 | Vite + UnoCSS + Pinia |
 | Electron 主进程（`src/`） | ✅ 生产稳定 | IPC + 窗口管理 |
 | TS 后端（`server/`） | ✅ 生产稳定 | Hono + better-sqlite3 |
-| C++ 刮削器（`scraper-cpp/`） | ✅ 功能完整 | 多源并发 + 异步提交 + 背压 |
-| Go Subsonic（`subsonic-go/`） | ✅ 已实现 | ~30 端点 |
+| C++ 刮削器（`scraper/`） | ✅ 功能完整 | 多源并发 + 异步提交 + 背压 |
+| Go Subsonic（`subsonic/`） | ✅ 已实现 | ~30 端点 |
 | Rust audio-engine | ✅ 已实现 | napi-rs 播放引擎 |
 | Rust download-engine | ✅ 已实现 | reqwest 流式下载 |
 | Rust media-ctrl | ✅ 已实现 | 系统媒体控制 |
 | Rust taskbar-lyric | ✅ 已实现 | Windows 任务栏歌词 |
 | Rust taskbar-thumbnail | ✅ 已实现 | Windows 任务栏缩略图 |
-| C# Scanner（`scanner-cs/`） | 🔧 骨架阶段 | TagLibSharp，待完善 |
+| C# Scanner（`scanner/`） | 🔧 骨架阶段 | TagLibSharp，待完善 |
 | 歌词管道 | ✅ 生产稳定 | netease/qqmusic/kugou 聚合 |
 | 在线 API 集成 | ✅ 生产稳定 | ⛔ 禁止重构 |
 | Docker 多进程编排 | 📋 规划阶段 | |
