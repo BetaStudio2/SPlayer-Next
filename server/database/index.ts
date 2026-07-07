@@ -160,6 +160,7 @@ export {
   getAllTracks,
   getTrackCount,
   getFileRecords,
+  getFormatStatistics,
   upsertTracks,
   deleteTracksByPaths,
   searchTracks,

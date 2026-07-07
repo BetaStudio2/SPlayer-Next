@@ -445,6 +445,16 @@
       "off": "顺序播放"
     }
   },
+  "mediaStats": {
+    "title": "媒体统计",
+    "description": "音乐库中不同媒体格式的数量与空间占用分布",
+    "byCount": "按数量分布",
+    "bySize": "按空间占用分布",
+    "noData": "暂无媒体数据",
+    "loadFailed": "加载失败",
+    "tracks": "首歌曲",
+    "totalSize": "总占用"
+  },
   "songList": {
     "title": "标题",
     "album": "专辑",

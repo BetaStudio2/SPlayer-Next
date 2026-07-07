@@ -165,6 +165,8 @@ const api = {
     searchTracks: (query: string) => ipcRenderer.invoke("library:searchTracks", query),
     // 获取曲目总数
     getTrackCount: () => ipcRenderer.invoke("library:getTrackCount"),
+    // 获取媒体格式统计
+    getFormatStats: () => ipcRenderer.invoke("library:getFormatStats"),
     // 随机取一首曲目
     getRandomTrack: () => ipcRenderer.invoke("library:getRandomTrack"),
     // 随机取多首曲目

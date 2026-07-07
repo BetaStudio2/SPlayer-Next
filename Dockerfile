@@ -296,6 +296,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 WORKDIR /app
 RUN mkdir -p /app/bin /app/scanner /app/music /app/data /app/scrape
 
+COPY --from=web-builder /app/package.json /app/package.json
 COPY --from=server-builder /app/server/package.json ./server/
 COPY --from=server-builder /app/server/node_modules ./server/node_modules
 COPY --from=server-builder /app/server/dist ./server

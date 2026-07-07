@@ -3,11 +3,13 @@ import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
 import { useLibraryStore } from "@/stores/library";
 import SongList from "@/components/list/SongList.vue";
 import FolderManager from "@/components/library/FolderManager.vue";
+import MediaStatsDialog from "@/components/modals/MediaStatsDialog.vue";
 import { formatFileSize } from "@/utils/format";
 import { isElectron } from "@/utils/config";
 import IconFolderOpen from "~icons/lucide/folder-open";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
 import IconLucideListChecks from "~icons/lucide/list-checks";
+import IconLucidePieChart from "~icons/lucide/pie-chart";
 import IconLucideWand2 from "~icons/lucide/wand-2";
 import IconLucideFolderSync from "~icons/lucide/folder-sync";
 import * as player from "@/core/player";
@@ -59,8 +61,12 @@ const scrapePercent = computed(() => {
 // 目录管理弹窗
 const folderDialogOpen = ref(false);
 
+// 媒体统计弹窗
+const mediaStatsOpen = ref(false);
+
 const moreMenuItems = computed<DropdownMenuItem[]>(() => [
   { key: "batchManage", label: t("songList.batch.manage"), icon: IconLucideListChecks },
+  { key: "mediaStats", label: t("mediaStats.title", "媒体统计"), icon: IconLucidePieChart, separator: true },
   { key: "folders", label: t("library.folders"), icon: IconFolderOpen, separator: true },
   {
     key: "scan",
@@ -76,6 +82,10 @@ const handleMoreMenu = (key: string): void => {
     // 批量管理
     case "batchManage":
       songListRef.value?.enterBatch();
+      break;
+    // 媒体统计
+    case "mediaStats":
+      mediaStatsOpen.value = true;
       break;
     // 目录管理
     case "folders":
@@ -295,5 +305,8 @@ onUnmounted(() => {
     >
       <FolderManager @added="handleFolderAdded" />
     </SDialog>
+
+    <!-- 媒体统计 -->
+    <MediaStatsDialog v-model:open="mediaStatsOpen" />
   </div>
 </template>

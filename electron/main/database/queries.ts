@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { Track, Artist, Album, AudioQuality } from "@shared/types/player";
-import type { AlbumSummary, ArtistSummary } from "@shared/types/library";
+import type { AlbumSummary, ArtistSummary, FormatStat } from "@shared/types/library";
 import { getDb } from "./index";
 
 /** 数据库行类型 */
@@ -226,6 +226,21 @@ export const deleteTracksByDir = (dir: string): void => {
   getDb()
     .prepare("DELETE FROM tracks WHERE path LIKE ? OR cue_path LIKE ? OR cue_audio_path LIKE ?")
     .run(prefix + "%", prefix + "%", prefix + "%");
+};
+
+/** 媒体格式统计：按 codec 分组，返回各格式的曲目数和总大小 */
+export const getFormatStatistics = (): FormatStat[] => {
+  return getDb()
+    .prepare(
+      `SELECT
+         COALESCE(NULLIF(codec, ''), 'Unknown') AS format,
+         COUNT(*) AS count,
+         COALESCE(SUM(file_size), 0) AS totalSize
+       FROM tracks
+       GROUP BY format
+       ORDER BY count DESC`,
+    )
+    .all() as FormatStat[];
 };
 
 /** 专辑列表 */

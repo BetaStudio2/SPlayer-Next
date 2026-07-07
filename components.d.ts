@@ -162,6 +162,7 @@ declare module 'vue' {
     LyricFormatOrderConfig: typeof import('./src/components/settings/custom/LyricFormatOrderConfig.vue')['default']
     Lyrics: typeof import('./src/components/player/Lyrics/index.vue')['default']
     LyricSourceOrderConfig: typeof import('./src/components/settings/custom/LyricSourceOrderConfig.vue')['default']
+    MediaStatsDialog: typeof import('./src/components/modals/MediaStatsDialog.vue')['default']
     MusicCommentsDialog: typeof import('./src/components/modals/MusicCommentsDialog.vue')['default']
     NavHeader: typeof import('./src/components/layout/NavHeader.vue')['default']
     NavSearch: typeof import('./src/components/layout/NavSearch.vue')['default']

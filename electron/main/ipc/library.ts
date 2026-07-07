@@ -14,6 +14,7 @@ import {
   getTracksByIds,
   getRandomTrack,
   getRandomTracks,
+  getFormatStatistics,
   upsertTracks,
 } from "@main/database";
 import { startScan, cancelScan, isScanning, scannedToUpsert } from "@main/services/scanner";
@@ -113,6 +114,15 @@ export const registerLibraryIpc = (): void => {
   ipcMain.handle("library:searchTracks", (_event, query: string) => {
     try {
       return { success: true, data: searchTracks(query) };
+    } catch (_error) {
+      return { success: false, error: ErrorCode.UNKNOWN };
+    }
+  });
+
+  // 获取媒体格式统计
+  ipcMain.handle("library:getFormatStats", () => {
+    try {
+      return { success: true, data: getFormatStatistics() };
     } catch (_error) {
       return { success: false, error: ErrorCode.UNKNOWN };
     }

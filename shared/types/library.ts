@@ -17,6 +17,16 @@ export interface ArtistSummary {
   cover?: string;
 }
 
+/** 媒体格式统计项 */
+export interface FormatStat {
+  /** 格式名称，如 flac, mp3, aac, wav, ape 等 */
+  format: string;
+  /** 该格式的曲目数量 */
+  count: number;
+  /** 该格式的总占用空间（字节） */
+  totalSize: number;
+}
+
 /** 扫描进度事件 */
 export interface ScanProgress {
   phase: "scanning" | "done" | "error";
@@ -55,6 +65,8 @@ export interface LibraryApi {
   searchTracks: (query: string) => Promise<IpcResponse<Track[]>>;
   /** 获取曲目总数 */
   getTrackCount: () => Promise<IpcResponse<number>>;
+  /** 获取媒体格式统计 */
+  getFormatStats: () => Promise<IpcResponse<FormatStat[]>>;
   /** 随机取一首曲目 */
   getRandomTrack: () => Promise<IpcResponse<Track | null>>;
   /** 随机取多首曲目 */

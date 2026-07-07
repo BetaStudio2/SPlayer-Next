@@ -155,6 +155,7 @@ export {
   getTrackCount,
   getFileRecords,
   getCueTrackPathsByDirs,
+  getFormatStatistics,
   upsertTracks,
   deleteTracksByPaths,
   searchTracks,

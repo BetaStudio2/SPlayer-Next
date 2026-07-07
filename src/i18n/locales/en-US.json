@@ -457,6 +457,16 @@
       "off": "Shuffle off"
     }
   },
+  "mediaStats": {
+    "title": "Media Statistics",
+    "description": "Distribution of media formats in your music library",
+    "byCount": "By Track Count",
+    "bySize": "By Storage Usage",
+    "noData": "No media data available",
+    "loadFailed": "Failed to load",
+    "tracks": "tracks",
+    "totalSize": "Total"
+  },
   "songList": {
     "title": "Title",
     "album": "Album",

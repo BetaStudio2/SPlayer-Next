@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import {
   getAllTracks,
   getTrackCount,
+  getFormatStatistics,
   searchTracks,
   getAlbumList,
   getArtistList,
@@ -56,6 +57,9 @@ app.get("/tracks", (c) => c.json(ok(getAllTracks())));
 
 /** GET /tracks/count */
 app.get("/tracks/count", (c) => c.json(ok(getTrackCount())));
+
+/** GET /tracks/format-stats */
+app.get("/tracks/format-stats", (c) => c.json(ok(getFormatStatistics())));
 
 /** GET /tracks/random */
 app.get("/tracks/random", (c) => c.json(ok(getRandomTrack())));
