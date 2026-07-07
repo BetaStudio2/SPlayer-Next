@@ -31,7 +31,7 @@ const cardStates = computed(() => {
     const local = installed.get(plugin.id);
     states.set(
       plugin.id,
-      local === undefined ? "install" : isNewer(plugin.version, local) ? "update" : "installed",
+      local === undefined ? "install" : isNewer(plugin.version, String(local)) ? "update" : "installed",
     );
   }
   return states;

@@ -319,7 +319,8 @@ const tryPluginFallback = async (token: number, track: Track): Promise<boolean> 
   for (const info of plugins.list) {
     if (!info.enabled || info.status.state !== "ready") continue;
     for (const [source, cap] of Object.entries(info.status.sources)) {
-      if (!cap.actions.includes("musicLyric")) continue;
+      const c = cap as { actions: string[] };
+      if (!c.actions.includes("musicLyric")) continue;
       const resp = await window.api.plugins.matchLyric({
         pluginId: info.manifest.id,
         source,

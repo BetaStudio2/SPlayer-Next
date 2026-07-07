@@ -25,7 +25,8 @@ export const loadCoverForTrack = async (track: Track): Promise<void> => {
   for (const info of plugins.list) {
     if (!info.enabled || info.status.state !== "ready") continue;
     for (const [source, cap] of Object.entries(info.status.sources)) {
-      if (!cap.actions.includes("musicPic")) continue;
+      const c = cap as { actions: string[] };
+      if (!c.actions.includes("musicPic")) continue;
       const resp = await window.api.plugins.matchCover({
         pluginId: info.manifest.id,
         source,
