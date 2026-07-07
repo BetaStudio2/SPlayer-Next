@@ -1,7 +1,7 @@
 import type Database from "better-sqlite3";
 
 /** 当前 schema 版本 */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 type TableInfoRow = { name: string };
 
@@ -35,12 +35,24 @@ export const migrate = (d: Database.Database): void => {
     v = 3;
   }
 
-  // 版本无关部分
-  // 补 tracks.lyrics 列（兜底：旧 DB 可能在 user_version >=5 时跳过了迁移）
-  if (!hasColumn(d, "tracks", "lyrics")) {
-    d.exec("ALTER TABLE tracks ADD COLUMN lyrics TEXT");
+  // v3 → v4: 添加 CUE 分轨列
+  if (v < 4) {
+    if (!hasColumn(d, "tracks", "cue_path")) {
+      d.exec("ALTER TABLE tracks ADD COLUMN cue_path TEXT");
+    }
+    if (!hasColumn(d, "tracks", "cue_audio_path")) {
+      d.exec("ALTER TABLE tracks ADD COLUMN cue_audio_path TEXT");
+    }
+    if (!hasColumn(d, "tracks", "cue_start_ms")) {
+      d.exec("ALTER TABLE tracks ADD COLUMN cue_start_ms INTEGER");
+    }
+    if (!hasColumn(d, "tracks", "cue_end_ms")) {
+      d.exec("ALTER TABLE tracks ADD COLUMN cue_end_ms INTEGER");
+    }
+    v = 4;
   }
 
+  // 版本无关部分
   // 补 lyric_match_cache.extra 列
   if (!hasColumn(d, "lyric_match_cache", "extra")) {
     d.exec("ALTER TABLE lyric_match_cache ADD COLUMN extra TEXT");

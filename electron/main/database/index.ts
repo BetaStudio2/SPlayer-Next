@@ -35,6 +35,10 @@ export const initDatabase = (): void => {
     CREATE TABLE IF NOT EXISTS tracks (
       id TEXT PRIMARY KEY,
       path TEXT NOT NULL UNIQUE,
+      cue_path TEXT,
+      cue_audio_path TEXT,
+      cue_start_ms INTEGER,
+      cue_end_ms INTEGER,
       title TEXT NOT NULL,
       track INTEGER,
       artists TEXT NOT NULL DEFAULT '[]',
@@ -49,8 +53,7 @@ export const initDatabase = (): void => {
       file_size INTEGER NOT NULL,
       file_mtime INTEGER,
       file_ctime INTEGER,
-      scanned_at INTEGER NOT NULL,
-      lyrics TEXT
+      scanned_at INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_tracks_title ON tracks(title);
     CREATE INDEX IF NOT EXISTS idx_tracks_album ON tracks(album);
@@ -151,6 +154,7 @@ export {
   getAllTracks,
   getTrackCount,
   getFileRecords,
+  getCueTrackPathsByDirs,
   upsertTracks,
   deleteTracksByPaths,
   searchTracks,
