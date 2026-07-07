@@ -21,6 +21,28 @@ interface MainMessages {
   quit: string;
 }
 
+/** 若无对应语言的翻译，回退到英文 */
+const en: MainMessages = {
+  prev: "Previous",
+  play: "Play",
+  pause: "Pause",
+  next: "Next",
+  addToLiked: "Add to Liked",
+  removeFromLiked: "Remove from Liked",
+  shuffle: "Shuffle",
+  sequential: "Sequential",
+  repeatList: "Repeat All",
+  repeatOne: "Repeat One",
+  repeatOff: "No Repeat",
+  openDesktopLyric: "Open Desktop Lyric",
+  closeDesktopLyric: "Close Desktop Lyric",
+  openDynamicIsland: "Open Dynamic Island",
+  closeDynamicIsland: "Close Dynamic Island",
+  openTaskbarLyric: "Open Taskbar Lyric",
+  closeTaskbarLyric: "Close Taskbar Lyric",
+  quit: "Quit",
+};
+
 const messages: Record<LocaleCode, MainMessages> = {
   "zh-CN": {
     prev: "上一曲",
@@ -42,26 +64,13 @@ const messages: Record<LocaleCode, MainMessages> = {
     closeTaskbarLyric: "关闭任务栏歌词",
     quit: "退出",
   },
-  "en-US": {
-    prev: "Previous",
-    play: "Play",
-    pause: "Pause",
-    next: "Next",
-    addToLiked: "Add to Liked",
-    removeFromLiked: "Remove from Liked",
-    shuffle: "Shuffle",
-    sequential: "Sequential",
-    repeatList: "Repeat All",
-    repeatOne: "Repeat One",
-    repeatOff: "No Repeat",
-    openDesktopLyric: "Open Desktop Lyric",
-    closeDesktopLyric: "Close Desktop Lyric",
-    openDynamicIsland: "Open Dynamic Island",
-    closeDynamicIsland: "Close Dynamic Island",
-    openTaskbarLyric: "Open Taskbar Lyric",
-    closeTaskbarLyric: "Close Taskbar Lyric",
-    quit: "Quit",
-  },
+  "zh-TW": en,
+  "en-US": en,
+  "ja-JP": en,
+  "ko-KR": en,
+  "fr-FR": en,
+  "de-DE": en,
+  "es-ES": en,
 };
 
 let currentLocale: LocaleCode = "zh-CN";

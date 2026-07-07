@@ -1,0 +1,2004 @@
+{
+  "update": {
+    "dialogTitle": "Neue Version verfügbar",
+    "later": "Später",
+    "download": "Herunterladen",
+    "downloading": "Wird heruntergeladen",
+    "installNow": "Neu starten & installieren",
+    "goDownload": "Zum Download",
+    "upToDate": "Du hast die neueste Version",
+    "readyToast": "Update bereit — neu starten zum Installieren",
+    "failed": "Update fehlgeschlagen, bitte später erneut versuchen"
+  },
+  "onboarding": {
+    "next": "Weiter",
+    "back": "Zurück",
+    "finish": "Fertigstellen",
+    "footer": "Du kannst alles Übersprungene jederzeit in den Einstellungen anpassen",
+    "welcome": {
+      "title": "Willkommen bei SPlayer-Next",
+      "subtitle": "Ein moderner Desktop-Musikplayer — ein paar schnelle Schritte und du bist bereit",
+      "start": "Loslegen",
+      "features": {
+        "local": {
+          "title": "Lokale Bibliothek",
+          "desc": "Ordner scannen, Bibliothek automatisch organisieren"
+        },
+        "quality": {
+          "title": "Verlustfreie Audioqualität",
+          "desc": "Native Audio-Engine mit breiter Unterstützung für verlustfreie Formate"
+        },
+        "streaming": {
+          "title": "Streaming-Server",
+          "desc": "Subsonic / Jellyfin / Emby und mehr"
+        },
+        "lyrics": {
+          "title": "Umfangreiche Liedtexte",
+          "desc": "AMLL Wort-für-Wort-Liedtexte, plus Desktop-, Dynamic-Island- und Taskleisten-Liedtexte"
+        }
+      }
+    },
+    "agreement": {
+      "title": "Nutzungsvereinbarung & Haftungsausschluss",
+      "subtitle": "Bitte lies und akzeptiere die Vereinbarung, bevor du fortfährst",
+      "scrollHint": "Scrolle bis zum Ende, um akzeptieren zu können",
+      "agree": "Ich habe die Nutzungsvereinbarung & den Haftungsausschluss gelesen und stimme zu",
+      "accept": "Zustimmen & Fortfahren"
+    },
+    "library": {
+      "title": "Lokale Musikbibliothek",
+      "subtitle": "Füge Ordner zum Scannen hinzu und SPlayer-Next indexiert sie automatisch. Du kannst später weitere hinzufügen."
+    },
+    "streaming": {
+      "title": "Streaming-Server",
+      "subtitle": "Verbinde dich mit Subsonic-kompatiblen Diensten, Jellyfin oder Emby für nahtlosen Zugriff auf deinen Heim-Musikserver.",
+      "hint": "Gehe nach der Einrichtung zu Einstellungen → Medienquellen → Streaming, um einen Server hinzuzufügen und die Verbindung zu testen.",
+      "servers": {
+        "subsonic": "Subsonic",
+        "navidrome": "Navidrome",
+        "jellyfin": "Jellyfin",
+        "emby": "Emby"
+      }
+    },
+    "preferences": {
+      "title": "Sprache & Design",
+      "subtitle": "Wähle deine Oberflächensprache und dein Design. Du kannst später alles in den Einstellungen anpassen.",
+      "languageLabel": "Oberflächensprache",
+      "modeLabel": "Design-Modus",
+      "colorLabel": "Akzentfarbe"
+    },
+    "hotkeys": {
+      "title": "Tastaturkürzel",
+      "subtitle": "SPlayer-Next enthält vollständige Wiedergabekürzel, die du jederzeit verwenden kannst.",
+      "tips": {
+        "global": {
+          "title": "Globale Kürzel",
+          "desc": "Steuere die Wiedergabe auch dann, wenn das Fenster nicht fokussiert ist — einschließlich Medientasten"
+        },
+        "local": {
+          "title": "Interne Kürzel",
+          "desc": "Leertaste zum Abspielen/Pausieren, Pfeiltasten zum Überspringen, Strg+F zum Suchen und mehr"
+        },
+        "customize": {
+          "title": "Vollständig anpassbar",
+          "desc": "Alle Kürzel in Einstellungen → Tastaturkürzel ansehen und neu belegen"
+        }
+      }
+    }
+  },
+  "common": {
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "configure": "Konfigurieren",
+    "more": "Mehr",
+    "save": "Speichern",
+    "reset": "Zurücksetzen",
+    "retry": "Wiederholen",
+    "prev": "Vorherige",
+    "next": "Nächste",
+    "search": "Suchen",
+    "loading": "Laden",
+    "noData": "Keine Daten",
+    "noMore": "Nichts mehr ~",
+    "refreshCache": "Cache aktualisieren",
+    "copied": "Kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "playAll": "Alle abspielen",
+    "totalSongs": "{count} Titel",
+    "totalAlbums": "{count} Alben",
+    "totalArtists": "{count} Künstler",
+    "totalPlaylists": "{count} Wiedergabelisten"
+  },
+  "comments": {
+    "name": "Titelkommentare",
+    "title": "Kommentare zu „{name}“",
+    "hot": "Top-Kommentare",
+    "new": "Neueste Kommentare",
+    "loading": "Kommentare werden geladen…",
+    "empty": "Noch keine Kommentare",
+    "noSource": "Keine Kommentarquelle verfügbar",
+    "location": "Aus {location}",
+    "page": "Seite {page} / {total}"
+  },
+  "equalizer": {
+    "title": "Equalizer",
+    "preamp": "Vorverstärker",
+    "preset": {
+      "label": "Voreinstellung",
+      "flat": "Standard",
+      "pop": "Pop",
+      "rock": "Rock",
+      "classical": "Klassik",
+      "electronic": "Elektronisch",
+      "bass": "Bass-Boost",
+      "vocal": "Gesang",
+      "dance": "Tanz",
+      "soft": "Sanft",
+      "custom": "Benutzerdefiniert"
+    }
+  },
+  "speed": {
+    "title": "Wiedergabegeschwindigkeit",
+    "speed": "Geschwindigkeit",
+    "pitchSync": "Tonhöhe beibehalten",
+    "pitchSyncTip": "Originaltonhöhe bei Geschwindigkeitsänderung beibehalten",
+    "pitch": "Tonhöhe",
+    "semitone": "{n} st"
+  },
+  "autoClose": {
+    "title": "Schlaf-Timer",
+    "duration": "Dauer",
+    "unitHint": "Minuten",
+    "custom": "Benutzerdefiniert",
+    "minute": "{n} Min",
+    "waitSongEnd": "Warte, bis der aktuelle Titel endet",
+    "waitSongEndTip": "Wenn die Zeit abläuft, beende den aktuellen Titel vor dem Stoppen",
+    "remaining": "Verbleibende Zeit",
+    "start": "Starten",
+    "update": "Aktualisieren",
+    "stop": "Ausschalten"
+  },
+  "abLoop": {
+    "title": "A-B-Schleife",
+    "enable": "Schleife aktivieren",
+    "enableTip": "Setze sowohl Punkt A als auch B, wobei B größer als A sein muss",
+    "pointA": "Punkt A",
+    "pointB": "Punkt B",
+    "setCurrent": "Aktuelle setzen",
+    "clear": "Löschen",
+    "minus": "-{n}s",
+    "plus": "+{n}s",
+    "warningBLessThanA": "B muss nach A liegen; Schleife deaktiviert"
+  },
+  "uiZoom": {
+    "title": "Oberflächenzoom",
+    "range": "Bereich: 50 % – 200 %",
+    "reset": "Auf Standard zurücksetzen"
+  },
+  "nav": {
+    "home": "Startseite",
+    "library": "Bibliothek",
+    "liked": "Gefällt mir",
+    "history": "Wiedergabeverlauf",
+    "download": "Downloads",
+    "favorites": "Favoriten",
+    "cloud": "Meine Cloud",
+    "streaming": "Streaming",
+    "reload": "Neu laden",
+    "devtools": "Entwicklertools",
+    "globalSettings": "Globale Einstellungen",
+    "searchPlaceholder": "Titel, Künstler oder Alben suchen",
+    "searchEmpty": "Gib einen Suchbegriff ein",
+    "searchGoto": "Suche nach „{keyword}“",
+    "searchSection": {
+      "quick": "Schnell",
+      "history": "Letzte Suchanfragen",
+      "hot": "Trends"
+    },
+    "link": {
+      "song": "Titel [{id}] abspielen",
+      "album": "Zum Album [{id}] gehen",
+      "artist": "Zum Künstler [{id}] gehen",
+      "playlist": "Zur Wiedergabeliste [{id}] gehen"
+    }
+  },
+  "home": {
+    "greetingLine": "{greeting}, {name}",
+    "greeting": {
+      "dawn": "Guten Morgen",
+      "morning": "Guten Morgen",
+      "noon": "Guten Nachmittag",
+      "afternoon": "Guten Nachmittag",
+      "evening": "Guten Abend"
+    },
+    "stats": {
+      "weekDuration": "Diese Woche",
+      "newFavorites": "Neue Favoriten",
+      "listenStreak": "Serie",
+      "unitHour": "h",
+      "unitSong": "Titel",
+      "unitDay": "Tage"
+    },
+    "duration": {
+      "hm": "{hours} Std. {minutes} Min",
+      "hours": "{hours} Std.",
+      "minutes": "{minutes} Min"
+    },
+    "subtitle": {
+      "plain1": "Möge dich heute gute Musik begleiten",
+      "plain2": "Setz deine Kopfhörer auf und lass die Welt zur Ruhe kommen",
+      "plain3": "Die Musik ist bereit — such dir einen Titel aus und leg los",
+      "streak": "Du hast {days} Tage am Stück gehört, weiter so",
+      "weekListened": "Du hast diese Woche {duration} gehört",
+      "weekMore": "Das sind {duration} mehr als letzte Woche",
+      "weekLess": "Das sind {duration} weniger als letzte Woche",
+      "favorites": "Du hast diese Woche {count} neue Favoriten hinzugefügt",
+      "recent": "Was soll heute laufen? Setze deine {count} zuletzt gehörten Titel fort"
+    },
+    "quickActions": {
+      "luck": {
+        "title": "Zufallswiedergabe",
+        "desc": "Einen zufälligen Titel abspielen",
+        "empty": "Noch keine Titel verfügbar"
+      },
+      "daily": {
+        "title": "Tägliche Auswahl",
+        "desc": "Täglich frische Auswahl"
+      },
+      "heartMode": {
+        "title": "Herz-Modus",
+        "desc": "Intelligente Wiedergabe nach deinem Geschmack"
+      },
+      "fm": {
+        "title": "Persönliches FM",
+        "desc": "Endlose Empfehlungen"
+      }
+    },
+    "continue": {
+      "repeatTitle": "In Dauerschleife",
+      "repeatSubtitle": "Deine {count} meistgespielten Titel",
+      "continueTitle": "Weiterhören",
+      "continueSubtitle": "{count} zuletzt gehörte Titel",
+      "empty": "Noch kein Wiedergabeverlauf — hör dir etwas an",
+      "playCount": "Einmal abgespielt | {count} Mal abgespielt"
+    },
+    "recommend": {
+      "title": "Für dich gemacht",
+      "titleGuest": "Empfohlene Wiedergabelisten",
+      "subtitle": "Wiedergabelisten, die auf deinen Geschmack zugeschnitten sind",
+      "subtitleGuest": "Beliebte Wiedergabelisten, die alle hören"
+    },
+    "radar": {
+      "title": "Radar",
+      "subtitle": "Empfiehlt immer wieder Musik nach deinem Geschmack"
+    },
+    "artists": {
+      "title": "Künstler",
+      "subtitle": "Entdecke Künstler, die dir gefallen könnten"
+    },
+    "albums": {
+      "title": "Neuerscheinungen",
+      "subtitle": "Frisch veröffentlichte Alben"
+    },
+    "hero": {
+      "play": "Jetzt abspielen",
+      "addQueue": "Zur Warteschlange hinzufügen",
+      "empty": "Keine abspielbaren Titel",
+      "added": "{count} Titel zur Warteschlange hinzugefügt",
+      "daily": {
+        "tag": "Täglicher Mix",
+        "title": "Starte mit „{song}“",
+        "subtitle": "Für deinen Geschmack ausgewählt · {count} Titel"
+      },
+      "local": {
+        "tag": "Lokal",
+        "title": "Zufällig auf „{song}“ gelandet",
+        "subtitle": "Zufällige Auswahl aus deiner Bibliothek · {count} Titel"
+      },
+      "liked": {
+        "tag": "Favoriten",
+        "title": "Entdecke deine Favoriten neu~",
+        "subtitle": "Alle deine gemochten Titel · {count} Titel"
+      }
+    }
+  },
+  "login": {
+    "qrTipWaiting": "Öffne die Cloud-Musik-App und scanne den QR-Code",
+    "qrTipScanned": "Gescannt, bitte in der App bestätigen",
+    "qrTipExpired": "QR-Code abgelaufen, wird aktualisiert",
+    "qrTipDone": "Angemeldet",
+    "qrTipUnknown": "Unbekannter Status, bitte erneut versuchen",
+    "qrRefresh": "QR-Code aktualisieren",
+    "autoFetch": "Automatischer Abruf",
+    "autoFetchTitle": "Bevor du fortfährst",
+    "autoFetchTip": "Diese Funktion kann die Kontosicherheit nicht garantieren — nutze sie auf eigenes Risiko. Wenn die offizielle Seite leer oder nicht reagiert, schließe sie und versuche es erneut.",
+    "autoFetchConfirm": "Ich verstehe",
+    "manualCookie": "Manuelles Cookie",
+    "cookieHint": "Nur das MUSIC_U-Feld aus deinem Cookie wird benötigt. z. B. MUSIC_U=xxxx;",
+    "cookiePlaceholder": "Cookie einfügen, muss MUSIC_U=xxx; enthalten",
+    "cookieInvalid": "Ungültiges Cookie. MUSIC_U ist erforderlich.",
+    "cookieConfirm": "Anmelden",
+    "success": "Angemeldet",
+    "failed": "Anmeldung fehlgeschlagen, bitte erneut versuchen",
+    "unknownUser": "Unbekannter Benutzer",
+    "logout": "Abmelden",
+    "logoutConfirmTitle": "Abmelden",
+    "logoutConfirmDesc": "Möchtest du dich vom aktuellen Konto abmelden?",
+    "logoutDone": "Abgemeldet"
+  },
+  "search": {
+    "title": "Suche",
+    "titleSuffix": "Suchergebnisse",
+    "emptyKeyword": "Gib einen Suchbegriff ein, um zu starten",
+    "noResults": "Keine passenden Ergebnisse",
+    "noResultsHint": "Versuche einen anderen Suchbegriff oder wechsle die Quelle",
+    "errorTitle": "Suche fehlgeschlagen",
+    "tabs": {
+      "songs": "Titel",
+      "albums": "Alben",
+      "artists": "Künstler",
+      "playlists": "Wiedergabelisten"
+    }
+  },
+  "streaming": {
+    "hint": "Mit einer Streaming-Plattform verbinden",
+    "hintDetail": "Server-Anmeldedaten werden vom Betriebssystem verschlüsselt und lokal gespeichert; es wird nichts hochgeladen",
+    "errorCode": {
+      "auth": "Authentifizierung fehlgeschlagen",
+      "network": "Netzwerkfehler",
+      "protocol": "Protokollfehler",
+      "unknown": "Unbekannter Fehler"
+    },
+    "tabs": {
+      "songs": "Titel",
+      "albums": "Alben",
+      "artists": "Künstler",
+      "playlists": "Wiedergabelisten"
+    },
+    "empty": {
+      "noServer": "Kein Streaming-Server konfiguriert",
+      "addHint": "Klicke oben rechts auf die Schaltfläche, um einen hinzuzufügen",
+      "goToSettings": "Zu den Einstellungen",
+      "notConnected": "Mit keinem Server verbunden",
+      "noResults": "Keine Ergebnisse"
+    },
+    "server": {
+      "type": "Servertyp",
+      "name": "Servername",
+      "namePlaceholder": "Anzeigename für diesen Server",
+      "url": "Server-URL",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "test": "Verbindung testen",
+      "testOk": "Verbindung erfolgreich",
+      "testFail": "Verbindung fehlgeschlagen",
+      "add": "Server hinzufügen",
+      "added": "Server hinzugefügt",
+      "edit": "Server bearbeiten",
+      "updated": "Server aktualisiert",
+      "delete": "Löschen",
+      "removed": "Server entfernt",
+      "deleteConfirmTitle": "Server löschen",
+      "deleteConfirm": "Server „{name}“ löschen? Dies kann nicht rückgängig gemacht werden.",
+      "connect": "Verbinden",
+      "connected": "Verbunden",
+      "connectFailed": "Verbindung fehlgeschlagen",
+      "disconnect": "Trennen",
+      "disconnected": "Getrennt",
+      "active": "Aktiv",
+      "lastConnected": "Zuletzt verbunden",
+      "errors": {
+        "nameEmpty": "Bitte gib einen Servernamen ein",
+        "urlInvalid": "Bitte gib eine gültige URL ein (http:// oder https://)",
+        "usernameEmpty": "Bitte gib einen Benutzernamen ein",
+        "passwordEmpty": "Bitte gib ein Passwort ein"
+      }
+    },
+    "actions": {
+      "settings": "Streaming-Einstellungen"
+    }
+  },
+  "player": {
+    "prev": "Vorheriger",
+    "next": "Nächster",
+    "heartMode": {
+      "needLogin": "Anmelden, um den Herz-Modus zu nutzen",
+      "noSeed": "Kein Starttitel für den Herz-Modus verfügbar",
+      "loading": "Herz-Modus wird gestartet…",
+      "entered": "Herz-Modus gestartet",
+      "already": "Bereits im Herz-Modus",
+      "failed": "Herz-Modus konnte nicht gestartet werden, bitte später erneut versuchen"
+    },
+    "fm": {
+      "needLogin": "Anmelden, um persönliches FM zu nutzen",
+      "loading": "Persönliches FM wird gestartet…",
+      "entered": "Persönliches FM gestartet",
+      "already": "Bereits im persönlichen FM",
+      "failed": "Persönliches FM konnte nicht gestartet werden, bitte später erneut versuchen"
+    },
+    "lyricOffset": {
+      "title": "Liedtext-Offset",
+      "hint": "Positive Werte verschieben den Liedtext nach vorne, in Millisekunden"
+    },
+    "lyricCredit": "Liedtext von",
+    "copyLyric": {
+      "title": "Liedtext kopieren",
+      "contentLabel": "Zu kopierender Inhalt",
+      "translation": "Übersetzung",
+      "romaji": "Romaji",
+      "emptyLine": "Leerzeile",
+      "songName": "Titel",
+      "artist": "Künstler",
+      "selectAll": "Alle auswählen",
+      "deselectAll": "Auswahl aufheben",
+      "invert": "Umkehren",
+      "selected": "{n} ausgewählt",
+      "copy": "Kopieren",
+      "copyRaw": "Original kopieren",
+      "exportImage": "Als Bild exportieren",
+      "saved": "In Downloads gespeichert",
+      "fileSuffix": "Liedtexte",
+      "exportFailed": "Bildexport fehlgeschlagen",
+      "empty": "Nichts zu kopieren"
+    },
+    "repeatMode": {
+      "list": "Alle wiederholen",
+      "one": "Einzelwiederholung",
+      "off": "Wiederholung aus"
+    },
+    "shuffleMode": {
+      "on": "Zufallswiedergabe ein",
+      "off": "Zufallswiedergabe aus"
+    }
+  },
+  "songList": {
+    "title": "Titel",
+    "album": "Album",
+    "actions": "Aktionen",
+    "size": "Größe",
+    "duration": "Dauer",
+    "noResults": "Keine passenden Titel",
+    "sort": {
+      "mode": "Sortiermodus",
+      "order": "Sortierreihenfolge",
+      "default": "Standard",
+      "asc": "Aufsteigend",
+      "desc": "Absteigend",
+      "byTitle": "Nach Titel sortieren",
+      "byArtist": "Nach Künstler sortieren",
+      "byPath": "Nach lokalem Pfad sortieren",
+      "byAlbum": "Nach Album sortieren",
+      "byDuration": "Nach Dauer sortieren",
+      "bySize": "Nach Größe sortieren",
+      "byMtime": "Nach Änderungsdatum sortieren",
+      "byCtime": "Nach Erstellungsdatum sortieren",
+      "byName": "Nach Name sortieren",
+      "byTrackCount": "Nach Titelanzahl sortieren",
+      "byTrack": "Nach Titelnnummer sortieren"
+    },
+    "context": {
+      "play": "Abspielen",
+      "playNext": "Als Nächstes abspielen",
+      "showInExplorer": "Speicherort öffnen",
+      "copyPath": "Dateipfad kopieren",
+      "editTags": "Metadaten bearbeiten",
+      "download": "Titel herunterladen",
+      "deleteFile": "Datei löschen",
+      "searchSame": "Nach Namen suchen",
+      "more": "Mehr",
+      "copyTitle": "Titel kopieren",
+      "copyId": "Titel-ID kopieren",
+      "copyUrl": "Titel-Link teilen"
+    },
+    "batch": {
+      "manage": "Stapelverwaltung",
+      "selected": "{count} ausgewählt",
+      "invert": "Umkehren",
+      "addToQueue": "Zur Warteschlange hinzufügen",
+      "download": "Herunterladen",
+      "exit": "Beenden"
+    },
+    "delete": {
+      "removeConfirmOne": "„{title}“ aus {type} entfernen?",
+      "removeConfirm": "{count} Titel aus {type} entfernen?",
+      "fileTitle": "Datei löschen",
+      "fileConfirmOne": "„{title}“ endgültig von der Festplatte löschen? Dies kann nicht rückgängig gemacht werden",
+      "fileConfirm": "{count} Dateien endgültig von der Festplatte löschen? Dies kann nicht rückgängig gemacht werden"
+    },
+    "toast": {
+      "addedToNext": "Als Nächstes zur Wiedergabe hinzugefügt"
+    }
+  },
+  "quality": {
+    "details": "Audioqualität",
+    "codec": "Codec",
+    "sampleRate": "Abtastrate",
+    "bitDepth": "Bittiefe",
+    "bitRate": "Bitrate",
+    "channels": "Kanäle",
+    "stereo": "Stereo",
+    "mono": "Mono",
+    "multiChannel": "Mehrkanal"
+  },
+  "playlist": {
+    "title": "Wiedergabeliste",
+    "empty": "Wiedergabeliste ist leer",
+    "unknownArtist": "Unbekannter Künstler",
+    "clearList": "Alle leeren",
+    "locateCurrent": "Aktuelle Wiedergabe",
+    "clearConfirmTitle": "Wiedergabeliste leeren",
+    "clearConfirmContent": "Bist du sicher, dass du die gesamte Wiedergabeliste leeren möchtest? Dies kann nicht rückgängig gemacht werden."
+  },
+  "liked": {
+    "title": "Gefällt mir",
+    "tabs": {
+      "local": "Lokal",
+      "online": "Online"
+    },
+    "empty": {
+      "local": "Noch keine lokalen Lieblingstitel – klicke auf das Herz neben einem Titel, um ihn hinzuzufügen",
+      "online": "Noch keine Online-Lieblingstitel"
+    },
+    "needLogin": "Anmelden, um deine Online-Lieblingstitel anzuzeigen",
+    "toast": {
+      "added": "Zu Gefällt mir hinzugefügt",
+      "removed": "Aus Gefällt mir entfernt",
+      "needLogin": "Bitte zuerst anmelden",
+      "unsupported": "Diese Quelle unterstützt keine Like-Funktion",
+      "failed": "Aktion fehlgeschlagen, bitte erneut versuchen"
+    }
+  },
+  "cloud": {
+    "title": "Meine Cloud",
+    "empty": "Noch keine Titel in deiner Cloud",
+    "needLogin": "Anmelden, um deine Cloud-Bibliothek anzuzeigen",
+    "removeAction": "Aus Cloud entfernen",
+    "removeTitle": "Aus Cloud entfernen",
+    "removeConfirmOne": "„{title}“ aus deiner Cloud entfernen? Dies kann nicht rückgängig gemacht werden.",
+    "removeConfirm": "{count} Titel aus deiner Cloud entfernen? Dies kann nicht rückgängig gemacht werden.",
+    "upload": {
+      "button": "Hochladen",
+      "title": "In Cloud hochladen",
+      "selectFile": "Dateien auswählen",
+      "emptyHint": "Klicke auf „Dateien auswählen“, um Titel hinzuzufügen",
+      "clearFinished": "Abgeschlossene löschen",
+      "instant": "Sofort",
+      "done": "Fertig",
+      "reading": "Lese",
+      "retry": "Wiederholen",
+      "remove": "Entfernen",
+      "capacityFull": "Nicht genügend Cloud-Speicherplatz",
+      "riskTip": "Das Hochladen kann zur Markierung oder Einschränkung deines Kontos führen, also sei vorsichtig. Nach dem Hochladen benötigt die Cloud etwas Zeit, um die Titel zuzuordnen – aktualisiere später erneut, um zu prüfen.",
+      "error": "Upload fehlgeschlagen",
+      "errorWithCode": "Upload fehlgeschlagen ({code})"
+    }
+  },
+  "history": {
+    "title": "Wiedergabeverlauf",
+    "empty": "Noch kein Wiedergabeverlauf – spiele etwas ab, um zu starten",
+    "clear": "Verlauf löschen",
+    "clearConfirmTitle": "Wiedergabeverlauf löschen",
+    "clearConfirmContent": "Den gesamten Wiedergabeverlauf löschen? Dies kann nicht rückgängig gemacht werden."
+  },
+  "download": {
+    "title": "Downloads",
+    "activeCount": "{count} in Bearbeitung",
+    "clearFinished": "Abgeschlossene löschen",
+    "clearConfirmTitle": "Abgeschlossene Aufgaben löschen",
+    "clearConfirmContent": "Dadurch werden alle abgeschlossenen und fehlgeschlagenen Aufgaben aus der Liste entfernt. Die heruntergeladenen Dateien auf der Festplatte bleiben erhalten. Fortfahren?",
+    "tabAll": "Alle",
+    "tabActive": "Wird heruntergeladen",
+    "tabError": "Fehler",
+    "tabDone": "Abgeschlossen",
+    "colStatus": "Status",
+    "colSize": "Größe",
+    "empty": "Keine Download-Aufgaben",
+    "emptyDone": "Noch keine abgeschlossenen Downloads",
+    "qualityDefault": "Standard verwenden",
+    "cancel": "Abbrechen",
+    "retry": "Wiederholen",
+    "openFolder": "Im Ordner anzeigen",
+    "remove": "Entfernen",
+    "deleteFile": "Datei löschen",
+    "deleteConfirmTitle": "Heruntergeladene Datei löschen",
+    "deleteConfirmContent": "Dadurch wird die Musikdatei endgültig von der Festplatte gelöscht und kann nicht rückgängig gemacht werden. Löschen?",
+    "tagWarning": "Schreiben der Tags fehlgeschlagen; Datei gespeichert",
+    "resolveFailed": "Kann nicht heruntergeladen werden: {title}",
+    "savedToBrowser": "An den Browser-Download gesendet: {title}",
+    "alreadyQueued": "Bereits in der Download-Warteschlange",
+    "alreadyDownloaded": "Bereits heruntergeladen",
+    "started": "Zu Downloads hinzugefügt: {title}",
+    "enqueued": "{count} zu Downloads hinzugefügt",
+    "status": {
+      "queued": "In Warteschlange",
+      "downloading": "Wird heruntergeladen",
+      "done": "Fertig",
+      "failed": "Fehlgeschlagen",
+      "canceled": "Abgebrochen",
+      "interrupted": "Unterbrochen"
+    }
+  },
+  "daily": {
+    "title": "Tägliche Empfehlungen",
+    "tagline": "Basierend auf deinem Musikgeschmack",
+    "today": "Heute",
+    "refresh": "Aktualisieren",
+    "empty": "Keine täglichen Empfehlungen verfügbar",
+    "needLogin": "Anmelden, um tägliche Empfehlungen zu sehen"
+  },
+  "favorites": {
+    "title": "Favoriten",
+    "empty": "Hier ist noch nichts – erkunde und speichere, was dir gefällt",
+    "notLogin": "Anmelden, um deine Favoriten zu sehen",
+    "tabs": {
+      "playlist": "Wiedergabelisten",
+      "album": "Alben",
+      "artist": "Künstler"
+    }
+  },
+  "library": {
+    "title": "Bibliothek",
+    "empty": "Bibliothek ist leer",
+    "emptyHint": "Füge einen Musikordner hinzu, um zu starten",
+    "noLocalData": "Keine lokalen Inhalte",
+    "noLocalDataHint": "Füge Titel zu deiner Bibliothek hinzu, um sie hier aggregiert zu sehen",
+    "goLibrary": "Zur Bibliothek",
+    "addFolder": "Ordner hinzufügen",
+    "scanAll": "Vollständiger Scan",
+    "scanning": "Scanne…",
+    "scanProgress": "Scanne {scanned}/{total}",
+    "scrape": "Metadaten extrahieren",
+    "scraping": "Extrahiere…",
+    "scrapeProgress": "Extrahiere {scraped}/{total}",
+    "scrapeAction": "Metadaten extrahieren",
+    "scrapeActionDescription": "Beginne mit der Extraktion von Audiodateien in den Verzeichnissen gemäß den obigen Einstellungen",
+    "scrapeRunningHint": "Extraktion läuft, bitte warten",
+    "scrapeScanning": "Scanne Dateien…",
+    "cancelScrape": "Extraktion abbrechen",
+    "startScrapeFailed": "Extraktion konnte nicht gestartet werden",
+    "organizing": "Organisiere Dateien",
+    "scrapeFolders": "Extraktionsverzeichnisse",
+    "scrapeFoldersDescription": "Verzeichnisse für die Metadatenextraktion festlegen; wenn leer, werden die Scan-Verzeichnisse verwendet",
+    "addScrapeFolder": "Ordner hinzufügen",
+    "noScrapeDirHint": "Bitte füge zuerst Extraktionsverzeichnisse hinzu",
+    "organizeAfterScrape": "Nach Extraktion automatisch organisieren",
+    "organizeAfterScrapeDescription": "Extraktierte Dateien nach Regeln in das Musikbibliotheksverzeichnis verschieben",
+    "organizeOnly": "Nur organisieren",
+    "organizeNoTargetHint": "Bitte lege zuerst das Zielverzeichnis für die Organisation fest",
+    "organizeDone": "Organisation abgeschlossen: {moved} verschoben, {skipped} übersprungen, {failed} fehlgeschlagen",
+    "organizeFailed": "Organisation fehlgeschlagen",
+    "organizeTargetDir": "Zielverzeichnis für Organisation",
+    "organizeTargetDirPlaceholder": "Wenn leer, wird das erste Scan-Verzeichnis verwendet",
+    "organizePattern": "Organisationsmuster",
+    "organizePatternDescription": "Variablen: {artist} {albumArtist} {album} {genre} {year} {disc} {track} {title} {ext}, verwende / für Verzeichnisebenen",
+    "organizePatternEmptyError": "Muster darf nicht leer sein",
+    "organizePatternNoTitleError": "Muster muss die {title}-Variable enthalten",
+    "organizePatternNoExtError": "Muster muss die {ext}-Variable enthalten",
+    "organizePatternUnknownVarError": "Unbekannte Variable: {{{name}}}",
+    "organizePatternPresets": {
+      "artistAlbum": "Künstler/Album",
+      "artistOnly": "Nur Künstler",
+      "genreArtistAlbum": "Genre/Künstler/Album",
+      "yearArtistAlbum": "Jahr/Künstler/Album"
+    },
+    "skipScraped": "Bereits extrahierte Dateien überspringen",
+    "skipScrapedDescription": "Dateien mit MusicBrainz-ID oder ISRC werden übersprungen",
+    "dataSources": "Datenquellen",
+    "noDataSourceError": "Wähle mindestens eine Datenquelle aus",
+    "useMusicBrainz": "MusicBrainz",
+    "useMusicBrainzDescription": "Autoritative Metadatenquelle für MBID, ISRC, Genre usw.",
+    "useDeezer": "Deezer",
+    "useDeezerDescription": "Ergänzende Cover-Art und Album-Metadaten",
+    "useItunes": "iTunes-Suche",
+    "useItunesDescription": "Ergänzende Cover-Art, Genre und Titelnnummer",
+    "useNetease": "NetEase Cloud",
+    "useNeteaseDescription": "Chinesische Metadaten, Liedtexte und Cover-Art",
+    "useQQMusic": "QQ Music",
+    "useQQMusicDescription": "Chinesische Metadaten, Liedtexte und Cover-Art",
+    "useKugou": "Kugou",
+    "useKugouDescription": "Chinesische Metadaten, Liedtexte und Cover-Art",
+    "useKuwo": "Kuwo",
+    "useKuwoDescription": "Chinesische Metadaten, Liedtexte und Cover-Art",
+    "useMigu": "Migu",
+    "useMiguDescription": "Chinesische Metadaten und Cover-Art",
+    "concurrentWorkers": "Parallele Arbeiter",
+    "concurrentWorkersDescription": "Anzahl der Threads für parallele Abfragen aus mehreren Quellen. Höhere Werte nutzen mehr CPU, fragen aber schneller ab.",
+    "folders": "Musikverzeichnisse",
+    "foldersDescription": "Titel werden beim Hinzufügen oder Entfernen automatisch synchronisiert",
+    "removeFolder": "Verzeichnis entfernen",
+    "removeFolderConfirm": "Das Entfernen dieses Verzeichnisses löscht seine Titel aus der Bibliothek!",
+    "nestedHint": "Ordner ist mit einem bestehenden verschachtelt; übersprungen",
+    "emptyScrapeHint": "Keine Extraktionsverzeichnisse festgelegt, verwende Scan-Verzeichnisse"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Passe dein Erlebnis an",
+    "search": "Einstellungen durchsuchen…",
+    "group": {
+      "general": "Allgemein",
+      "player": "Player",
+      "lyric": "Liedtexte",
+      "externalLyric": "Externe Liedtexte",
+      "appearance": "Erscheinungsbild",
+      "hotkeys": "Tastenkürzel",
+      "services": "Dienste",
+      "mediaSource": "Medienquellen",
+      "download": "Downloads",
+      "localCache": "Lokal & Cache",
+      "plugins": "Plugin-Verwaltung",
+      "scraper": "Extraktion & Scan",
+      "other": "Sonstiges",
+      "about": "Über"
+    },
+    "section": {
+      "network": "Netzwerk & Proxy",
+      "aboutApp": "Über",
+      "specialThanks": "Besonderer Dank",
+      "developers": "Entwickler",
+      "community": "Community",
+      "update": "Update",
+      "language": "Sprache",
+      "playback": "Player",
+      "playControl": "Wiedergabesteuerung",
+      "scrobble": "Scrobbeln",
+      "lyricContent": "Liedtext-Inhalt",
+      "lyricTTML": "TTML-Liedtexte",
+      "lyricExclude": "Metadaten entfernen",
+      "lyricGeneral": "Inhalt & Stil",
+      "lyricDisplay": "Anzeigeeffekte",
+      "lyricSpring": "Federanimation",
+      "lyricLayout": "Layout & Deckkraft",
+      "desktopLyric": "Desktop-Liedtext",
+      "dynamicIsland": "Dynamic-Island-Liedtext",
+      "taskbarLyric": "Taskleisten-Liedtext",
+      "theme": "Design",
+      "appearanceStyle": "Erscheinungsbild-Stil",
+      "layout": "Layout",
+      "font": "Schriftarten",
+      "media": "Mediensteuerung",
+      "device": "Ausgabegerät",
+      "hotkeys": "Tastenkürzel",
+      "musicSpectrum": "Musikspektrum",
+      "discord": "Discord RPC",
+      "lastfm": "Last.fm",
+      "externalApi": "Externe API",
+      "systemConfig": "System",
+      "pluginManage": "Plugins importieren",
+      "pluginsList": "Plugin-Verwaltung",
+      "streaming": "Streaming",
+      "songCache": "Titel-Cache",
+      "downloadLocation": "Download-Einstellungen",
+      "downloadGeneral": "Download-Optionen",
+      "downloadTags": "Was geschrieben werden soll",
+      "cache": "Caches",
+      "database": "Datenbank",
+      "library": "Bibliothek",
+      "scanner": "Scanvorgang",
+      "scraper": "Extraktion",
+      "backupReset": "Backup & Zurücksetzen",
+      "debug": "Debug",
+      "preset": "OCD-Einstellungen"
+    },
+    "about": {
+      "checkUpdate": "Nach Updates suchen",
+      "checking": "Suche…",
+      "newVersion": "Update verfügbar",
+      "openLogs": "Protokolle öffnen",
+      "officialSite": "Offizielle Website",
+      "showMore": "Weitere Mitwirkende",
+      "collapse": "Einklappen"
+    },
+    "language": {
+      "label": "Sprache",
+      "description": "Die Anzeigesprache wechseln"
+    },
+    "autoPlay": {
+      "label": "Automatische Wiedergabe",
+      "description": "Wiedergabe nach dem Laden eines Titels automatisch starten"
+    },
+    "fuckDjMode": {
+      "label": "Fuck-DJ-Modus",
+      "description": "Titel mit DJ, TikTok, 0.9, 0.8, viral, car, hot, slow rock im Titel automatisch überspringen"
+    },
+    "uncensorProfanity": {
+      "label": "Fuck-**-Modus",
+      "description": "Zensierte Schimpfwörter in Liedtexten wiederherstellen"
+    },
+    "hideVipTag": {
+      "label": "VIP-Tag ausblenden",
+      "description": "VIP-Tags nicht in der Titelliste anzeigen"
+    },
+    "hideQualityTag": {
+      "label": "Qualitätstag ausblenden",
+      "description": "Qualitätstags nicht in der Titelliste anzeigen"
+    },
+    "showSubtitle": {
+      "label": "Untertitel anzeigen",
+      "description": "Alias- und andere Untertitelinformationen in der Titelliste anzeigen"
+    },
+    "rememberLastTrack": {
+      "label": "Fortschritt merken",
+      "description": "Wiedergabeposition beim Start wiederherstellen"
+    },
+    "showLyricInBar": {
+      "label": "Liedtext während der Wiedergabe anzeigen",
+      "description": "Ersetze den Künstlernamen durch den aktuellen Liedtext in der unteren Player-Leiste"
+    },
+    "fadeEnabled": {
+      "label": "Ein-/Ausblenden",
+      "description": "Audio-Ein- und Ausblenden bei Wiedergabe und Pause"
+    },
+    "fadeDuration": {
+      "label": "Ein-/Ausblenddauer",
+      "description": "Ein-/Ausblenddauer (ms)"
+    },
+    "loudnessNormalization": {
+      "label": "Lautheitsnormalisierung",
+      "description": "Automatische Angleichung der Lautstärkepegel zwischen Titeln"
+    },
+    "songLevel": {
+      "label": "Online-Audioqualität",
+      "description": "Bevorzugte Qualität für Online-Titel; die tatsächliche Stufe hängt davon ab, was dein Konto unterstützt",
+      "switchTitle": "Qualität wechseln",
+      "switchHint": "Abhängig von deinen Kontoberechtigungen",
+      "unsupportedHint": "Qualitätswechsel wird für diesen Titel nicht unterstützt",
+      "lq": "Standard (LQ)",
+      "sq": "Höher (SQ)",
+      "hq": "Extrem (HQ)",
+      "lossless": "Verlustfrei",
+      "hi-res": "Hi-Res"
+    },
+    "outputDevice": {
+      "label": "Ausgabegerät",
+      "description": "Audio-Ausgabegerät auswählen",
+      "default": "Systemstandard"
+    },
+    "pauseOnDeviceSwitch": {
+      "label": "Bei Gerätewechsel pausieren",
+      "description": "Wiedergabe beim Wechsel des Ausgabegeräts pausieren, z. B. wenn ein Bluetooth-Gerät getrennt wird"
+    },
+    "timeFormat": {
+      "label": "Zeitanzeigeformat",
+      "description": "Wie die Zeit in der Player-Leiste und im Vollbild-Player angezeigt wird (zum schnellen Umschalten klicken)",
+      "currentTotal": "Verstrichen / Gesamt",
+      "remainingTotal": "Verbleibend / Gesamt",
+      "currentRemaining": "Verstrichen / Verbleibend"
+    },
+    "showProgressTooltip": {
+      "label": "Fortschritts-Tooltip anzeigen",
+      "description": "Zeige einen Tooltip beim Ziehen der Fortschrittsleiste an"
+    },
+    "showProgressLyric": {
+      "label": "Liedtext im Tooltip anzeigen",
+      "description": "Zeige die aktuelle Liedtextzeile im Fortschritts-Tooltip an"
+    },
+    "snapToLyric": {
+      "label": "Zum nächsten Liedtext springen",
+      "description": "Automatisch zur nächsten Liedtextzeile springen, wenn der Fortschritt angepasst wird"
+    },
+    "transitionStyle": {
+      "label": "Titelübergang",
+      "description": "Übergangsanimation beim Wechseln von Titeln",
+      "scale": "Skalieren",
+      "slide": "Schieben"
+    },
+    "enableSpectrum": {
+      "label": "Spektrum aktivieren",
+      "description": "Echtzeit-Spektrumanalyse erhöht die CPU-Last – auf schwächeren Geräten deaktivieren"
+    },
+    "spectrumBarWidth": {
+      "label": "Balkenbreite",
+      "description": "Kleinere Werte ergeben dünnere, dichtere Balken"
+    },
+    "lyricSourcePreference": {
+      "label": "Liedtextquellen-Präferenz",
+      "description": "Plattformpriorität beim Abgleich von Online-Liedtexten",
+      "auto": "Intelligent",
+      "qqmusic": "QM bevorzugen",
+      "kugou": "KG bevorzugen",
+      "netease": "NCM bevorzugen",
+      "self": "Eigene bevorzugen"
+    },
+    "lyricSourceOrder": {
+      "label": "Quellenreihenfolge",
+      "description": "Priorität der Quellen anpassen",
+      "hint": "Im Automatikmodus werden die Quellen von oben nach unten durchprobiert; bei Fehlschlag wird zur nächsten gewechselt"
+    },
+    "lyricFormatOrder": {
+      "label": "Liedtextformat-Priorität",
+      "description": "Priorität der Liedtextformate anpassen",
+      "hint": "Wählt das am höchsten bewertete, wenn mehrere Formate verfügbar sind – z. B. mehrere externe Liedtextdateien oder TTML-Upgrade"
+    },
+    "smartPreferOnline": {
+      "label": "Liedtextformat automatisch verbessern",
+      "description": "Ein höher bewertetes Format von anderen Plattformen abrufen, wenn das aktuelle niedrig ist"
+    },
+    "enableOnlineTTMLLyric": {
+      "label": "Online-TTML-Liedtexte aktivieren",
+      "description": "Liedtexte aus der AMLL TTML DB abrufen. Unterstützt Wort-für-Wort-Timing, Übersetzung und Romanisierung."
+    },
+    "amllDbServer": {
+      "label": "AMLL TTML DB-Server",
+      "description": "Stelle sicher, dass die URL korrekt ist, sonst schlägt der Liedtextabruf fehl",
+      "placeholder": "AMLL TTML DB-URL eingeben",
+      "warning": "Wenn du nicht weißt, was das tut, lass es bitte auf der Standardeinstellung",
+      "hint": "Die URL muss gültig sein und die erforderlichen Platzhalter enthalten",
+      "placeholders": "%p ist der Plattformpfad, %s ist die Titel-ID",
+      "docsHint": "Weitere Informationen unter",
+      "invalid": "Ungültige URL – erforderliche Platzhalter fehlen"
+    },
+    "enableExcludeLyrics": {
+      "label": "Liedtextausschluss aktivieren",
+      "description": "Metadatenzeilen (z. B. Texter, Komponist, Arrangeur, Produzent) von Kopf und Ende der Liedtexte entfernen"
+    },
+    "excludeLyricsRules": {
+      "label": "Benutzerdefinierte Regeln",
+      "description": "Schlüsselwörter und Regex-Muster zusätzlich zu den integrierten Standardregeln hinzufügen",
+      "button": "Verwalten",
+      "hint": "Benutzerregeln werden mit den integrierten Standardregeln zusammengeführt",
+      "tabKeywords": "Schlüsselwörter",
+      "tabRegexes": "Regex-Muster",
+      "keywordHint": "Schlüsselwortfilter – vergleicht den Inhalt vor dem Doppelpunkt",
+      "keywordPlaceholder": "Schlüsselwort eingeben",
+      "regexHint": "JavaScript-Regex – wird mit der Groß-/Kleinschreibung ignorierenden Flagge kompiliert",
+      "regexPlaceholder": "Regex-Muster eingeben",
+      "add": "Hinzufügen",
+      "remove": "Entfernen",
+      "empty": "Keine Regeln konfiguriert",
+      "clear": "Aktuelle Liste löschen",
+      "duplicate": "Regel existiert bereits",
+      "invalidRegex": "Ungültiges Regex-Muster"
+    },
+    "hotkeys": {
+      "label": "Tastenkürzel",
+      "description": "Interne und globale Tastaturkürzel verwalten",
+      "globalEnabled": "Globale Kürzel aktivieren",
+      "globalEnabledHint": "Auch auslösen, wenn die App nicht fokussiert ist. Kann mit dem Betriebssystem oder anderen Apps kollidieren.",
+      "colAction": "Aktion",
+      "colInApp": "In-App",
+      "colGlobal": "Global",
+      "unbound": "Nicht zugewiesen",
+      "recording": "Drücke ein Kürzel",
+      "resetRow": "Auf Standard zurücksetzen",
+      "resetAll": "Alle zurücksetzen",
+      "resetAllHint": "Jede Aktionsverknüpfung auf den Standard zurücksetzen",
+      "confirmResetTitle": "Auf Standard zurücksetzen?",
+      "confirmResetDesc": "Alle Kürzel werden zurückgesetzt und alle Anpassungen werden überschrieben!",
+      "duplicateWith": "Konflikt mit „{action}“",
+      "crossScopeWith": "Identisch mit der In-App-Belegung von „{action}“; wird doppelt ausgelöst",
+      "osOccupied": "Bereits vom Betriebssystem oder einer anderen App belegt",
+      "osDuplicate": "Bereits von einem anderen globalen Kürzel verwendet",
+      "invalid": "Ungültige Tastenkombination",
+      "groups": {
+        "player": "Wiedergabe",
+        "window": "Fenster",
+        "view": "Ansichten"
+      },
+      "actions": {
+        "togglePlay": "Abspielen / Pause",
+        "next": "Nächster Titel",
+        "prev": "Vorheriger Titel",
+        "seekForward": "5 s vorwärts springen",
+        "seekBack": "5 s zurück springen",
+        "volumeUp": "Lauter",
+        "volumeDown": "Leiser",
+        "cycleRepeat": "Wiederholungsmodus durchschalten",
+        "toggleShuffle": "Zufallswiedergabe umschalten",
+        "toggleDesktopLyric": "Desktop-Liedtext umschalten",
+        "toggleDynamicIsland": "Dynamic Island umschalten",
+        "toggleTaskbarLyric": "Taskleisten-Liedtext umschalten",
+        "openPlayer": "Player-Ansicht öffnen",
+        "closePlayer": "Player-Ansicht schließen",
+        "togglePlaylist": "Wiedergabeliste ein-/ausblenden",
+        "openSearch": "Suche öffnen"
+      }
+    },
+    "engine": {
+      "label": "Liedtext-Engine",
+      "description": "Wähle den Engine-Typ für die Darstellung und das Scrollen von Liedtexten"
+    },
+    "lyricEngine": {
+      "physics": "Standard",
+      "amll": "AMLL"
+    },
+    "confirm": {
+      "highResourceTitle": "Ressourcenintensive Funktion",
+      "highResourceContent": "Das Aktivieren kann die Speicher- und CPU-Auslastung deutlich erhöhen und auf schwächeren Geräten zu Ruckeln führen. Trotzdem aktivieren?",
+      "highParallelismTitle": "Hochparalleler Scan",
+      "highParallelismContent": "Extreme Parallelisierung kann zu Systemverzögerungen oder Speicherfehlern führen. Trotzdem fortfahren?"
+    },
+    "scannerParallelism": {
+      "label": "Scan-Parallelität",
+      "description": "Anzahl der gleichzeitigen Threads beim Scannen von Audiodateien. 0 bedeutet automatisch"
+    },
+    "useAMSpring": {
+      "label": "Federanimations-Debug-Schalter",
+      "description": "Feder-Effekt und aktive Zeilen-Skalierungseffekte für applemusic-like-lyrics aktivieren"
+    },
+    "amllVerticalSpringMass": {
+      "label": "Vertikale Federmasse",
+      "description": "Masse der vertikalen Scroll-Federphysik. Größere Masse erhöht die Federträgheit."
+    },
+    "amllVerticalSpringDamping": {
+      "label": "Vertikale Federdämpfung",
+      "description": "Dämpfung der vertikalen Scroll-Federphysik. Größere Dämpfung reduziert Schwingungen und sorgt für schnelleres Einpendeln."
+    },
+    "amllVerticalSpringStiffness": {
+      "label": "Vertikale Federsteifigkeit",
+      "description": "Steifigkeit der vertikalen Scroll-Federphysik. Größere Steifigkeit zieht stärker und federt schneller."
+    },
+    "amllVerticalSpringSoft": {
+      "label": "Vertikale weiche Feder",
+      "description": "Erzwingt ein weicheres Federprofil für das vertikale Scrollen."
+    },
+    "amllScaleSpringMass": {
+      "label": "Skalierungs-Federmasse",
+      "description": "Masse der aktiven Zeilen-Skalierungsanimation. Größere Masse erhöht die Skalierungsträgheit."
+    },
+    "amllScaleSpringDamping": {
+      "label": "Skalierungs-Federdämpfung",
+      "description": "Dämpfung der aktiven Zeilen-Skalierungsanimation. Größere Dämpfung reduziert Skalierungsschwingungen und sorgt für schnelleres Einpendeln."
+    },
+    "amllScaleSpringStiffness": {
+      "label": "Skalierungs-Federsteifigkeit",
+      "description": "Steifigkeit der aktiven Zeilen-Skalierungsanimation. Größere Steifigkeit reagiert und skaliert schneller."
+    },
+    "amllScaleSpringSoft": {
+      "label": "Skalierungsweiche Feder",
+      "description": "Erzwingt ein weicheres Federprofil für die aktive Zeilen-Skalierungsanimation."
+    },
+    "autoCenterCover": {
+      "label": "Cover automatisch zentrieren",
+      "description": "Cover zentrieren und Liedtextbereich ausblenden, wenn keine Liedtexte verfügbar sind"
+    },
+    "adaptiveFontSize": {
+      "label": "Anpassbare Schriftgröße",
+      "description": "Liedtext-Schriftgröße automatisch an die Fenstergröße anpassen"
+    },
+    "fontSize": {
+      "label": "Schriftgröße",
+      "description": "Wirkt, wenn die Anpassung deaktiviert ist"
+    },
+    "fontWeight": {
+      "label": "Schriftstärke",
+      "description": "Liedtext-Schriftstärke"
+    },
+    "lyricBlendMode": {
+      "label": "Liedtext-Mischmodus",
+      "description": "Steuert, wie Liedtexte mit dem Hintergrund verschmelzen",
+      "normal": "Normal",
+      "screen": "Aufhellen",
+      "plusLighter": "Plus Hellere"
+    },
+    "followCoverColor": {
+      "label": "Cover-Farbe folgen",
+      "description": "Liedtextfarbe folgt dem aktuellen Cover-Art"
+    },
+    "autoImmersive": {
+      "label": "Automatischer immersiver Modus",
+      "description": "Obere/untere Leisten und den Mauszeiger ausblenden, wenn die Maus inaktiv ist oder das Fenster verlässt"
+    },
+    "showTranslation": {
+      "label": "Übersetzung anzeigen",
+      "description": "Übersetzte Liedtexte anzeigen"
+    },
+    "showRomanization": {
+      "label": "Romanisierung anzeigen",
+      "description": "Romanisierte Liedtexte anzeigen"
+    },
+    "amllShowLineRomanization": {
+      "label": "Zeilen-Romanisierung anzeigen",
+      "description": "Romanisierte Liedtexte für jede Zeile anzeigen"
+    },
+    "amllShowWordRomanization": {
+      "label": "Wort-Romanisierung anzeigen",
+      "description": "Romanisierte Liedtexte für jedes Wort in Wort-für-Wort-Liedtexten anzeigen"
+    },
+    "enableWordHighlight": {
+      "label": "Wort-Hervorhebung",
+      "description": "Wort-für-Wort-Liedtext-Hervorhebungsfortschritt anzeigen"
+    },
+    "enableFloatAnimation": {
+      "label": "Wort-Schweben",
+      "description": "Aktive Wörter schweben leicht nach oben"
+    },
+    "enableEmphasizeEffect": {
+      "label": "Hervorhebungseffekt",
+      "description": "Skalierungs- und Leuchteffekt für lange Silben"
+    },
+    "enableBlur": {
+      "label": "Zeilenunschärfe",
+      "description": "Zeilen, die weiter von der aktiven Zeile entfernt sind, allmählich unscharf machen"
+    },
+    "hidePassedLines": {
+      "label": "Abgespielte Zeilen ausblenden",
+      "description": "Bereits abgespielte Liedtextzeilen automatisch ausblenden"
+    },
+    "springPreset": {
+      "label": "Feder-Voreinstellung",
+      "description": "Physik-Voreinstellung für die Liedtext-Scroll-Federanimation",
+      "default": "Standard",
+      "smooth": "Weicher",
+      "responsive": "Schnell reaktiv",
+      "jello": "Wackelig",
+      "heavy": "Schwer & langsam",
+      "noBounce": "Kein Hüpfen",
+      "custom": "Benutzerdefiniert"
+    },
+    "springMass": {
+      "label": "Masse",
+      "description": "Höhere Werte machen die Bewegung träger mit mehr Trägheit"
+    },
+    "springDamping": {
+      "label": "Dämpfung",
+      "description": "Höhere Werte dämpfen Schwingungen schneller, weichere Bewegung"
+    },
+    "springStiffness": {
+      "label": "Steifigkeit",
+      "description": "Höhere Werte lassen die Feder schneller zurückschnappen"
+    },
+    "alignPosition": {
+      "label": "Ausrichtungsposition",
+      "description": "Vertikale Position der aktiven Zeile (0 = oben, 1 = unten)"
+    },
+    "wordFadeWidth": {
+      "label": "Ausblendbreite",
+      "description": "Verlaufsbreitenverhältnis für die Wort-Hervorhebungsmaske"
+    },
+    "inactiveAlpha": {
+      "label": "Inaktive Deckkraft",
+      "description": "Grunddeckkraft für nicht aktive Zeilen"
+    },
+    "desktopLyricEnabled": {
+      "label": "Desktop-Liedtext aktivieren",
+      "description": "Ein schwebendes Liedtextfenster auf dem Desktop anzeigen"
+    },
+    "desktopLyricFontSize": {
+      "label": "Schriftgröße",
+      "description": "Desktop-Liedtext-Schriftgröße (px)"
+    },
+    "desktopLyricFontWeight": {
+      "label": "Schriftstärke",
+      "description": "Desktop-Liedtext-Schriftstärke"
+    },
+    "desktopLyricShowTranslation": {
+      "label": "Übersetzung anzeigen",
+      "description": "Übersetzte Liedtexte im Desktop-Liedtext anzeigen"
+    },
+    "desktopLyricDoubleLine": {
+      "label": "Doppelzeilig",
+      "description": "Aktuelle und nächste Zeile zusammen anzeigen"
+    },
+    "desktopLyricAlign": {
+      "label": "Ausrichtung",
+      "description": "Horizontale Ausrichtung des Liedtextes",
+      "left": "Links",
+      "center": "Zentriert",
+      "right": "Rechts",
+      "justify": "Blocksatz"
+    },
+    "desktopLyricWordByWord": {
+      "label": "Wort für Wort",
+      "description": "Hervorhebungsfortschritt pro Wort darstellen"
+    },
+    "desktopLyricAutoGenerateWordByWord": {
+      "label": "Worteffekt automatisch generieren",
+      "description": "Wenn deaktiviert, werden nur echte Wort-für-Wort-Liedtexte angewendet"
+    },
+    "desktopLyricPlayedColor": {
+      "label": "Abgespielte Farbe",
+      "description": "Farbe des abgespielten Liedtextes"
+    },
+    "desktopLyricUnplayedColor": {
+      "label": "Nicht abgespielte Farbe",
+      "description": "Farbe des nicht abgespielten Liedtextes"
+    },
+    "desktopLyricStrokeColor": {
+      "label": "Konturfarbe",
+      "description": "Umrissfarbe des Liedtextes; transparent bedeutet keine Kontur"
+    },
+    "desktopLyricBackgroundMask": {
+      "label": "Text-Hintergrundmaske",
+      "description": "Fügt einen durchscheinenden Hintergrundblock hinter jeder Liedtextzeile für bessere Lesbarkeit hinzu"
+    },
+    "desktopLyricBackgroundMaskColor": {
+      "label": "Maskenfarbe",
+      "description": "Farbe und Deckkraft der Text-Hintergrundmaske"
+    },
+    "desktopLyricAlwaysShowSongInfo": {
+      "label": "Titelinfo immer anzeigen",
+      "description": "Titel und Künstler immer anzeigen; andernfalls nur beim Darüberfahren anzeigen"
+    },
+    "desktopLyricAnimation": {
+      "label": "Zeilenübergang",
+      "description": "Ein-/Ausblendanimation beim Wechsel der Liedtextzeile aktivieren"
+    },
+    "desktopLyricLimitBounds": {
+      "label": "Auf Bildschirm beschränken",
+      "description": "Fensterposition beim Ziehen auf den Arbeitsbereich des aktuellen Bildschirms beschränken"
+    },
+    "desktopLyricAlwaysOnTop": {
+      "label": "Immer im Vordergrund",
+      "description": "Desktop-Liedtextfenster über anderen Fenstern halten"
+    },
+    "desktopLyricLocked": {
+      "label": "Fenster sperren",
+      "description": "Fenster durchklickbar und nicht verschiebbar machen"
+    },
+    "desktopLyricUseCSSDrag": {
+      "label": "CSS-Drag aktivieren",
+      "description": "CSS-basiertes Ziehen aktivieren, empfohlen für Wayland-Umgebungen"
+    },
+    "dynamicIslandEnabled": {
+      "label": "Dynamic Island aktivieren",
+      "description": "Ein kompaktes, schwebendes Liedtextfenster oben auf dem Bildschirm anzeigen; überall hin verschiebbar"
+    },
+    "dynamicIslandScale": {
+      "label": "Skalierung",
+      "description": "Fensterhöhe und Schriftgröße gemeinsam skalieren; 100 % ist die Standardgröße"
+    },
+    "dynamicIslandFontWeight": {
+      "label": "Schriftstärke",
+      "description": "Liedtext-Schriftstärke im Dynamic Island"
+    },
+    "dynamicIslandWordByWord": {
+      "label": "Wort-Hervorhebung",
+      "description": "Fortschreitende Wort-für-Wort-Hervorhebung darstellen"
+    },
+    "dynamicIslandDoubleLine": {
+      "label": "Immer zwei Zeilen",
+      "description": "Zweizeiliges Layout auch ohne Übersetzung beibehalten"
+    },
+    "dynamicIslandShowTranslation": {
+      "label": "Übersetzung anzeigen",
+      "description": "Übersetzung als zweite Zeile anzeigen, wenn verfügbar"
+    },
+    "dynamicIslandPlayedColor": {
+      "label": "Abgespielte Farbe",
+      "description": "Farbe des bereits gesungenen Liedtextes"
+    },
+    "dynamicIslandUnplayedColor": {
+      "label": "Nicht abgespielte Farbe",
+      "description": "Farbe des bevorstehenden Liedtextes und Künstlernamens"
+    },
+    "dynamicIslandBackgroundColor": {
+      "label": "Hintergrundfarbe",
+      "description": "Hintergrundfarbe und Deckkraft der Insel"
+    },
+    "dynamicIslandAlwaysOnTop": {
+      "label": "Immer im Vordergrund",
+      "description": "Das Dynamic-Island-Fenster über anderen Fenstern halten"
+    },
+    "dynamicIslandNotchFusion": {
+      "label": "Notch-Fusion",
+      "description": "Die Insel von der physischen MacBook-Notch aus erweitern"
+    },
+    "dynamicIslandSnapCentered": {
+      "label": "Zentriert beim Einrasten",
+      "description": "Wenn deaktiviert, bleibt beim Einrasten an der Oberkante die gezogene horizontale Position erhalten"
+    },
+    "dynamicIslandNonOcclusive": {
+      "label": "Nicht-okklusiver Modus",
+      "description": "Durchklickbares Fenster; beim Darüberfahren ausblenden"
+    },
+    "dynamicIslandUseCSSDrag": {
+      "label": "CSS-Drag aktivieren",
+      "description": "CSS-basiertes Ziehen aktivieren, empfohlen für Wayland-Umgebungen"
+    },
+    "taskbarLyricEnabled": {
+      "label": "Taskleisten-Liedtext aktivieren",
+      "description": "Liedtexte in die Windows-Taskleiste einbetten"
+    },
+    "taskbarLyricPosition": {
+      "label": "Position",
+      "description": "Liedtextposition in der Taskleiste. Der Automatikmodus wählt basierend auf der Taskleistenausrichtung",
+      "auto": "Auto",
+      "left": "Links",
+      "right": "Rechts"
+    },
+    "taskbarLyricAutoMaxWidth": {
+      "label": "Automatische Breite",
+      "description": "Wenn aktiviert, den verfügbaren Taskleistenplatz füllen; andernfalls auf die maximale Breite unten begrenzen"
+    },
+    "taskbarLyricMaxWidth": {
+      "label": "Maximale Breite",
+      "description": "Durch verfügbaren Platz begrenzt, um Überlappung zu vermeiden"
+    },
+    "taskbarLyricLeftMargin": {
+      "label": "Linker Rand",
+      "description": "Abstand zwischen dem Liedtext und dem linken Rand des verfügbaren Platzes, um andere Taskleisten-Widgets zu vermeiden"
+    },
+    "taskbarLyricRightMargin": {
+      "label": "Rechter Rand",
+      "description": "Abstand zwischen dem Liedtext und dem rechten Rand des verfügbaren Platzes, um andere Taskleisten-Widgets zu vermeiden"
+    },
+    "taskbarLyricColorMode": {
+      "label": "Farbmodus",
+      "description": "Text- und Hintergrundfarbschema des Taskleisten-Liedtextes",
+      "taskbar": "Taskleiste folgen",
+      "taskbarInverse": "Taskleiste folgen (invertiert)",
+      "light": "Hell",
+      "dark": "Dunkel"
+    },
+    "taskbarLyricFontSize": {
+      "label": "Schriftgröße",
+      "description": "Taskleisten-Liedtext-Schriftgröße (px)"
+    },
+    "taskbarLyricShowCover": {
+      "label": "Cover anzeigen",
+      "description": "Zeige das aktuelle Titelcover neben dem Liedtext an"
+    },
+    "taskbarLyricDoubleLine": {
+      "label": "Doppelzeilig",
+      "description": "Aktuellen Liedtext zusammen mit Übersetzung oder nächster Zeile anzeigen"
+    },
+    "taskbarLyricShowTranslation": {
+      "label": "Übersetzung anzeigen",
+      "description": "Im Doppelzeilen-Modus Übersetzung bevorzugen; falls nicht verfügbar, auf die nächste Zeile zurückfallen"
+    },
+    "taskbarLyricWordByWord": {
+      "label": "Wort für Wort",
+      "description": "Hervorhebungsfortschritt pro Wort darstellen"
+    },
+    "playerBgType": {
+      "label": "Player-Hintergrund",
+      "description": "Hintergrundtyp des Vollbild-Players",
+      "blur": "Weichzeichner",
+      "solid": "Einfarbig",
+      "animation": "Fließend"
+    },
+    "playerBgFlowSpeed": {
+      "label": "Fließgeschwindigkeit",
+      "description": "Animationsfließgeschwindigkeit des fließenden Hintergrunds"
+    },
+    "playerBgRenderScale": {
+      "label": "Render-Skalierung",
+      "description": "Höhere Werte reduzieren Kantenunschärfen für ein glatteres Aussehen, erhöhen aber die GPU-Last"
+    },
+    "playerBgFps": {
+      "label": "Bildrate",
+      "description": "Render-Bildrate des fließenden Hintergrunds; höher ist flüssiger, aber lastintensiver"
+    },
+    "playerBgFreezeOnPause": {
+      "label": "Bei Pause einfrieren",
+      "description": "Die Animation des fließenden Hintergrunds anhalten, während die Wiedergabe pausiert"
+    },
+    "playerBgBeat": {
+      "label": "Beat-Puls",
+      "description": "Den fließenden Hintergrund im Takt der tiefen Frequenzen der Musik pulsieren lassen"
+    },
+    "coverLayout": {
+      "label": "Cover-Layout",
+      "description": "Cover-Darstellung im Vollbild-Player",
+      "default": "Standard",
+      "fullscreen": "Vollbild"
+    },
+    "themeMode": {
+      "label": "Design-Modus",
+      "description": "Farbschema der Anwendung",
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System"
+    },
+    "themeSource": {
+      "label": "Designfarbenquelle",
+      "description": "Wie die Designfarbe bestimmt wird",
+      "default": "Standardfarbe",
+      "custom": "Benutzerdefinierte Farbe",
+      "cover": "Vom Cover / Hintergrund",
+      "solid": "Keine Designfarbe"
+    },
+    "customColor": {
+      "label": "Benutzerdefinierte Designfarbe",
+      "description": "Primärfarbe, die von der benutzerdefinierten Quelle verwendet wird"
+    },
+    "globalTint": {
+      "label": "Globale Tönung",
+      "description": "Designfarbtönung auf die gesamte Oberfläche anwenden"
+    },
+    "appearanceStyle": {
+      "label": "Erscheinungsbild-Stil",
+      "description": "Wie der Anwendungshintergrund dargestellt wird",
+      "solid": "Einfarbig",
+      "image": "Benutzerdefiniertes Bild"
+    },
+    "backgroundImage": {
+      "label": "Hintergrundbild",
+      "description": "Wähle ein lokales Bild als App-Hintergrund",
+      "select": "Bild auswählen",
+      "replace": "Ersetzen",
+      "clear": "Entfernen"
+    },
+    "backgroundBlur": {
+      "label": "Hintergrundunschärfe",
+      "description": "Gaußsche Unschärfe, die auf das Hintergrundbild angewendet wird"
+    },
+    "backgroundDim": {
+      "label": "Abdunkelungsüberlagerung",
+      "description": "Deckkraft der schwarzen Überlagerung für bessere Lesbarkeit im Vordergrund"
+    },
+    "backgroundScale": {
+      "label": "Skalierung",
+      "description": "Skalierungsfaktor des Hintergrundbilds"
+    },
+    "layoutMode": {
+      "label": "Layout-Modus",
+      "description": "Layout-Stil der Anwendung",
+      "default": "Klassisch",
+      "sidebarFull": "Immersive Seitenleiste",
+      "floating": "Dynamisch schwebend"
+    },
+    "routeTransition": {
+      "label": "Seitenübergang",
+      "description": "Animationseffekt beim Wechseln von Seiten",
+      "none": "Kein",
+      "fade": "Einblenden",
+      "slide": "Schieben",
+      "zoom": "Zoomen"
+    },
+    "sidebarCollapsed": {
+      "label": "Seitenleiste einklappen",
+      "description": "Seitenleiste in den Nur-Symbol-Modus einklappen"
+    },
+    "sidebarNavStyle": {
+      "label": "Nav-Hervorhebungsstil",
+      "description": "Den Animationsstil des Seitenleisten-Navigationshervorhebungsindikators wechseln",
+      "default": "Statisch",
+      "animated": "Gleitend"
+    },
+    "sidebarPlaylistCover": {
+      "label": "Wiedergabelisten-Cover anzeigen",
+      "description": "Wiedergabelisten-Cover anstelle von Standardsymbolen in der Seitenleiste anzeigen"
+    },
+    "showQualitySwitch": {
+      "label": "Schnellen Qualitätswechsel anzeigen",
+      "description": "Das Online-Audioqualitäts-Tag in der Player-Leiste für schnellen Wechsel anzeigen"
+    },
+    "toastStyle": {
+      "label": "Toast-Nachrichtenstil",
+      "description": "Visueller Stil von Benachrichtigungen",
+      "default": "Modern",
+      "classic": "Klassisch"
+    },
+    "fontConfig": {
+      "label": "Schriftarteinstellungen",
+      "description": "Schriftarten für die App, Liedtexte und externe Liedtextfenster konfigurieren",
+      "title": "Schriftarteinstellungen",
+      "loading": "Systemschriftarten werden geladen",
+      "placeholder": "Gib einen Schriftartnamen ein",
+      "useSystem": "Systemstandard",
+      "useGlobal": "Global folgen",
+      "modeLabel": "Eingabemethode",
+      "modeHint": "Alle folgenden Felder verwenden diese Methode",
+      "modeSelect": "Manuelle Auswahl",
+      "modeCustom": "Benutzerdefinierte Schriftart",
+      "resetRow": "Auf Standard zurücksetzen",
+      "fieldLabel": "{name}-Schriftart",
+      "groups": {
+        "general": "Allgemein",
+        "appLyric": "Liedtext-Schriftart",
+        "externalLyric": "Externe Liedtextfenster"
+      },
+      "fields": {
+        "global": "global",
+        "lyric": "Liedtexte",
+        "desktopLyric": "Desktop-Liedtext",
+        "dynamicIsland": "Dynamic-Island-Liedtext",
+        "taskbarLyric": "Taskleisten-Liedtext"
+      }
+    },
+    "systemMediaControls": {
+      "label": "System-Mediensteuerung",
+      "description": "Wiedergabeinformationen in der System-Mediensteuerung anzeigen"
+    },
+    "discordEnabled": {
+      "label": "Discord-Status",
+      "description": "Wiedergabestatus auf Discord anzeigen"
+    },
+    "discordShowWhenPaused": {
+      "label": "Bei Pause anzeigen",
+      "description": "Discord-Status auch bei Pause sichtbar halten"
+    },
+    "discordDisplayMode": {
+      "label": "Kurze Statusanzeige",
+      "description": "Text, der unter dem Benutzernamen angezeigt wird, wenn das detaillierte Panel nicht geöffnet ist",
+      "name": "App-Name",
+      "details": "Titelname",
+      "state": "Künstlername"
+    },
+    "lastfmEnabled": {
+      "label": "Last.fm",
+      "description": "Verbinde dein Last.fm-Konto zum Scrobbeln und Synchronisieren von Likes"
+    },
+    "lastfmScrobble": {
+      "label": "Scrobbeln",
+      "description": "Eine Wiedergabe nach einer Weile an Last.fm melden"
+    },
+    "lastfmNowPlaying": {
+      "label": "Aktuelle Wiedergabe",
+      "description": "Den aktuell abgespielten Titel an Last.fm senden"
+    },
+    "lastfmLoveSync": {
+      "label": "Likes synchronisieren",
+      "description": "Deine Likes als Last.fm-Love/Unlove spiegeln"
+    },
+    "lastfm": {
+      "connect": "Konto verbinden",
+      "connecting": "Autorisierung im Browser abschließen…",
+      "cancel": "Abbrechen",
+      "disconnect": "Trennen",
+      "connectedAs": "Verbunden: {name}",
+      "notConnected": "Kein Last.fm-Konto verbunden",
+      "connectHint": "Klicken auf „Verbinden“ öffnet die Autorisierungsseite in deinem Browser",
+      "toast": {
+        "connected": "Mit Last.fm verbunden: {name}",
+        "timeout": "Autorisierung abgelaufen, bitte erneut versuchen",
+        "canceled": "Autorisierung abgebrochen",
+        "failed": "Verbindung fehlgeschlagen, bitte erneut versuchen",
+        "disconnected": "Von Last.fm getrennt"
+      }
+    },
+    "rememberWindowState": {
+      "label": "Fensterzustand merken",
+      "description": "Fenstergröße, -position und maximierten Zustand beim nächsten Start wiederherstellen"
+    },
+    "autoCheckUpdate": {
+      "label": "Automatisch nach Updates suchen",
+      "description": "Beim Start und regelmäßig im Hintergrund nach neuen Versionen suchen"
+    },
+    "checkUpdate": {
+      "label": "Nach Updates suchen",
+      "description": "Jetzt nach einer neuen Version suchen"
+    },
+    "showPerformanceMonitor": {
+      "label": "Leistungsmonitor",
+      "description": "Schwebendes Widget mit FPS / Bildzeit / Speicher. Zum Umschalten klicken"
+    },
+    "taskbarProgress": {
+      "label": "Taskleisten-Fortschritt",
+      "description": "Wiedergabefortschritt auf dem Taskleistensymbol anzeigen"
+    },
+    "taskbarThumbnailCover": {
+      "label": "Taskleisten-Covervorschau",
+      "description": "Das Albumcover als Fenstervorschau beim Überfahren der Taskleiste verwenden; deaktivieren, um das Live-Fenster des Systems anzuzeigen"
+    },
+    "networkProxyProtocol": {
+      "label": "Netzwerk-Proxy",
+      "description": "Einen manuellen Proxy für Online-Anfragen konfigurieren",
+      "off": "Proxy aus",
+      "http": "HTTP-Proxy",
+      "https": "HTTPS-Proxy",
+      "socks5": "SOCKS5-Proxy"
+    },
+    "networkProxyHost": {
+      "label": "Proxy-Server",
+      "description": "Gib die Proxy-Server-Adresse ein, z. B. 127.0.0.1",
+      "placeholder": "127.0.0.1"
+    },
+    "networkProxyPort": {
+      "label": "Proxy-Port",
+      "description": "Gib den Proxy-Server-Port ein, z. B. 7890"
+    },
+    "networkProxyTest": {
+      "label": "Proxy testen",
+      "description": "Testen, ob die Proxy-Konfiguration eine erfolgreiche Verbindung herstellen kann",
+      "success": "Proxy ist verfügbar",
+      "failed": "Proxy-Test fehlgeschlagen. Überprüfe die Konfiguration"
+    },
+    "neteaseRealIp": {
+      "label": "Echte IP verwenden",
+      "description": "Kann im Ausland oder in einigen Regionen eingeschränkt sein; aktiviere dies, um das Problem zu beheben"
+    },
+    "neteaseScrobbleEnabled": {
+      "label": "Scrobbeln aktivieren",
+      "description": "Automatisch Hörprotokolle an NCM melden, nachdem ein Titel lange genug abgespielt wurde"
+    },
+    "neteaseScrobbleMode": {
+      "label": "NCM-Scrobbel-Methode",
+      "description": "Wähle, welche Meldeschnittstelle für automatische NCM-Hörprotokolle verwendet wird",
+      "legacy": "Alte Log-API",
+      "ncbl": "NCBL-verschlüsselte API"
+    },
+    "orpheusProtocol": {
+      "label": "Diese App über das Orpheus-Protokoll aufwecken",
+      "description": "Dieses Protokoll wird normalerweise vom Webplayer verwendet, um den offiziellen Client zu starten; die Aktivierung kann das Starten des offiziellen Clients verhindern"
+    },
+    "streamingEnabled": {
+      "label": "Streaming aktivieren",
+      "description": "Wenn deaktiviert, wird der Streaming-Eintrag in der Seitenleiste ausgeblendet"
+    },
+    "externalApiEnabled": {
+      "label": "Externe Steuerung zulassen",
+      "description": "Externen Apps die Steuerung des Players über die API erlauben"
+    },
+    "externalApiWs": {
+      "label": "WebSocket aktivieren",
+      "description": "Externe Apps können Ereignisse abonnieren und Befehle senden"
+    },
+    "externalApiAllowLan": {
+      "label": "LAN-Zugriff zulassen",
+      "description": "Andere Geräte in deinem Netzwerk können über die IP dieses Geräts auf die API zugreifen; wenn deaktiviert, kann nur dieses Gerät eine Verbindung herstellen"
+    },
+    "externalApiPort": {
+      "label": "Listening-Port",
+      "description": "TCP-Port für die externe API (1024–65535)"
+    },
+    "externalApiPanel": {
+      "label": "",
+      "description": ""
+    },
+    "externalApi": {
+      "restart": "Server neu starten",
+      "restartHint": "Nach Änderung des Ports oder LAN-Zugriffs ist ein Neustart erforderlich",
+      "restarted": "Server neu gestartet",
+      "portInUse": "Port {port} wird bereits verwendet, wähle einen anderen",
+      "pendingChange": "Neustart ausstehend",
+      "pendingChangeHint": "Einstellungen geändert, Server neu starten, um sie zu übernehmen",
+      "endpoint": "Adresse",
+      "stopped": "Server läuft nicht"
+    },
+    "closeAction": {
+      "label": "Schaltflächenaktion „Schließen“",
+      "description": "Was passiert, wenn die Schließen-Schaltfläche der Titelleiste geklickt wird",
+      "quit": "Anwendung beenden",
+      "hide": "In Taskleiste minimieren"
+    },
+    "rememberCloseChoice": {
+      "label": "Schließen-Auswahl merken",
+      "description": "Wenn deaktiviert, wird jedes Mal beim Klicken der Schließen-Schaltfläche gefragt"
+    },
+    "closeDialog": {
+      "title": "Fenster schließen",
+      "description": "Wähle, was dieses Mal passieren soll",
+      "remember": "Meine Auswahl merken, nicht erneut fragen",
+      "quit": "Anwendung beenden",
+      "hide": "In Taskleiste minimieren"
+    },
+    "storageManager": {
+      "label": "Datenverwaltung",
+      "description": "Einstellungen sichern, wiederherstellen, zurücksetzen oder alle Daten löschen"
+    },
+    "backup": {
+      "label": "Einstellungen sichern",
+      "description": "Aktuelle Einstellungen in eine Sicherungsdatei exportieren",
+      "button": "Sichern",
+      "exported": "Sicherung gespeichert",
+      "failed": "Sicherung fehlgeschlagen"
+    },
+    "restore": {
+      "label": "Einstellungen wiederherstellen",
+      "description": "Einstellungen aus einer Sicherungsdatei importieren. Aktuelle Einstellungen werden überschrieben.",
+      "button": "Wiederherstellen",
+      "confirmTitle": "Einstellungen wiederherstellen und neu starten?",
+      "confirmDesc": "Deine aktuellen Einstellungen werden durch die Sicherungsdatei überschrieben, und die App wird sofort neu gestartet, um sie zu übernehmen. Die lokale Bibliothek, Wiedergabelisten und der Wiedergabeverlauf sind nicht betroffen.",
+      "invalid": "Ungültige Sicherungsdatei",
+      "failed": "Wiederherstellung fehlgeschlagen"
+    },
+    "resetSettings": {
+      "label": "Einstellungen zurücksetzen",
+      "description": "Alle Einstellungen auf Standardwerte zurücksetzen. Wiedergabelisten und lokale Bibliothek sind nicht betroffen.",
+      "button": "Zurücksetzen",
+      "confirmTitle": "Einstellungen zurücksetzen?",
+      "confirmDesc": "Alle Einstellungen werden auf ihre Standardwerte zurückgesetzt. Dies kann nicht rückgängig gemacht werden.",
+      "done": "Einstellungen wurden zurückgesetzt"
+    },
+    "resetAll": {
+      "label": "Alle Daten löschen",
+      "description": "Alle Wiedergabelisten, Anmeldestatus und Caches löschen, dann Einstellungen zurücksetzen",
+      "button": "Löschen",
+      "confirmTitle": "Alle Daten löschen?",
+      "confirmDesc": "Alle Wiedergabelisten, Anmeldestatus und Caches werden gelöscht und die Einstellungen zurückgesetzt. Dies kann nicht rückgängig gemacht werden.",
+      "done": "Alle Daten wurden gelöscht"
+    },
+    "plugins": {
+      "securityWarningTitle": "Achte auf die Sicherheitsrisiken vor der Installation",
+      "securityWarning": "Plugins sind Code von Drittanbietern. Die App sandboxt sie so weit wie möglich, aber das Risiko kann nicht vollständig ausgeschlossen werden – ein bösartiges Plugin könnte auf deine Daten zugreifen oder gefährliche Aktionen ausführen. Installiere nur Plugins aus vertrauenswürdigen Quellen.",
+      "hint": "Installiere aus lokaler Datei oder URL",
+      "hintDetail": "Erweitere die App mit Plugins. Siehe die",
+      "docs": "Plugin-Dokumentation",
+      "importLocal": "Lokal",
+      "importFromUrl": "Von URL",
+      "importUrlTitle": "Plugin aus URL installieren",
+      "importUrlPlaceholder": "https://-Link zu einem .js-Skript einfügen",
+      "importUrlSubmit": "Installieren",
+      "importUrlInvalid": "Bitte gib eine gültige http- oder https-URL ein",
+      "market": "Plugin-Marktplatz",
+      "install": "Installieren",
+      "installed": "Installiert",
+      "marketEmpty": "Keine Plugins verfügbar",
+      "marketError": "Laden fehlgeschlagen",
+      "publishHint": "Ein Plugin erstellt?",
+      "publishAction": "Veröffentlichen",
+      "importSuccess": "Plugin importiert",
+      "importFailed": "Plugin-Import fehlgeschlagen",
+      "empty": "Keine Plugins installiert",
+      "emptyHint": "Installiere ein Plugin aus einer lokalen Datei oder URL, um erweiterte Funktionen zu aktivieren",
+      "enable": "Aktivieren",
+      "enabled": "Aktiviert",
+      "uninstall": "Deinstallieren",
+      "configSubtitle": "Plugin-Einstellungen",
+      "uninstallConfirmTitle": "Plugin deinstallieren",
+      "uninstallConfirm": "Bist du sicher, dass du „{name}“ deinstallieren möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "uninstallSuccess": "Plugin deinstalliert",
+      "uninstallFailed": "Deinstallation fehlgeschlagen",
+      "by": "Von",
+      "sources": "Quellen",
+      "pendingUpdate": "Update",
+      "noChangelog": "Keine Versionshinweise",
+      "openUpdateUrl": "Update-Seite öffnen",
+      "checkUpdate": "Auf Update prüfen",
+      "checkUpdateFailed": "Update-Prüfung fehlgeschlagen",
+      "updateFound": "Neue Version verfügbar",
+      "updateLatest": "Bereits auf dem neuesten Stand",
+      "update": "Aktualisieren",
+      "updateSuccess": "Plugin aktualisiert",
+      "updateFailed": "Update fehlgeschlagen, verwende „Update-Seite öffnen“, um manuell zu installieren",
+      "status": {
+        "ready": "Bereit",
+        "loading": "Laden",
+        "error": "Fehler",
+        "disabled": "Deaktiviert",
+        "unloaded": "Entladen"
+      },
+      "sectionSource": "Quell-Plugins",
+      "sectionControl": "Steuerungs-Plugins",
+      "detail": {
+        "title": "Plugin-Details",
+        "intro": "Über",
+        "grants": "Berechtigungen",
+        "contributes": "Fähigkeiten",
+        "info": "Info",
+        "noDescription": "Keine Beschreibung",
+        "grantNone": "Dieses Plugin deklariert keine Berechtigungen",
+        "autoGranted": "Automatisch gewährt",
+        "sources": "Quellen",
+        "events": "Ereignisse",
+        "controls": "Wiedergabesteuerung",
+        "controlsYes": "Ja",
+        "settingsCount": "Einstellungen",
+        "menus": "Menüeinträge",
+        "id": "ID",
+        "author": "Autor",
+        "apiLevel": "API-Level",
+        "installed": "Installiert",
+        "updated": "Aktualisiert",
+        "homepage": "Webseite"
+      },
+      "grant": {
+        "network": { "label": "Netzwerk", "desc": "Kann Netzwerkanfragen stellen" },
+        "control": { "label": "Steuerung", "desc": "Kann den Player steuern" },
+        "ui": { "label": "Oberfläche", "desc": "Kann die App-Oberfläche erweitern oder ändern" }
+      }
+    },
+    "pluginManager": {
+      "label": "Plugin-Verwaltung",
+      "description": "Erweiterungsskripte importieren, aktivieren oder deinstallieren"
+    },
+    "enableLocalTTMLOverride": {
+      "label": "Lokale TTML-Bibliothek aktivieren",
+      "description": ".ttml-Dateien in einem ausgewählten Ordner anhand von Song-Metadaten zuordnen; hat Vorrang vor Online-Liedtexten"
+    },
+    "localLyricRepoDir": {
+      "label": "Bibliotheksordner",
+      "description": "Wähle einen Ordner mit TTML-Liedtexten; die App durchsucht ihn nach Metadaten",
+      "choose": "Auswählen",
+      "clear": "Entfernen",
+      "unset": "Nicht festgelegt"
+    },
+    "fileCacheManager": {
+      "label": "Cache-Verwaltung",
+      "description": "Cache-Nutzung anzeigen und leeren"
+    },
+    "dbCacheManager": {
+      "label": "Datenbank-Verwaltung",
+      "description": "Datenbanknutzung anzeigen und leeren"
+    },
+    "cacheDir": {
+      "label": "Cache-Verzeichnis",
+      "open": "Im Dateimanager öffnen",
+      "change": "Ändern",
+      "reset": "Zurücksetzen",
+      "hint": "Cover, Künstler-Avatare und Hintergründe befinden sich in diesem Ordner. Ein Wechsel löscht die alten Caches; der neue Speicherort muss ein leerer Ordner sein.",
+      "changedHint": "Cache-Verzeichnis gewechselt",
+      "notEmpty": "Der ausgewählte Ordner ist nicht leer. Bitte wähle einen leeren Ordner.",
+      "switchConfirmTitle": "Cache-Verzeichnis wechseln?",
+      "switchConfirmDesc": "Aktuelle Cover-/Künstler-/Hintergrund-Caches werden vor dem Wechsel gelöscht, und der neue Speicherort muss ein leerer Ordner sein. Datenbankgestützte Liedtext-Caches sind nicht betroffen.",
+      "switchConfirmOk": "Ordner auswählen",
+      "resetConfirmTitle": "Auf Standard-Cache-Verzeichnis zurücksetzen?",
+      "resetConfirmDesc": "Aktuelle Datei-Caches werden vor dem Zurücksetzen gelöscht."
+    },
+    "cacheUsage": {
+      "label": "Nutzung",
+      "total": "Gesamt",
+      "refresh": "Aktualisieren"
+    },
+    "cacheCategory": {
+      "covers": "Cover-Miniaturansichten",
+      "artists": "Künstler-Avatare",
+      "backgrounds": "Hintergründe",
+      "songs": "Titeldateien",
+      "lyric": "Liedtext-Cache",
+      "lyricTTML": "TTML-Liedtext-Cache",
+      "lyricMatch": "Liedtext-Zuordnungs-Cache"
+    },
+    "enableSongCache": {
+      "label": "Titel-Cache",
+      "description": "Online-Titel lokal zwischenspeichern, um die Ladegeschwindigkeit zu verbessern"
+    },
+    "songCacheSizeLimit": {
+      "label": "Größenbeschränkung",
+      "description": "Wenn das Limit erreicht ist, werden Einträge automatisch entfernt; ∞ bedeutet unbegrenzt"
+    },
+    "downloadEnabled": {
+      "label": "Downloads aktivieren"
+    },
+    "downloadDir": {
+      "label": "Download-Ordner",
+      "change": "Ändern",
+      "serverPathHint": "Server-Pfad"
+    },
+    "downloadTarget": {
+      "browser": "Im Browser speichern",
+      "server": "Auf Server speichern",
+      "browserHint": "Downloads werden direkt an den Browser übergeben und belegen keinen Server-Speicherplatz"
+    },
+    "downloadQuality": {
+      "label": "Download-Qualität",
+      "description": "Bevorzugte Qualität für Downloads; die tatsächliche Verfügbarkeit hängt von Plattform und Konto ab"
+    },
+    "downloadUsePlayback": {
+      "label": "Wiedergabe für Download simulieren",
+      "description": "Den Wiedergabelink als Audioquelle beim Herunterladen verwenden"
+    },
+    "downloadFileTemplate": {
+      "label": "Dateinamenformat",
+      "description": "Wie heruntergeladene Dateien benannt werden",
+      "titleOnly": "Titel",
+      "artistTitle": "Künstler - Titel",
+      "titleArtist": "Titel - Künstler"
+    },
+    "downloadFolderScheme": {
+      "label": "Intelligente Ordnerstruktur",
+      "description": "Downloads nach Regel in Unterordner organisieren",
+      "none": "Keine Unterordner",
+      "artist": "Nach Künstler",
+      "artistAlbum": "Nach Künstler / Album"
+    },
+    "downloadOverwrite": {
+      "label": "Duplikatbehandlung",
+      "description": "Was tun, wenn die Zieldatei bereits existiert",
+      "rename": "Beide behalten (Nummer hinzufügen)",
+      "overwrite": "Überschreiben",
+      "skip": "Überspringen"
+    },
+    "downloadEmbedCover": {
+      "label": "Cover einbetten",
+      "description": "Das Cover in die heruntergeladene Audiodatei schreiben"
+    },
+    "downloadEmbedMeta": {
+      "label": "Metadaten einbetten",
+      "description": "Titel, Künstler und Album in die Datei-Tags schreiben"
+    },
+    "downloadEmbedLyric": {
+      "label": "Liedtexte einbetten",
+      "description": "Liedtexte in die Datei-Tags schreiben"
+    },
+    "downloadWriteLrc": {
+      "label": "Liedtextdatei speichern",
+      "description": "Beim Herunterladen auch eine Liedtextdatei neben der Audiodatei speichern"
+    },
+    "downloadLyricFormat": {
+      "label": "Liedtextdateiformat",
+      "description": "Format für gespeicherte und eingebettete Liedtexte",
+      "lrc": "LRC (Zeile)",
+      "enhanced": "Enhanced LRC (Wort)"
+    },
+    "downloadSaveTtml": {
+      "label": "Auch als TTML speichern",
+      "description": "Eine zusätzliche TTML-Datei mit Original, Übersetzung und Romanisierung in einer Datei exportieren"
+    },
+    "cacheCategoryClear": {
+      "label": "Leeren",
+      "confirmTitle": "„{name}“ leeren?",
+      "confirmDesc": "Alle zwischengespeicherten Daten in dieser Kategorie werden gelöscht. Dies kann nicht rückgängig gemacht werden."
+    },
+    "fileClearAll": {
+      "label": "Datei-Caches leeren",
+      "description": "Alle Caches leeren. Dies kann nicht rückgängig gemacht werden.",
+      "button": "Alle leeren",
+      "confirmTitle": "Alle Datei-Caches leeren?",
+      "confirmDesc": "Alle oben genannten Datei-Caches werden gelöscht und bei der nächsten Verwendung neu erstellt. Dies kann nicht rückgängig gemacht werden."
+    },
+    "dbClearAll": {
+      "label": "Datenbank-Caches leeren",
+      "description": "Liedtext- und Zuordnungs-Caches in der Datenbank löschen. Deine lokale Bibliothek und Kontodaten sind nicht betroffen.",
+      "button": "Alle leeren",
+      "confirmTitle": "Alle Datenbank-Caches leeren?",
+      "confirmDesc": "Alle oben genannten Datenbank-Caches werden gelöscht. Dies kann nicht rückgängig gemacht werden."
+    }
+  },
+  "collection": {
+    "totalDuration": "Etwa {time}",
+    "unknownAlbum": "Unbekanntes Album",
+    "empty": "Keine Titel",
+    "noDescription": "Noch keine Beschreibung~",
+    "album": "Album",
+    "playlist": "Wiedergabeliste",
+    "radio": "Radio",
+    "my": "Meine {type}s",
+    "subscribed": "Abonnierte {type}s",
+    "localPlaylist": "Lokale Wiedergabelisten",
+    "onlinePlaylist": "Online-Wiedergabelisten",
+    "create": "Neue {type}",
+    "name": "{type}-Name",
+    "description": "Beschreibung",
+    "delete": "{type} löschen",
+    "deleteConfirm": "{type} „{title}“ löschen? Dies kann nicht rückgängig gemacht werden",
+    "addTo": "Zu {type} hinzufügen",
+    "removeFrom": "Aus {type} entfernen",
+    "tracksAdded": "Erfolgreich hinzugefügt, {count} Titel",
+    "alreadyInPlaylist": "Bereits in der Wiedergabeliste",
+    "edit": "{type} bearbeiten",
+    "subscribe": "Abonnieren",
+    "unsubscribe": "Abonnement kündigen",
+    "privacy": {
+      "private": "Privat machen"
+    }
+  },
+  "artist": {
+    "label": "Künstler",
+    "songs": "Titel",
+    "totalArtists": "{count} Künstler",
+    "albums": "Alben"
+  },
+  "album": {
+    "label": "Alben"
+  },
+  "folder": {
+    "label": "Ordner",
+    "totalFolders": "{count} Ordner"
+  },
+  "errors": {
+    "dialogTitle": "Ein Fehler ist aufgetreten",
+    "deviceHint": "Kein Audio-Ausgabegerät erkannt. Bitte schließe Kopfhörer oder Lautsprecher an und versuche es erneut.",
+    "DEVICE_NOT_FOUND": "Kein Audio-Ausgabegerät gefunden",
+    "DEVICE_INIT_FAILED": "Initialisierung des Audiogeräts fehlgeschlagen",
+    "FILE_NOT_FOUND": "Datei nicht gefunden oder nicht zugänglich",
+    "FILE_NO_AUDIO_STREAM": "Kein Audiostream in der Datei gefunden",
+    "FILE_DECODE_ERROR": "Audio-Dekodierung fehlgeschlagen",
+    "FILE_NOT_SELECTED": "Keine Datei ausgewählt",
+    "NETWORK_ERROR": "Audioquelle nicht erreichbar, Netzwerk prüfen oder andere Quelle versuchen",
+    "NETWORK_TIMEOUT": "Zeitüberschreitung der Audioquelle, Netzwerk prüfen oder andere Quelle versuchen",
+    "URL_RESOLVE_FAILED": "Wiedergabe-URL konnte nicht abgerufen werden",
+    "NO_PLUGIN_AVAILABLE": "Kein Plugin für diese Plattform verfügbar",
+    "SCAN_NO_DIRS": "Keine Scan-Verzeichnisse konfiguriert",
+    "SCAN_DIR_EXISTS": "Verzeichnis existiert bereits",
+    "SCAN_DIR_NOT_FOUND": "Verzeichnis nicht gefunden",
+    "SCAN_DIR_NOT_SELECTED": "Kein Verzeichnis ausgewählt",
+    "TAG_READ_FAILED": "Lesen der Tags fehlgeschlagen",
+    "TAG_WRITE_FAILED": "Schreiben der Tags fehlgeschlagen",
+    "UNKNOWN": "Vorgang fehlgeschlagen"
+  },
+  "tagEditor": {
+    "title": "Metadaten bearbeiten",
+    "replaceCover": "Cover ersetzen",
+    "onlineMatch": "Tags automatisch zuordnen",
+    "matchHint": "Keine Lust, Tags manuell auszufüllen?",
+    "noMatches": "Keine Übereinstimmungen gefunden",
+    "lyricsPlaceholder": "Reiner Liedtext, wird unverändert in den Datei-Tag geschrieben",
+    "saveSuccess": "Metadaten gespeichert",
+    "saveFailed": "Speichern fehlgeschlagen",
+    "fields": {
+      "title": "Titel",
+      "artist": "Künstler",
+      "album": "Album",
+      "albumArtist": "Album-Künstler",
+      "year": "Jahr",
+      "genre": "Genre",
+      "trackNumber": "Titel-Nr.",
+      "discNumber": "Disc-Nr.",
+      "lyrics": "Eingebettete Liedtexte"
+    }
+  }
+}

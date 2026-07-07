@@ -1,0 +1,2004 @@
+{
+  "update": {
+    "dialogTitle": "Nouvelle version disponible",
+    "later": "Plus tard",
+    "download": "Télécharger",
+    "downloading": "Téléchargement",
+    "installNow": "Redémarrer et installer",
+    "goDownload": "Aller au téléchargement",
+    "upToDate": "Vous utilisez la dernière version",
+    "readyToast": "Mise à jour prête — redémarrez pour installer",
+    "failed": "Échec de la mise à jour, veuillez réessayer plus tard"
+  },
+  "onboarding": {
+    "next": "Suivant",
+    "back": "Retour",
+    "finish": "Terminer",
+    "footer": "Vous pouvez ajuster à tout moment les éléments ignorés dans les Paramètres",
+    "welcome": {
+      "title": "Bienvenue sur SPlayer-Next",
+      "subtitle": "Un lecteur musical moderne pour ordinateur — quelques étapes rapides et vous êtes prêt",
+      "start": "Commencer",
+      "features": {
+        "local": {
+          "title": "Bibliothèque locale",
+          "desc": "Scannez les dossiers, organisez votre bibliothèque automatiquement"
+        },
+        "quality": {
+          "title": "Audio sans perte",
+          "desc": "Moteur audio natif avec prise en charge étendue des formats sans perte"
+        },
+        "streaming": {
+          "title": "Serveurs de streaming",
+          "desc": "Subsonic / Jellyfin / Emby et plus"
+        },
+        "lyrics": {
+          "title": "Paroles enrichies",
+          "desc": "Paroles mot à mot AMLL, plus paroles sur le bureau, Dynamic Island et la barre des tâches"
+        }
+      }
+    },
+    "agreement": {
+      "title": "Accord utilisateur et clause de non-responsabilité",
+      "subtitle": "Veuillez lire et accepter l'accord avant de continuer",
+      "scrollHint": "Faites défiler jusqu'à la fin pour pouvoir accepter",
+      "agree": "J'ai lu et j'accepte l'Accord utilisateur et la clause de non-responsabilité",
+      "accept": "Accepter et continuer"
+    },
+    "library": {
+      "title": "Bibliothèque musicale locale",
+      "subtitle": "Ajoutez des dossiers à scanner et SPlayer-Next les indexera automatiquement. Vous pourrez en ajouter plus tard."
+    },
+    "streaming": {
+      "title": "Serveurs de streaming",
+      "subtitle": "Connectez-vous aux services compatibles Subsonic, Jellyfin ou Emby pour un accès fluide à votre serveur musical domestique.",
+      "hint": "Après la configuration, allez dans Paramètres → Sources multimédia → Streaming pour ajouter un serveur et tester la connexion.",
+      "servers": {
+        "subsonic": "Subsonic",
+        "navidrome": "Navidrome",
+        "jellyfin": "Jellyfin",
+        "emby": "Emby"
+      }
+    },
+    "preferences": {
+      "title": "Langue et thème",
+      "subtitle": "Choisissez votre langue d'interface et votre thème. Vous pourrez tout affiner plus tard dans les Paramètres.",
+      "languageLabel": "Langue d'interface",
+      "modeLabel": "Mode du thème",
+      "colorLabel": "Couleur d'accentuation"
+    },
+    "hotkeys": {
+      "title": "Raccourcis clavier",
+      "subtitle": "SPlayer-Next est livré avec des raccourcis de lecture complets que vous pouvez utiliser à tout moment.",
+      "tips": {
+        "global": {
+          "title": "Raccourcis globaux",
+          "desc": "Contrôlez la lecture même lorsque la fenêtre n'est pas focalisée — y compris les touches multimédia"
+        },
+        "local": {
+          "title": "Raccourcis dans l'application",
+          "desc": "Espace pour lire/pause, touches fléchées pour sauter, Ctrl+F pour chercher, et plus"
+        },
+        "customize": {
+          "title": "Entièrement personnalisable",
+          "desc": "Voyez et reassignez chaque raccourci dans Paramètres → Raccourcis"
+        }
+      }
+    }
+  },
+  "common": {
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "configure": "Configurer",
+    "more": "Plus",
+    "save": "Enregistrer",
+    "reset": "Réinitialiser",
+    "retry": "Réessayer",
+    "prev": "Précédent",
+    "next": "Suivant",
+    "search": "Rechercher",
+    "loading": "Chargement",
+    "noData": "Aucune donnée",
+    "noMore": "Pas plus ~",
+    "refreshCache": "Actualiser le cache",
+    "copied": "Copié",
+    "copyFailed": "Échec de la copie",
+    "playAll": "Tout lire",
+    "totalSongs": "{count} morceaux",
+    "totalAlbums": "{count} albums",
+    "totalArtists": "{count} artistes",
+    "totalPlaylists": "{count} listes de lecture"
+  },
+  "comments": {
+    "name": "Commentaires du morceau",
+    "title": "Commentaires pour « {name} »",
+    "hot": "Meilleurs commentaires",
+    "new": "Derniers commentaires",
+    "loading": "Chargement des commentaires...",
+    "empty": "Aucun commentaire pour l'instant",
+    "noSource": "Aucune source de commentaires disponible",
+    "location": "Depuis {location}",
+    "page": "Page {page} / {total}"
+  },
+  "equalizer": {
+    "title": "Égaliseur",
+    "preamp": "Préampli",
+    "preset": {
+      "label": "Préréglage",
+      "flat": "Par défaut",
+      "pop": "Pop",
+      "rock": "Rock",
+      "classical": "Classique",
+      "electronic": "Électronique",
+      "bass": "Boost des basses",
+      "vocal": "Vocal",
+      "dance": "Danse",
+      "soft": "Douce",
+      "custom": "Personnalisé"
+    }
+  },
+  "speed": {
+    "title": "Vitesse de lecture",
+    "speed": "Vitesse",
+    "pitchSync": "Conserver le ton",
+    "pitchSyncTip": "Garder le ton original lors du changement de vitesse",
+    "pitch": "Ton",
+    "semitone": "{n} st"
+  },
+  "autoClose": {
+    "title": "Minuterie de mise en veille",
+    "duration": "Durée",
+    "unitHint": "minutes",
+    "custom": "Personnalisé",
+    "minute": "{n} min",
+    "waitSongEnd": "Attendre la fin du morceau en cours",
+    "waitSongEndTip": "Quand le temps est écoulé, terminer le morceau avant de s'arrêter",
+    "remaining": "Temps restant",
+    "start": "Démarrer",
+    "update": "Mettre à jour",
+    "stop": "Éteindre"
+  },
+  "abLoop": {
+    "title": "Boucle A-B",
+    "enable": "Activer la boucle",
+    "enableTip": "Définissez les points A et B, B doit être supérieur à A",
+    "pointA": "Point A",
+    "pointB": "Point B",
+    "setCurrent": "Définir actuel",
+    "clear": "Effacer",
+    "minus": "-{n}s",
+    "plus": "+{n}s",
+    "warningBLessThanA": "B doit être après A ; boucle désactivée"
+  },
+  "uiZoom": {
+    "title": "Zoom de l'interface",
+    "range": "Plage : 50 % - 200 %",
+    "reset": "Rétablir par défaut"
+  },
+  "nav": {
+    "home": "Accueil",
+    "library": "Bibliothèque",
+    "liked": "Morceaux aimés",
+    "history": "Historique de lecture",
+    "download": "Téléchargements",
+    "favorites": "Favoris",
+    "cloud": "Mon cloud",
+    "streaming": "Streaming",
+    "reload": "Recharger",
+    "devtools": "Outils de développement",
+    "globalSettings": "Paramètres globaux",
+    "searchPlaceholder": "Rechercher des morceaux, artistes ou albums",
+    "searchEmpty": "Commencez à taper pour rechercher",
+    "searchGoto": "Rechercher « {keyword} »",
+    "searchSection": {
+      "quick": "Rapide",
+      "history": "Recherches récentes",
+      "hot": "Tendances"
+    },
+    "link": {
+      "song": "Lire [{id}]",
+      "album": "Aller à l'album [{id}]",
+      "artist": "Aller à l'artiste [{id}]",
+      "playlist": "Aller à la liste de lecture [{id}]"
+    }
+  },
+  "home": {
+    "greetingLine": "{greeting}, {name}",
+    "greeting": {
+      "dawn": "Bonjour",
+      "morning": "Bonjour",
+      "noon": "Bon après-midi",
+      "afternoon": "Bon après-midi",
+      "evening": "Bonsoir"
+    },
+    "stats": {
+      "weekDuration": "Cette semaine",
+      "newFavorites": "Nouveaux favoris",
+      "listenStreak": "Série",
+      "unitHour": "h",
+      "unitSong": "morceaux",
+      "unitDay": "jours"
+    },
+    "duration": {
+      "hm": "{hours} h {minutes} min",
+      "hours": "{hours} h",
+      "minutes": "{minutes} min"
+    },
+    "subtitle": {
+      "plain1": "Que la bonne musique vous accompagne aujourd'hui",
+      "plain2": "Mettez votre casque et laissez le monde s'apaiser",
+      "plain3": "La musique est prête — choisissez un morceau pour commencer",
+      "streak": "Vous avez écouté {days} jours d'affilée, continuez comme ça",
+      "weekListened": "Vous avez écouté pendant {duration} cette semaine",
+      "weekMore": "C'est {duration} de plus que la semaine dernière",
+      "weekLess": "C'est {duration} de moins que la semaine dernière",
+      "favorites": "Vous avez ajouté {count} nouveaux favoris cette semaine",
+      "recent": "Que jouer aujourd'hui ? Reprenez vos {count} morceaux récents"
+    },
+    "quickActions": {
+      "luck": {
+        "title": "Au hasard",
+        "desc": "Jouer un morceau aléatoire",
+        "empty": "Aucun morceau disponible"
+      },
+      "daily": {
+        "title": "Sélections du jour",
+        "desc": "Nouvelles sélections chaque jour"
+      },
+      "heartMode": {
+        "title": "Mode Cœur",
+        "desc": "Lecture intelligente selon vos goûts"
+      },
+      "fm": {
+        "title": "FM personnelle",
+        "desc": "Recommandations infinies"
+      }
+    },
+    "continue": {
+      "repeatTitle": "En boucle",
+      "repeatSubtitle": "Vos {count} morceaux les plus écoutés",
+      "continueTitle": "Continuer l'écoute",
+      "continueSubtitle": "{count} morceaux que vous avez récemment écoutés",
+      "empty": "Pas encore d'historique — allez écouter quelque chose",
+      "playCount": "Écouté {count} fois | Écouté {count} fois"
+    },
+    "recommend": {
+      "title": "Créé pour vous",
+      "titleGuest": "Listes de lecture recommandées",
+      "subtitle": "Listes de lecture sélectionnées selon vos goûts",
+      "subtitleGuest": "Listes de lecture populaires que tout le monde écoute"
+    },
+    "radar": {
+      "title": "Radar",
+      "subtitle": "Continue de recommander de la musique selon vos goûts"
+    },
+    "artists": {
+      "title": "Artistes",
+      "subtitle": "Découvrez des artistes que vous pourriez aimer"
+    },
+    "albums": {
+      "title": "Nouvelles sorties",
+      "subtitle": "Albums fraîchement publiés"
+    },
+    "hero": {
+      "play": "Lire maintenant",
+      "addQueue": "Ajouter à la file",
+      "empty": "Aucun morceau jouable",
+      "added": "{count} morceaux ajoutés à la file",
+      "daily": {
+        "tag": "Mix quotidien",
+        "title": "Commencez avec « {song} »",
+        "subtitle": "Sélectionné pour vos goûts · {count} morceaux"
+      },
+      "local": {
+        "tag": "Local",
+        "title": "Débarqué aléatoirement sur « {song} »",
+        "subtitle": "Sélections aléatoires de votre bibliothèque · {count} morceaux"
+      },
+      "liked": {
+        "tag": "Favoris",
+        "title": "Revisitez vos favoris~",
+        "subtitle": "Toute votre musique aimée · {count} morceaux"
+      }
+    }
+  },
+  "login": {
+    "qrTipWaiting": "Ouvrez l'application Cloud Music et scannez le code QR",
+    "qrTipScanned": "Scanné, veuillez confirmer dans l'application",
+    "qrTipExpired": "Code QR expiré, actualisation",
+    "qrTipDone": "Connecté",
+    "qrTipUnknown": "État inconnu, veuillez réessayer",
+    "qrRefresh": "Actualiser le code QR",
+    "autoFetch": "Récupération automatique",
+    "autoFetchTitle": "Avant de continuer",
+    "autoFetchTip": "Cette fonction ne peut pas garantir la sécurité du compte — utilisez-la à vos risques. Si la page officielle reste vide ou ne répond pas, fermez-la et réessayez.",
+    "autoFetchConfirm": "Je comprends",
+    "manualCookie": "Cookie manuel",
+    "cookieHint": "Seul le champ MUSIC_U de votre cookie est nécessaire. Ex. : MUSIC_U=xxxx;",
+    "cookiePlaceholder": "Collez le cookie, doit contenir MUSIC_U=xxx;",
+    "cookieInvalid": "Cookie invalide. MUSIC_U est requis.",
+    "cookieConfirm": "Se connecter",
+    "success": "Connecté",
+    "failed": "Échec de la connexion, veuillez réessayer",
+    "unknownUser": "Utilisateur inconnu",
+    "logout": "Déconnexion",
+    "logoutConfirmTitle": "Déconnexion",
+    "logoutConfirmDesc": "Se déconnecter du compte actuel ?",
+    "logoutDone": "Déconnecté"
+  },
+  "search": {
+    "title": "Recherche",
+    "titleSuffix": "résultats de recherche",
+    "emptyKeyword": "Tapez un mot-clé pour commencer la recherche",
+    "noResults": "Aucun résultat correspondant",
+    "noResultsHint": "Essayez un autre mot-clé ou changez de source",
+    "errorTitle": "Échec de la recherche",
+    "tabs": {
+      "songs": "Morceaux",
+      "albums": "Albums",
+      "artists": "Artistes",
+      "playlists": "Listes de lecture"
+    }
+  },
+  "streaming": {
+    "hint": "Connectez-vous à une plateforme de streaming",
+    "hintDetail": "Les identifiants du serveur sont chiffrés par le système d'exploitation et stockés localement ; rien n'est téléchargé",
+    "errorCode": {
+      "auth": "Échec d'authentification",
+      "network": "Erreur réseau",
+      "protocol": "Erreur de protocole",
+      "unknown": "Erreur inconnue"
+    },
+    "tabs": {
+      "songs": "Morceaux",
+      "albums": "Albums",
+      "artists": "Artistes",
+      "playlists": "Listes de lecture"
+    },
+    "empty": {
+      "noServer": "Aucun serveur de streaming configuré",
+      "addHint": "Cliquez sur le bouton en haut à droite pour en ajouter un",
+      "goToSettings": "Aller aux paramètres",
+      "notConnected": "Non connecté à aucun serveur",
+      "noResults": "Aucun résultat"
+    },
+    "server": {
+      "type": "Type de serveur",
+      "name": "Nom du serveur",
+      "namePlaceholder": "Nom convivial pour ce serveur",
+      "url": "URL du serveur",
+      "username": "Nom d'utilisateur",
+      "password": "Mot de passe",
+      "test": "Tester la connexion",
+      "testOk": "Connexion réussie",
+      "testFail": "Connexion échouée",
+      "add": "Ajouter un serveur",
+      "added": "Serveur ajouté",
+      "edit": "Modifier le serveur",
+      "updated": "Serveur mis à jour",
+      "delete": "Supprimer",
+      "removed": "Serveur supprimé",
+      "deleteConfirmTitle": "Supprimer le serveur",
+      "deleteConfirm": "Supprimer le serveur « {name} » ? Cette action est irréversible.",
+      "connect": "Connecter",
+      "connected": "Connecté",
+      "connectFailed": "Connexion échouée",
+      "disconnect": "Déconnecter",
+      "disconnected": "Déconnecté",
+      "active": "Actif",
+      "lastConnected": "Dernière connexion",
+      "errors": {
+        "nameEmpty": "Veuillez saisir un nom de serveur",
+        "urlInvalid": "Veuillez saisir une URL valide (http:// ou https://)",
+        "usernameEmpty": "Veuillez saisir un nom d'utilisateur",
+        "passwordEmpty": "Veuillez saisir un mot de passe"
+      }
+    },
+    "actions": {
+      "settings": "Paramètres de streaming"
+    }
+  },
+  "player": {
+    "prev": "Précédent",
+    "next": "Suivant",
+    "heartMode": {
+      "needLogin": "Connectez-vous pour utiliser le Mode Cœur",
+      "noSeed": "Aucun morceau de départ disponible pour le Mode Cœur",
+      "loading": "Démarrage du Mode Cœur…",
+      "entered": "Mode Cœur activé",
+      "already": "Déjà en Mode Cœur",
+      "failed": "Échec du démarrage du Mode Cœur, veuillez réessayer plus tard"
+    },
+    "fm": {
+      "needLogin": "Connectez-vous pour utiliser la FM personnelle",
+      "loading": "Démarrage de la FM personnelle…",
+      "entered": "FM personnelle activée",
+      "already": "Déjà en FM personnelle",
+      "failed": "Échec du démarrage de la FM personnelle, veuillez réessayer plus tard"
+    },
+    "lyricOffset": {
+      "title": "Décalage des paroles",
+      "hint": "Les valeurs positives avancent les paroles, en millisecondes"
+    },
+    "lyricCredit": "Paroles par",
+    "copyLyric": {
+      "title": "Copier les paroles",
+      "contentLabel": "Contenu à copier",
+      "translation": "Traduction",
+      "romaji": "Rōmaji",
+      "emptyLine": "Ligne vide",
+      "songName": "Titre",
+      "artist": "Artiste",
+      "selectAll": "Tout sélectionner",
+      "deselectAll": "Tout désélectionner",
+      "invert": "Inverser",
+      "selected": "{n} sélectionné(s)",
+      "copy": "Copier",
+      "copyRaw": "Copier l'original",
+      "exportImage": "Exporter en image",
+      "saved": "Enregistré dans Téléchargements",
+      "fileSuffix": "Paroles",
+      "exportFailed": "Échec de l'exportation d'image",
+      "empty": "Rien à copier"
+    },
+    "repeatMode": {
+      "list": "Répéter tout",
+      "one": "Répéter un",
+      "off": "Répétition désactivée"
+    },
+    "shuffleMode": {
+      "on": "Aléatoire activé",
+      "off": "Aléatoire désactivé"
+    }
+  },
+  "songList": {
+    "title": "Titre",
+    "album": "Album",
+    "actions": "Actions",
+    "size": "Taille",
+    "duration": "Durée",
+    "noResults": "Aucun morceau correspondant",
+    "sort": {
+      "mode": "Mode de tri",
+      "order": "Ordre de tri",
+      "default": "Par défaut",
+      "asc": "Croissant",
+      "desc": "Décroissant",
+      "byTitle": "Trier par titre",
+      "byArtist": "Trier par artiste",
+      "byPath": "Trier par chemin local",
+      "byAlbum": "Trier par album",
+      "byDuration": "Trier par durée",
+      "bySize": "Trier par taille",
+      "byMtime": "Trier par date de modification",
+      "byCtime": "Trier par date de création",
+      "byName": "Trier par nom",
+      "byTrackCount": "Trier par nombre de morceaux",
+      "byTrack": "Trier par numéro de piste"
+    },
+    "context": {
+      "play": "Lire",
+      "playNext": "Lire ensuite",
+      "showInExplorer": "Ouvrir l'emplacement",
+      "copyPath": "Copier le chemin du fichier",
+      "editTags": "Modifier les métadonnées",
+      "download": "Télécharger le morceau",
+      "deleteFile": "Supprimer le fichier",
+      "searchSame": "Rechercher par nom",
+      "more": "Plus",
+      "copyTitle": "Copier le titre",
+      "copyId": "Copier l'ID du morceau",
+      "copyUrl": "Partager le lien du morceau"
+    },
+    "batch": {
+      "manage": "Gestion par lots",
+      "selected": "{count} sélectionné(s)",
+      "invert": "Inverser",
+      "addToQueue": "Ajouter à la file",
+      "download": "Télécharger",
+      "exit": "Quitter"
+    },
+    "delete": {
+      "removeConfirmOne": "Supprimer « {title} » de {type} ?",
+      "removeConfirm": "Supprimer {count} morceaux de {type} ?",
+      "fileTitle": "Supprimer le fichier",
+      "fileConfirmOne": "Supprimer définitivement « {title} » du disque ? Cette action est irréversible",
+      "fileConfirm": "Supprimer définitivement {count} fichiers du disque ? Cette action est irréversible"
+    },
+    "toast": {
+      "addedToNext": "Ajouté pour lecture suivante"
+    }
+  },
+  "quality": {
+    "details": "Qualité audio",
+    "codec": "Codec",
+    "sampleRate": "Fréquence d'échantillonnage",
+    "bitDepth": "Profondeur de bits",
+    "bitRate": "Débit binaire",
+    "channels": "Canaux",
+    "stereo": "Stéréo",
+    "mono": "Mono",
+    "multiChannel": "Multicanal"
+  },
+  "playlist": {
+    "title": "Liste de lecture",
+    "empty": "La liste de lecture est vide",
+    "unknownArtist": "Artiste inconnu",
+    "clearList": "Tout effacer",
+    "locateCurrent": "En cours de lecture",
+    "clearConfirmTitle": "Effacer la liste de lecture",
+    "clearConfirmContent": "Êtes-vous sûr de vouloir effacer toute la liste de lecture ? Cette action est irréversible."
+  },
+  "liked": {
+    "title": "Morceaux aimés",
+    "tabs": {
+      "local": "Local",
+      "online": "En ligne"
+    },
+    "empty": {
+      "local": "Aucun morceau local aimé pour l'instant — cliquez sur le cœur à côté d'un morceau pour l'ajouter",
+      "online": "Aucun morceau en ligne aimé pour l'instant"
+    },
+    "needLogin": "Connectez-vous pour voir vos morceaux aimés en ligne",
+    "toast": {
+      "added": "Ajouté aux favoris",
+      "removed": "Retiré des favoris",
+      "needLogin": "Veuillez d'abord vous connecter",
+      "unsupported": "Cette source ne prend pas en charge les favoris",
+      "failed": "Action échouée, veuillez réessayer"
+    }
+  },
+  "cloud": {
+    "title": "Mon cloud",
+    "empty": "Aucun morceau dans votre cloud pour l'instant",
+    "needLogin": "Connectez-vous pour voir votre bibliothèque cloud",
+    "removeAction": "Retirer du cloud",
+    "removeTitle": "Retirer du cloud",
+    "removeConfirmOne": "Retirer « {title} » de votre cloud ? Cette action est irréversible.",
+    "removeConfirm": "Retirer {count} morceaux de votre cloud ? Cette action est irréversible.",
+    "upload": {
+      "button": "Téléverser",
+      "title": "Téléverser vers le cloud",
+      "selectFile": "Sélectionner des fichiers",
+      "emptyHint": "Cliquez sur Sélectionner des fichiers pour ajouter des morceaux",
+      "clearFinished": "Effacer les terminés",
+      "instant": "Instantané",
+      "done": "Terminé",
+      "reading": "Lecture",
+      "retry": "Réessayer",
+      "remove": "Retirer",
+      "capacityFull": "Espace cloud insuffisant",
+      "riskTip": "Le téléversement peut entraîner un signalement ou une restriction de votre compte, utilisez-le avec précaution. Après le téléversement, le cloud a besoin de temps pour faire correspondre le morceau — actualisez à nouveau plus tard pour vérifier.",
+      "error": "Échec du téléversement",
+      "errorWithCode": "Échec du téléversement ({code})"
+    }
+  },
+  "history": {
+    "title": "Historique de lecture",
+    "empty": "Pas encore d'historique de lecture — jouez quelque chose pour commencer",
+    "clear": "Effacer l'historique",
+    "clearConfirmTitle": "Effacer l'historique de lecture",
+    "clearConfirmContent": "Effacer tout l'historique de lecture ? Cette action est irréversible."
+  },
+  "download": {
+    "title": "Téléchargements",
+    "activeCount": "{count} en cours",
+    "clearFinished": "Effacer les terminés",
+    "clearConfirmTitle": "Effacer les tâches terminées",
+    "clearConfirmContent": "Cela supprime de la liste tous les enregistrements de tâches terminées et échouées. Les fichiers téléchargés sur le disque sont conservés. Continuer ?",
+    "tabAll": "Tout",
+    "tabActive": "Téléchargement",
+    "tabError": "Erreurs",
+    "tabDone": "Terminé",
+    "colStatus": "Statut",
+    "colSize": "Taille",
+    "empty": "Aucune tâche de téléchargement",
+    "emptyDone": "Aucun téléchargement terminé",
+    "qualityDefault": "Suivre par défaut",
+    "cancel": "Annuler",
+    "retry": "Réessayer",
+    "openFolder": "Afficher dans le dossier",
+    "remove": "Retirer",
+    "deleteFile": "Supprimer le fichier",
+    "deleteConfirmTitle": "Supprimer le fichier téléchargé",
+    "deleteConfirmContent": "Cela supprime définitivement le fichier du disque et ne peut pas être annulé. Supprimer ?",
+    "tagWarning": "Échec de l'écriture des balises ; fichier sauvegardé",
+    "resolveFailed": "Impossible de télécharger : {title}",
+    "savedToBrowser": "Envoyé au téléchargement du navigateur : {title}",
+    "alreadyQueued": "Déjà dans la file de téléchargement",
+    "alreadyDownloaded": "Déjà téléchargé",
+    "started": "Ajouté aux téléchargements : {title}",
+    "enqueued": "{count} ajouté(s) aux téléchargements",
+    "status": {
+      "queued": "En file d'attente",
+      "downloading": "Téléchargement",
+      "done": "Terminé",
+      "failed": "Échoué",
+      "canceled": "Annulé",
+      "interrupted": "Interrompu"
+    }
+  },
+  "daily": {
+    "title": "Recommandations du jour",
+    "tagline": "Basé sur vos goûts musicaux",
+    "today": "Aujourd'hui",
+    "refresh": "Actualiser",
+    "empty": "Aucune recommandation du jour disponible",
+    "needLogin": "Connectez-vous pour voir les recommandations du jour"
+  },
+  "favorites": {
+    "title": "Favoris",
+    "empty": "Rien ici pour l'instant — explorez et sauvegardez ce que vous aimez",
+    "notLogin": "Connectez-vous pour voir vos favoris",
+    "tabs": {
+      "playlist": "Listes de lecture",
+      "album": "Albums",
+      "artist": "Artistes"
+    }
+  },
+  "library": {
+    "title": "Bibliothèque",
+    "empty": "La bibliothèque est vide",
+    "emptyHint": "Ajoutez un dossier musical pour commencer",
+    "noLocalData": "Aucun contenu local",
+    "noLocalDataHint": "Ajoutez des morceaux à votre bibliothèque pour les voir regroupés ici",
+    "goLibrary": "Aller à la bibliothèque",
+    "addFolder": "Ajouter un dossier",
+    "scanAll": "Analyse complète",
+    "scanning": "Analyse en cours...",
+    "scanProgress": "Analyse {scanned}/{total}",
+    "scrape": "Extraire les métadonnées",
+    "scraping": "Extraction en cours...",
+    "scrapeProgress": "Extraction {scraped}/{total}",
+    "scrapeAction": "Extraire les métadonnées",
+    "scrapeActionDescription": "Commencer l'extraction des fichiers audio dans les répertoires selon les paramètres ci-dessus",
+    "scrapeRunningHint": "Extraction en cours, veuillez patienter",
+    "scrapeScanning": "Analyse des fichiers...",
+    "cancelScrape": "Annuler l'extraction",
+    "startScrapeFailed": "Échec du démarrage de l'extraction",
+    "organizing": "Organisation des fichiers",
+    "scrapeFolders": "Répertoires d'extraction",
+    "scrapeFoldersDescription": "Définissez les répertoires pour l'extraction des métadonnées, utilise les répertoires d'analyse si vide",
+    "addScrapeFolder": "Ajouter un dossier",
+    "noScrapeDirHint": "Veuillez d'abord ajouter des répertoires d'extraction",
+    "organizeAfterScrape": "Organisation automatique après extraction",
+    "organizeAfterScrapeDescription": "Déplacer les fichiers extraits vers le répertoire de la bibliothèque musicale selon les règles",
+    "organizeOnly": "Organiser uniquement",
+    "organizeNoTargetHint": "Veuillez d'abord définir le répertoire cible d'organisation",
+    "organizeDone": "Organisation terminée : {moved} déplacé(s), {skipped} ignoré(s), {failed} échoué(s)",
+    "organizeFailed": "Échec de l'organisation",
+    "organizeTargetDir": "Répertoire cible d'organisation",
+    "organizeTargetDirPlaceholder": "Utilise le premier répertoire d'analyse si vide",
+    "organizePattern": "Modèle d'organisation",
+    "organizePatternDescription": "Variables : {artist} {albumArtist} {album} {genre} {year} {disc} {track} {title} {ext}, utilisez / pour les niveaux de répertoire",
+    "organizePatternEmptyError": "Le modèle ne peut pas être vide",
+    "organizePatternNoTitleError": "Le modèle doit inclure la variable {title}",
+    "organizePatternNoExtError": "Le modèle doit inclure la variable {ext}",
+    "organizePatternUnknownVarError": "Variable inconnue : {{{name}}}",
+    "organizePatternPresets": {
+      "artistAlbum": "Artiste/Album",
+      "artistOnly": "Artiste uniquement",
+      "genreArtistAlbum": "Genre/Artiste/Album",
+      "yearArtistAlbum": "Année/Artiste/Album"
+    },
+    "skipScraped": "Ignorer les fichiers déjà extraits",
+    "skipScrapedDescription": "Les fichiers avec un ID MusicBrainz ou ISRC seront ignorés",
+    "dataSources": "Sources de données",
+    "noDataSourceError": "Sélectionnez au moins une source de données",
+    "useMusicBrainz": "MusicBrainz",
+    "useMusicBrainzDescription": "Source de métadonnées faisant autorité pour MBID, ISRC, genre, etc.",
+    "useDeezer": "Deezer",
+    "useDeezerDescription": "Compléter les pochettes et les métadonnées d'album",
+    "useItunes": "Recherche iTunes",
+    "useItunesDescription": "Compléter les pochettes, le genre et le numéro de piste",
+    "useNetease": "NetEase Cloud",
+    "useNeteaseDescription": "Métadonnées chinoises, paroles et pochettes",
+    "useQQMusic": "QQ Music",
+    "useQQMusicDescription": "Métadonnées chinoises, paroles et pochettes",
+    "useKugou": "Kugou",
+    "useKugouDescription": "Métadonnées chinoises, paroles et pochettes",
+    "useKuwo": "Kuwo",
+    "useKuwoDescription": "Métadonnées chinoises, paroles et pochettes",
+    "useMigu": "Migu",
+    "useMiguDescription": "Métadonnées chinoises et pochettes",
+    "concurrentWorkers": "Travailleurs simultanés",
+    "concurrentWorkersDescription": "Nombre de threads pour les requêtes simultanées multi-sources. Des valeurs plus élevées utilisent plus de CPU mais interrogent plus rapidement.",
+    "folders": "Répertoires musicaux",
+    "foldersDescription": "Les morceaux sont automatiquement synchronisés lors de l'ajout ou de la suppression",
+    "removeFolder": "Supprimer le répertoire",
+    "removeFolderConfirm": "La suppression de ce répertoire effacera ses morceaux de la bibliothèque !",
+    "nestedHint": "Le dossier est imbriqué avec un existant ; ignoré",
+    "emptyScrapeHint": "Aucun répertoire d'extraction défini, utilisation des répertoires d'analyse"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Personnalisez votre expérience",
+    "search": "Rechercher dans les paramètres...",
+    "group": {
+      "general": "Général",
+      "player": "Lecteur",
+      "lyric": "Paroles",
+      "externalLyric": "Paroles externes",
+      "appearance": "Apparence",
+      "hotkeys": "Raccourcis clavier",
+      "services": "Services",
+      "mediaSource": "Sources multimédia",
+      "download": "Téléchargements",
+      "localCache": "Local et cache",
+      "plugins": "Gestionnaire de plugins",
+      "scraper": "Extraction et analyse",
+      "other": "Autre",
+      "about": "À propos"
+    },
+    "section": {
+      "network": "Réseau et proxy",
+      "aboutApp": "À propos",
+      "specialThanks": "Remerciements spéciaux",
+      "developers": "Développeurs",
+      "community": "Communauté",
+      "update": "Mise à jour",
+      "language": "Langue",
+      "playback": "Lecteur",
+      "playControl": "Contrôle de la lecture",
+      "scrobble": "Scrobble",
+      "lyricContent": "Contenu des paroles",
+      "lyricTTML": "Paroles TTML",
+      "lyricExclude": "Suppression de métadonnées",
+      "lyricGeneral": "Contenu et style",
+      "lyricDisplay": "Effets d'affichage",
+      "lyricSpring": "Animation à ressort",
+      "lyricLayout": "Disposition et opacité",
+      "desktopLyric": "Paroles de bureau",
+      "dynamicIsland": "Paroles Dynamic Island",
+      "taskbarLyric": "Paroles dans la barre des tâches",
+      "theme": "Thème",
+      "appearanceStyle": "Style d'apparence",
+      "layout": "Disposition",
+      "font": "Polices",
+      "media": "Contrôles multimédia",
+      "device": "Périphérique de sortie",
+      "hotkeys": "Raccourcis",
+      "musicSpectrum": "Spectre musical",
+      "discord": "Discord RPC",
+      "lastfm": "Last.fm",
+      "externalApi": "API externe",
+      "systemConfig": "Système",
+      "pluginManage": "Importer des plugins",
+      "pluginsList": "Gestion des plugins",
+      "streaming": "Streaming",
+      "songCache": "Cache des morceaux",
+      "downloadLocation": "Paramètres de téléchargement",
+      "downloadGeneral": "Options de téléchargement",
+      "downloadTags": "Quoi écrire",
+      "cache": "Caches",
+      "database": "Base de données",
+      "library": "Bibliothèque",
+      "scanner": "Analyse",
+      "scraper": "Extraction",
+      "backupReset": "Sauvegarde et réinitialisation",
+      "debug": "Débogage",
+      "preset": "Paramètres OCD"
+    },
+    "about": {
+      "checkUpdate": "Vérifier les mises à jour",
+      "checking": "Vérification",
+      "newVersion": "Mise à jour disponible",
+      "openLogs": "Ouvrir les journaux",
+      "officialSite": "Site officiel",
+      "showMore": "Plus de contributeurs",
+      "collapse": "Réduire"
+    },
+    "language": {
+      "label": "Langue",
+      "description": "Changer la langue d'affichage"
+    },
+    "autoPlay": {
+      "label": "Lecture automatique",
+      "description": "Démarrer automatiquement la lecture après le chargement d'un morceau"
+    },
+    "fuckDjMode": {
+      "label": "Mode Fuck DJ",
+      "description": "Sauter automatiquement les morceaux contenant DJ, TikTok, 0.9, 0.8, viral, car, hot, slow rock dans le titre"
+    },
+    "uncensorProfanity": {
+      "label": "Mode Fuck **",
+      "description": "Restaurer les grossièretés masquées dans les paroles en mots originaux"
+    },
+    "hideVipTag": {
+      "label": "Masquer le badge VIP",
+      "description": "Ne pas afficher les badges VIP dans la liste des morceaux"
+    },
+    "hideQualityTag": {
+      "label": "Masquer le badge de qualité",
+      "description": "Ne pas afficher les badges de qualité dans la liste des morceaux"
+    },
+    "showSubtitle": {
+      "label": "Afficher le sous-titre",
+      "description": "Afficher l'alias et d'autres informations de sous-titre dans la liste des morceaux"
+    },
+    "rememberLastTrack": {
+      "label": "Mémoriser la progression",
+      "description": "Restaurer la position de lecture au démarrage"
+    },
+    "showLyricInBar": {
+      "label": "Afficher les paroles pendant la lecture",
+      "description": "Remplacer le nom de l'artiste par les paroles actuelles dans la barre de lecture inférieure"
+    },
+    "fadeEnabled": {
+      "label": "Fondu en entrée/sortie",
+      "description": "Fondu audio à la lecture et à la pause"
+    },
+    "fadeDuration": {
+      "label": "Durée du fondu",
+      "description": "Durée du fondu en entrée/sortie (ms)"
+    },
+    "loudnessNormalization": {
+      "label": "Normalisation du volume",
+      "description": "Équilibrer automatiquement les niveaux de volume entre les morceaux"
+    },
+    "songLevel": {
+      "label": "Qualité audio en ligne",
+      "description": "Qualité préférée pour les morceaux en ligne ; le niveau réel dépend de ce que votre compte prend en charge",
+      "switchTitle": "Changer la qualité",
+      "switchHint": "Sous réserve des autorisations de votre compte",
+      "unsupportedHint": "Le changement de qualité n'est pas pris en charge pour ce morceau",
+      "lq": "Standard (BQ)",
+      "sq": "Supérieure (SQ)",
+      "hq": "Extrême (HQ)",
+      "lossless": "Sans perte",
+      "hi-res": "Haute résolution"
+    },
+    "outputDevice": {
+      "label": "Périphérique de sortie",
+      "description": "Sélectionner le périphérique de sortie audio",
+      "default": "Par défaut du système"
+    },
+    "pauseOnDeviceSwitch": {
+      "label": "Pause lors du changement de périphérique",
+      "description": "Mettre en pause la lecture lors du changement de périphérique de sortie, par exemple quand un périphérique Bluetooth se déconnecte"
+    },
+    "timeFormat": {
+      "label": "Format d'affichage du temps",
+      "description": "Comment afficher le temps dans la barre de lecture et le lecteur plein écran (cliquez pour basculer rapidement)",
+      "currentTotal": "Écoulé / Total",
+      "remainingTotal": "Restant / Total",
+      "currentRemaining": "Écoulé / Restant"
+    },
+    "showProgressTooltip": {
+      "label": "Afficher l'infobulle de progression",
+      "description": "Afficher une infobulle lors du glissement de la barre de progression"
+    },
+    "showProgressLyric": {
+      "label": "Afficher les paroles dans l'infobulle",
+      "description": "Afficher la ligne de paroles actuelle dans l'infobulle de progression"
+    },
+    "snapToLyric": {
+      "label": "Accrocher à la parole la plus proche",
+      "description": "S'accrocher automatiquement à la ligne de paroles la plus proche lors du réglage de la progression"
+    },
+    "transitionStyle": {
+      "label": "Transition de morceau",
+      "description": "Animation de transition lors du changement de morceau",
+      "scale": "Échelle",
+      "slide": "Glissement"
+    },
+    "enableSpectrum": {
+      "label": "Activer le spectre",
+      "description": "L'analyse spectrale en temps réel ajoute une charge CPU — envisagez de la désactiver sur les appareils à faible puissance"
+    },
+    "spectrumBarWidth": {
+      "label": "Largeur des barres",
+      "description": "Des valeurs plus petites donnent des barres plus fines et plus denses"
+    },
+    "lyricSourcePreference": {
+      "label": "Préférence de source des paroles",
+      "description": "Priorité de la plateforme lors de la correspondance des paroles en ligne",
+      "auto": "Automatique",
+      "qqmusic": "Préférer QM",
+      "kugou": "Préférer KG",
+      "netease": "Préférer NCM",
+      "self": "Suivre soi-même"
+    },
+    "lyricSourceOrder": {
+      "label": "Ordre des sources",
+      "description": "Personnaliser la priorité des sources",
+      "hint": "En mode automatique, les sources sont essayées de haut en bas ; passe à la suivante en cas d'échec"
+    },
+    "lyricFormatOrder": {
+      "label": "Priorité du format de paroles",
+      "description": "Personnaliser la priorité du format de paroles",
+      "hint": "Choisit le mieux classé lorsque plusieurs formats sont disponibles — par ex. plusieurs fichiers de paroles externes, ou mise à niveau TTML"
+    },
+    "smartPreferOnline": {
+      "label": "Mise à niveau automatique du format de paroles",
+      "description": "Récupérer un format mieux classé depuis d'autres plateformes lorsque le format actuel est bas"
+    },
+    "enableOnlineTTMLLyric": {
+      "label": "Activer les paroles TTML en ligne",
+      "description": "Récupérer les paroles depuis la base AMLL TTML DB. Prend en charge le minutage mot par mot, la traduction et la romanisation."
+    },
+    "amllDbServer": {
+      "label": "Serveur AMLL TTML DB",
+      "description": "Assurez-vous que l'URL est correcte, sinon la récupération des paroles échouera",
+      "placeholder": "Entrez l'URL AMLL TTML DB",
+      "warning": "Si vous ne savez pas ce que cela fait, veuillez laisser par défaut",
+      "hint": "L'URL doit être valide et contenir les espaces réservés requis",
+      "placeholders": "%p est le chemin de la plateforme, %s est l'ID du morceau",
+      "docsHint": "Plus d'informations sur",
+      "invalid": "URL invalide — espaces réservés requis manquants"
+    },
+    "enableExcludeLyrics": {
+      "label": "Activer l'exclusion de paroles",
+      "description": "Supprimer les lignes de métadonnées (par ex. parolier, compositeur, arrangeur, producteur) de l'en-tête et du pied des paroles"
+    },
+    "excludeLyricsRules": {
+      "label": "Règles personnalisées",
+      "description": "Ajouter des mots-clés et des motifs regex par-dessus les valeurs par défaut intégrées",
+      "button": "Gérer",
+      "hint": "Les règles utilisateur sont fusionnées avec les valeurs par défaut intégrées",
+      "tabKeywords": "Mots-clés",
+      "tabRegexes": "Motifs regex",
+      "keywordHint": "Filtre par mot-clé — correspond au contenu avant les deux-points",
+      "keywordPlaceholder": "Entrez un mot-clé",
+      "regexHint": "Regex JavaScript — compilé avec le drapeau insensible à la casse",
+      "regexPlaceholder": "Entrez un motif regex",
+      "add": "Ajouter",
+      "remove": "Supprimer",
+      "empty": "Aucune règle configurée",
+      "clear": "Effacer la liste actuelle",
+      "duplicate": "La règle existe déjà",
+      "invalidRegex": "Motif regex invalide"
+    },
+    "hotkeys": {
+      "label": "Raccourcis clavier",
+      "description": "Gérer les raccourcis clavier dans l'application et globaux",
+      "globalEnabled": "Activer les raccourcis globaux",
+      "globalEnabledHint": "Se déclenchent même lorsque l'application n'est pas focalisée. Peuvent entrer en conflit avec le système d'exploitation ou d'autres applications.",
+      "colAction": "Action",
+      "colInApp": "Dans l'application",
+      "colGlobal": "Global",
+      "unbound": "Non attribué",
+      "recording": "Appuyez sur un raccourci",
+      "resetRow": "Rétablir par défaut",
+      "resetAll": "Tout réinitialiser",
+      "resetAllHint": "Restaurer chaque action à son raccourci par défaut",
+      "confirmResetTitle": "Réinitialiser aux valeurs par défaut ?",
+      "confirmResetDesc": "Tous les raccourcis seront réinitialisés et toutes les personnalisations seront écrasées !",
+      "duplicateWith": "Conflit avec « {action} »",
+      "crossScopeWith": "Identique à la liaison dans l'application de « {action} » ; se déclenchera deux fois",
+      "osOccupied": "Déjà pris par le système d'exploitation ou une autre application",
+      "osDuplicate": "Déjà utilisé par un autre raccourci global",
+      "invalid": "Combinaison de touches invalide",
+      "groups": {
+        "player": "Lecture",
+        "window": "Fenêtres",
+        "view": "Vues"
+      },
+      "actions": {
+        "togglePlay": "Lecture / Pause",
+        "next": "Morceau suivant",
+        "prev": "Morceau précédent",
+        "seekForward": "Avancer de 5s",
+        "seekBack": "Reculer de 5s",
+        "volumeUp": "Augmenter le volume",
+        "volumeDown": "Diminuer le volume",
+        "cycleRepeat": "Changer le mode de répétition",
+        "toggleShuffle": "Activer/désactiver le mode aléatoire",
+        "toggleDesktopLyric": "Activer/désactiver les paroles de bureau",
+        "toggleDynamicIsland": "Activer/désactiver Dynamic Island",
+        "toggleTaskbarLyric": "Activer/désactiver les paroles dans la barre des tâches",
+        "openPlayer": "Ouvrir la vue lecteur",
+        "closePlayer": "Fermer la vue lecteur",
+        "togglePlaylist": "Afficher / masquer la liste de lecture",
+        "openSearch": "Ouvrir la recherche"
+      }
+    },
+    "engine": {
+      "label": "Moteur de paroles",
+      "description": "Choisir le type de moteur utilisé pour le rendu et le défilement des paroles"
+    },
+    "lyricEngine": {
+      "physics": "Par défaut",
+      "amll": "AMLL"
+    },
+    "confirm": {
+      "highResourceTitle": "Fonction gourmande en ressources",
+      "highResourceContent": "L'activer peut augmenter notablement l'utilisation de la mémoire et du CPU, et pourrait causer des ralentissements sur les appareils moins puissants. Activer quand même ?",
+      "highParallelismTitle": "Analyse à haute concurrence",
+      "highParallelismContent": "Un parallélisme extrême peut provoquer un ralentissement du système ou des erreurs de mémoire insuffisante. Continuer quand même ?"
+    },
+    "scannerParallelism": {
+      "label": "Parallélisme d'analyse",
+      "description": "Nombre de threads simultanés utilisés lors de l'analyse des fichiers audio. 0 signifie automatique"
+    },
+    "useAMSpring": {
+      "label": "Interrupteur de débogage d'animation à ressort",
+      "description": "Activer l'effet de rebond et la mise à l'échelle de la ligne active pour applemusic-like-lyrics"
+    },
+    "amllVerticalSpringMass": {
+      "label": "Masse du ressort vertical",
+      "description": "Masse du ressort physique de défilement vertical. Une masse plus grande augmente l'inertie du ressort."
+    },
+    "amllVerticalSpringDamping": {
+      "label": "Amortissement du ressort vertical",
+      "description": "Amortissement du ressort physique de défilement vertical. Un amortissement plus grand réduit l'oscillation et se stabilise plus vite."
+    },
+    "amllVerticalSpringStiffness": {
+      "label": "Raideur du ressort vertical",
+      "description": "Raideur du ressort physique de défilement vertical. Une raideur plus grande tire plus fort et rebondit plus vite."
+    },
+    "amllVerticalSpringSoft": {
+      "label": "Ressort vertical doux",
+      "description": "Force le défilement vertical à utiliser un profil de ressort plus doux."
+    },
+    "amllScaleSpringMass": {
+      "label": "Masse du ressort d'échelle",
+      "description": "Masse de l'animation d'échelle de la ligne active. Une masse plus grande augmente l'inertie du rebond d'échelle."
+    },
+    "amllScaleSpringDamping": {
+      "label": "Amortissement du ressort d'échelle",
+      "description": "Amortissement de l'animation d'échelle de la ligne active. Un amortissement plus grand réduit les à-coups d'échelle et se stabilise plus vite."
+    },
+    "amllScaleSpringStiffness": {
+      "label": "Raideur du ressort d'échelle",
+      "description": "Raideur de l'animation d'échelle de la ligne active. Une raideur plus grande répond et ajuste l'échelle plus rapidement."
+    },
+    "amllScaleSpringSoft": {
+      "label": "Ressort d'échelle doux",
+      "description": "Force l'animation d'échelle de la ligne active à utiliser un profil de ressort plus doux."
+    },
+    "autoCenterCover": {
+      "label": "Centrer automatiquement la pochette",
+      "description": "Centrer la pochette et masquer la zone des paroles quand aucune parole n'est disponible"
+    },
+    "adaptiveFontSize": {
+      "label": "Taille de police adaptative",
+      "description": "Ajuster automatiquement la taille de la police des paroles en fonction de la taille de la fenêtre"
+    },
+    "fontSize": {
+      "label": "Taille de police",
+      "description": "Effectif lorsque l'adaptatif est désactivé"
+    },
+    "fontWeight": {
+      "label": "Graisse de police",
+      "description": "Graisse du texte des paroles"
+    },
+    "lyricBlendMode": {
+      "label": "Mode de fusion des paroles",
+      "description": "Contrôle comment les paroles se fondent avec l'arrière-plan",
+      "normal": "Normal",
+      "screen": "Écran",
+      "plusLighter": "Plus clair"
+    },
+    "followCoverColor": {
+      "label": "Suivre la couleur de la pochette",
+      "description": "La couleur des paroles suit la pochette actuelle"
+    },
+    "autoImmersive": {
+      "label": "Mode immersif automatique",
+      "description": "Masquer les barres supérieure/inférieure et le curseur lorsque la souris est inactive ou quitte la fenêtre"
+    },
+    "showTranslation": {
+      "label": "Afficher la traduction",
+      "description": "Afficher les paroles traduites"
+    },
+    "showRomanization": {
+      "label": "Afficher la romanisation",
+      "description": "Afficher les paroles romanisées"
+    },
+    "amllShowLineRomanization": {
+      "label": "Afficher la romanisation des lignes",
+      "description": "Afficher les paroles romanisées pour chaque ligne"
+    },
+    "amllShowWordRomanization": {
+      "label": "Afficher la romanisation des mots",
+      "description": "Afficher les paroles romanisées pour chaque mot dans les paroles mot à mot"
+    },
+    "enableWordHighlight": {
+      "label": "Surlignage des mots",
+      "description": "Afficher la progression du surlignage mot par mot"
+    },
+    "enableFloatAnimation": {
+      "label": "Flottement des mots",
+      "description": "Les mots actifs flottent légèrement vers le haut"
+    },
+    "enableEmphasizeEffect": {
+      "label": "Effet d'accentuation",
+      "description": "Animation d'échelle et de lueur pour les longues syllabes"
+    },
+    "enableBlur": {
+      "label": "Flou des lignes",
+      "description": "Fllouter progressivement les lignes éloignées de la ligne active"
+    },
+    "hidePassedLines": {
+      "label": "Masquer les lignes passées",
+      "description": "Masquer automatiquement les lignes de paroles déjà jouées"
+    },
+    "springPreset": {
+      "label": "Préréglage de ressort",
+      "description": "Préréglage physique pour l'animation à ressort du défilement des paroles",
+      "default": "Par défaut",
+      "smooth": "Plus lisse",
+      "responsive": "Réactif",
+      "jello": "Gélatine",
+      "heavy": "Lourd et lent",
+      "noBounce": "Sans rebond",
+      "custom": "Personnalisé"
+    },
+    "springMass": {
+      "label": "Masse",
+      "description": "Des valeurs plus élevées rendent le mouvement lent avec plus d'inertie"
+    },
+    "springDamping": {
+      "label": "Amortissement",
+      "description": "Des valeurs plus élevées amortissent l'oscillation plus rapidement, mouvement plus fluide"
+    },
+    "springStiffness": {
+      "label": "Raideur",
+      "description": "Des valeurs plus élevées font revenir le ressort plus rapidement"
+    },
+    "alignPosition": {
+      "label": "Position d'alignement",
+      "description": "Position verticale de la ligne active (0 = haut, 1 = bas)"
+    },
+    "wordFadeWidth": {
+      "label": "Largeur du fondu",
+      "description": "Rapport de largeur du dégradé pour le masque de surlignage des mots"
+    },
+    "inactiveAlpha": {
+      "label": "Opacité inactive",
+      "description": "Opacité de base pour les lignes non actives"
+    },
+    "desktopLyricEnabled": {
+      "label": "Activer les paroles de bureau",
+      "description": "Afficher une fenêtre flottante de paroles sur le bureau"
+    },
+    "desktopLyricFontSize": {
+      "label": "Taille de police",
+      "description": "Taille du texte des paroles de bureau (px)"
+    },
+    "desktopLyricFontWeight": {
+      "label": "Graisse de police",
+      "description": "Graisse du texte des paroles de bureau"
+    },
+    "desktopLyricShowTranslation": {
+      "label": "Afficher la traduction",
+      "description": "Afficher les paroles traduites sur les paroles de bureau"
+    },
+    "desktopLyricDoubleLine": {
+      "label": "Double ligne",
+      "description": "Afficher la ligne actuelle et la suivante ensemble"
+    },
+    "desktopLyricAlign": {
+      "label": "Alignement",
+      "description": "Alignement horizontal du texte des paroles",
+      "left": "Gauche",
+      "center": "Centre",
+      "right": "Droite",
+      "justify": "Justifier"
+    },
+    "desktopLyricWordByWord": {
+      "label": "Mot par mot",
+      "description": "Afficher la progression du surlignage par mot"
+    },
+    "desktopLyricAutoGenerateWordByWord": {
+      "label": "Génération automatique de l'effet mot par mot",
+      "description": "Quand désactivé, seules les paroles réellement mot à mot s'appliquent"
+    },
+    "desktopLyricPlayedColor": {
+      "label": "Couleur des paroles jouées",
+      "description": "Couleur du texte des paroles déjà jouées"
+    },
+    "desktopLyricUnplayedColor": {
+      "label": "Couleur des paroles non jouées",
+      "description": "Couleur du texte des paroles non encore jouées"
+    },
+    "desktopLyricStrokeColor": {
+      "label": "Couleur du contour",
+      "description": "Couleur du contour du texte des paroles ; transparent signifie pas de contour"
+    },
+    "desktopLyricBackgroundMask": {
+      "label": "Masque d'arrière-plan du texte",
+      "description": "Ajouter un bloc d'arrière-plan translucide derrière chaque ligne de paroles pour la lisibilité"
+    },
+    "desktopLyricBackgroundMaskColor": {
+      "label": "Couleur du masque",
+      "description": "Couleur et opacité du masque d'arrière-plan du texte"
+    },
+    "desktopLyricAlwaysShowSongInfo": {
+      "label": "Toujours afficher les infos du morceau",
+      "description": "Toujours afficher le titre et l'artiste ; sinon afficher uniquement au survol"
+    },
+    "desktopLyricAnimation": {
+      "label": "Transition de ligne",
+      "description": "Activer l'animation de glissement à l'entrée/sortie lors du changement de ligne de paroles"
+    },
+    "desktopLyricLimitBounds": {
+      "label": "Confiner à l'écran",
+      "description": "Limiter la position de la fenêtre à la zone de travail de l'écran actuel lors du glissement"
+    },
+    "desktopLyricAlwaysOnTop": {
+      "label": "Toujours au premier plan",
+      "description": "Garder la fenêtre des paroles de bureau au-dessus des autres"
+    },
+    "desktopLyricLocked": {
+      "label": "Verrouiller la fenêtre",
+      "description": "Rendre la fenêtre transparente aux clics et non déplaçable"
+    },
+    "desktopLyricUseCSSDrag": {
+      "label": "Activer le glissement CSS",
+      "description": "Activer le glissement basé sur CSS, recommandé pour les environnements Wayland"
+    },
+    "dynamicIslandEnabled": {
+      "label": "Activer Dynamic Island",
+      "description": "Afficher une fenêtre compacte flottante de paroles en haut de l'écran ; glissez-la n'importe où"
+    },
+    "dynamicIslandScale": {
+      "label": "Échelle",
+      "description": "Ajuster la hauteur de la fenêtre et la taille de la police ensemble ; 100 % est la taille par défaut"
+    },
+    "dynamicIslandFontWeight": {
+      "label": "Graisse de police",
+      "description": "Graisse du texte des paroles dans Dynamic Island"
+    },
+    "dynamicIslandWordByWord": {
+      "label": "Surlignage des mots",
+      "description": "Afficher le surlignage progressif mot par mot"
+    },
+    "dynamicIslandDoubleLine": {
+      "label": "Toujours deux lignes",
+      "description": "Garder la disposition à deux lignes même quand aucune traduction n'est disponible"
+    },
+    "dynamicIslandShowTranslation": {
+      "label": "Afficher la traduction",
+      "description": "Afficher la traduction comme deuxième ligne quand elle est disponible"
+    },
+    "dynamicIslandPlayedColor": {
+      "label": "Couleur des paroles jouées",
+      "description": "Couleur du texte des paroles déjà chantées"
+    },
+    "dynamicIslandUnplayedColor": {
+      "label": "Couleur des paroles non jouées",
+      "description": "Couleur du texte des paroles à venir et du nom de l'artiste"
+    },
+    "dynamicIslandBackgroundColor": {
+      "label": "Couleur d'arrière-plan",
+      "description": "Couleur et opacité de l'arrière-plan de l'îlot"
+    },
+    "dynamicIslandAlwaysOnTop": {
+      "label": "Toujours au premier plan",
+      "description": "Garder la fenêtre Dynamic Island au-dessus des autres"
+    },
+    "dynamicIslandNotchFusion": {
+      "label": "Fusion avec l'encoche",
+      "description": "Étendre l'îlot depuis l'encoche physique du MacBook"
+    },
+    "dynamicIslandSnapCentered": {
+      "label": "Centrer lors de l'accrochage",
+      "description": "Quand désactivé, l'accrochage en haut conserve la position horizontale glissée"
+    },
+    "dynamicIslandNonOcclusive": {
+      "label": "Mode non occlusif",
+      "description": "Fenêtre transparente aux clics ; masquer au survol"
+    },
+    "dynamicIslandUseCSSDrag": {
+      "label": "Activer le glissement CSS",
+      "description": "Activer le glissement basé sur CSS, recommandé pour les environnements Wayland"
+    },
+    "taskbarLyricEnabled": {
+      "label": "Activer les paroles dans la barre des tâches",
+      "description": "Intégrer les paroles dans la barre des tâches Windows"
+    },
+    "taskbarLyricPosition": {
+      "label": "Position",
+      "description": "Position des paroles dans la barre des tâches. Le mode Auto choisit selon l'alignement de la barre des tâches",
+      "auto": "Auto",
+      "left": "Gauche",
+      "right": "Droite"
+    },
+    "taskbarLyricAutoMaxWidth": {
+      "label": "Largeur automatique",
+      "description": "Quand activé, remplir l'espace disponible de la barre des tâches ; sinon limiter à la largeur maximale ci-dessous"
+    },
+    "taskbarLyricMaxWidth": {
+      "label": "Largeur maximale",
+      "description": "Limitée par l'espace disponible pour éviter le chevauchement"
+    },
+    "taskbarLyricLeftMargin": {
+      "label": "Marge gauche",
+      "description": "Espace entre les paroles et le bord gauche de l'espace disponible, pour éviter les autres widgets de la barre des tâches"
+    },
+    "taskbarLyricRightMargin": {
+      "label": "Marge droite",
+      "description": "Espace entre les paroles et le bord droit de l'espace disponible, pour éviter les autres widgets de la barre des tâches"
+    },
+    "taskbarLyricColorMode": {
+      "label": "Mode de couleur",
+      "description": "Schéma de couleurs du texte et de l'arrière-plan des paroles de la barre des tâches",
+      "taskbar": "Suivre la barre des tâches",
+      "taskbarInverse": "Suivre la barre des tâches (inversé)",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
+    "taskbarLyricFontSize": {
+      "label": "Taille de police",
+      "description": "Taille du texte des paroles de la barre des tâches (px)"
+    },
+    "taskbarLyricShowCover": {
+      "label": "Afficher la pochette",
+      "description": "Afficher la vignette de la pochette du morceau en cours à côté des paroles"
+    },
+    "taskbarLyricDoubleLine": {
+      "label": "Double ligne",
+      "description": "Afficher les paroles actuelles avec la traduction ou la ligne suivante"
+    },
+    "taskbarLyricShowTranslation": {
+      "label": "Afficher la traduction",
+      "description": "En mode double ligne, préférer la traduction ; utiliser la ligne suivante si indisponible"
+    },
+    "taskbarLyricWordByWord": {
+      "label": "Mot par mot",
+      "description": "Afficher la progression du surlignage par mot"
+    },
+    "playerBgType": {
+      "label": "Arrière-plan du lecteur",
+      "description": "Type d'arrière-plan du lecteur plein écran",
+      "blur": "Flou",
+      "solid": "Uni",
+      "animation": "Fluide"
+    },
+    "playerBgFlowSpeed": {
+      "label": "Vitesse de flux",
+      "description": "Vitesse d'animation du flux de l'arrière-plan fluide"
+    },
+    "playerBgRenderScale": {
+      "label": "Échelle de rendu",
+      "description": "Des valeurs plus élevées réduisent le crénelage des bords pour un aspect plus lisse, mais augmentent la charge GPU"
+    },
+    "playerBgFps": {
+      "label": "Fréquence d'images",
+      "description": "Fréquence de rendu de l'arrière-plan fluide ; plus élevée = plus fluide mais plus lourd"
+    },
+    "playerBgFreezeOnPause": {
+      "label": "Figer en pause",
+      "description": "Arrêter l'animation de l'arrière-plan fluide pendant la pause"
+    },
+    "playerBgBeat": {
+      "label": "Pulsation rythmique",
+      "description": "Faire pulser l'arrière-plan fluide au rythme des basses fréquences de la musique"
+    },
+    "coverLayout": {
+      "label": "Disposition de la pochette",
+      "description": "Présentation de la pochette dans le lecteur plein écran",
+      "default": "Par défaut",
+      "fullscreen": "Plein écran"
+    },
+    "themeMode": {
+      "label": "Mode du thème",
+      "description": "Thème de couleur de l'application",
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    },
+    "themeSource": {
+      "label": "Source de la couleur du thème",
+      "description": "Comment la couleur du thème est déterminée",
+      "default": "Couleur par défaut",
+      "custom": "Couleur personnalisée",
+      "cover": "Depuis la pochette / l'arrière-plan",
+      "solid": "Pas de couleur de thème"
+    },
+    "customColor": {
+      "label": "Couleur de thème personnalisée",
+      "description": "Couleur primaire utilisée par la source personnalisée"
+    },
+    "globalTint": {
+      "label": "Teinte globale",
+      "description": "Appliquer la teinte de la couleur du thème à toute l'interface"
+    },
+    "appearanceStyle": {
+      "label": "Style d'apparence",
+      "description": "Comment l'arrière-plan de l'application est rendu",
+      "solid": "Couleur unie",
+      "image": "Image personnalisée"
+    },
+    "backgroundImage": {
+      "label": "Image d'arrière-plan",
+      "description": "Choisir une image locale comme arrière-plan de l'application",
+      "select": "Choisir une image",
+      "replace": "Remplacer",
+      "clear": "Effacer"
+    },
+    "backgroundBlur": {
+      "label": "Flou d'arrière-plan",
+      "description": "Flou gaussien appliqué à l'image d'arrière-plan"
+    },
+    "backgroundDim": {
+      "label": "Superposition sombre",
+      "description": "Opacité de la superposition noire pour la lisibilité au premier plan"
+    },
+    "backgroundScale": {
+      "label": "Échelle",
+      "description": "Facteur d'échelle de l'image d'arrière-plan"
+    },
+    "layoutMode": {
+      "label": "Mode de disposition",
+      "description": "Style de disposition de l'application",
+      "default": "Classique",
+      "sidebarFull": "Barre latérale immersive",
+      "floating": "Flottant dynamique"
+    },
+    "routeTransition": {
+      "label": "Transition de page",
+      "description": "Effet d'animation lors du changement de page",
+      "none": "Aucun",
+      "fade": "Fondu",
+      "slide": "Glissement",
+      "zoom": "Zoom"
+    },
+    "sidebarCollapsed": {
+      "label": "Réduire la barre latérale",
+      "description": "Réduire la barre latérale en mode icônes uniquement"
+    },
+    "sidebarNavStyle": {
+      "label": "Style de surlignage de navigation",
+      "description": "Changer le style d'animation de l'indicateur de surlignage de la barre latérale",
+      "default": "Statique",
+      "animated": "Glissant"
+    },
+    "sidebarPlaylistCover": {
+      "label": "Afficher les pochettes des listes de lecture",
+      "description": "Afficher les pochettes des listes de lecture au lieu des icônes par défaut dans la barre latérale"
+    },
+    "showQualitySwitch": {
+      "label": "Afficher le changement rapide de qualité",
+      "description": "Afficher le badge de qualité audio en ligne dans la barre de lecture pour un changement rapide"
+    },
+    "toastStyle": {
+      "label": "Style des messages toast",
+      "description": "Style visuel des messages de notification",
+      "default": "Moderne",
+      "classic": "Classique"
+    },
+    "fontConfig": {
+      "label": "Paramètres de police",
+      "description": "Configurer les polices pour l'application, les paroles et les fenêtres de paroles externes",
+      "title": "Paramètres de police",
+      "loading": "Chargement des polices système",
+      "placeholder": "Entrez un nom de police",
+      "useSystem": "Par défaut du système",
+      "useGlobal": "Suivre le global",
+      "modeLabel": "Méthode de saisie",
+      "modeHint": "Tous les champs ci-dessous utilisent cette méthode",
+      "modeSelect": "Sélection manuelle",
+      "modeCustom": "Police personnalisée",
+      "resetRow": "Rétablir par défaut",
+      "fieldLabel": "Police {name}",
+      "groups": {
+        "general": "Général",
+        "appLyric": "Police des paroles",
+        "externalLyric": "Fenêtres de paroles externes"
+      },
+      "fields": {
+        "global": "globale",
+        "lyric": "paroles",
+        "desktopLyric": "paroles de bureau",
+        "dynamicIsland": "paroles Dynamic Island",
+        "taskbarLyric": "paroles de la barre des tâches"
+      }
+    },
+    "systemMediaControls": {
+      "label": "Contrôles multimédia système",
+      "description": "Afficher les informations de lecture dans les contrôles multimédia système"
+    },
+    "discordEnabled": {
+      "label": "Statut Discord",
+      "description": "Afficher le statut de lecture sur Discord"
+    },
+    "discordShowWhenPaused": {
+      "label": "Afficher en pause",
+      "description": "Garder le statut Discord visible en pause"
+    },
+    "discordDisplayMode": {
+      "label": "Affichage de statut bref",
+      "description": "Texte affiché sous le nom d'utilisateur quand le panneau détaillé n'est pas ouvert",
+      "name": "Nom de l'application",
+      "details": "Nom du morceau",
+      "state": "Nom de l'artiste"
+    },
+    "lastfmEnabled": {
+      "label": "Last.fm",
+      "description": "Connecter votre compte Last.fm pour scrobbler et synchroniser les likes"
+    },
+    "lastfmScrobble": {
+      "label": "Scrobbling",
+      "description": "Enregistrer une écoute sur Last.fm après avoir écouté un certain temps"
+    },
+    "lastfmNowPlaying": {
+      "label": "En cours de lecture",
+      "description": "Envoyer le morceau en cours de lecture à Last.fm"
+    },
+    "lastfmLoveSync": {
+      "label": "Synchroniser les likes",
+      "description": "Miroiter vos likes en Love/Unlove Last.fm"
+    },
+    "lastfm": {
+      "connect": "Connecter le compte",
+      "connecting": "Terminez l'autorisation dans votre navigateur…",
+      "cancel": "Annuler",
+      "disconnect": "Déconnecter",
+      "connectedAs": "Connecté : {name}",
+      "notConnected": "Aucun compte Last.fm connecté",
+      "connectHint": "Cliquer sur Connecter ouvre la page d'autorisation dans votre navigateur",
+      "toast": {
+        "connected": "Connecté à Last.fm : {name}",
+        "timeout": "Autorisation expirée, veuillez réessayer",
+        "canceled": "Autorisation annulée",
+        "failed": "Échec de la connexion, veuillez réessayer",
+        "disconnected": "Déconnecté de Last.fm"
+      }
+    },
+    "rememberWindowState": {
+      "label": "Mémoriser l'état de la fenêtre",
+      "description": "Restaurer la taille, la position et l'état maximisé de la fenêtre au prochain lancement"
+    },
+    "autoCheckUpdate": {
+      "label": "Vérifier automatiquement les mises à jour",
+      "description": "Vérifier les nouvelles versions en arrière-plan au lancement et périodiquement"
+    },
+    "checkUpdate": {
+      "label": "Vérifier les mises à jour",
+      "description": "Vérifier une nouvelle version maintenant"
+    },
+    "showPerformanceMonitor": {
+      "label": "Moniteur de performances",
+      "description": "Widget flottant affichant FPS / temps d'image / mémoire. Cliquez pour changer"
+    },
+    "taskbarProgress": {
+      "label": "Progression dans la barre des tâches",
+      "description": "Afficher la progression de lecture sur l'icône de la barre des tâches"
+    },
+    "taskbarThumbnailCover": {
+      "label": "Aperçu de la pochette dans la barre des tâches",
+      "description": "Utiliser la pochette d'album comme aperçu de la fenêtre au survol de la barre des tâches ; désactiver pour afficher l'aperçu en direct du système"
+    },
+    "networkProxyProtocol": {
+      "label": "Proxy réseau",
+      "description": "Configurer un proxy manuel pour les requêtes en ligne",
+      "off": "Proxy désactivé",
+      "http": "Proxy HTTP",
+      "https": "Proxy HTTPS",
+      "socks5": "Proxy SOCKS5"
+    },
+    "networkProxyHost": {
+      "label": "Serveur proxy",
+      "description": "Entrez l'adresse du serveur proxy, par exemple 127.0.0.1",
+      "placeholder": "127.0.0.1"
+    },
+    "networkProxyPort": {
+      "label": "Port proxy",
+      "description": "Entrez le port du serveur proxy, par exemple 7890"
+    },
+    "networkProxyTest": {
+      "label": "Tester le proxy",
+      "description": "Tester si la configuration du proxy peut se connecter avec succès",
+      "success": "Le proxy est disponible",
+      "failed": "Échec du test du proxy. Vérifiez la configuration"
+    },
+    "neteaseRealIp": {
+      "label": "Utiliser l'IP réelle",
+      "description": "Peut être restreint à l'étranger ou dans certaines régions ; activez cette option pour essayer de résoudre le problème"
+    },
+    "neteaseScrobbleEnabled": {
+      "label": "Activer le scrobble",
+      "description": "Signaler automatiquement les écoutes à NCM après qu'un morceau a été joué suffisamment longtemps"
+    },
+    "neteaseScrobbleMode": {
+      "label": "Méthode de scrobble NCM",
+      "description": "Choisir quelle interface de signalement est utilisée pour les écoutes automatiques NCM",
+      "legacy": "API de journal héritée",
+      "ncbl": "API chiffrée NCBL"
+    },
+    "orpheusProtocol": {
+      "label": "Réveiller cette application via le protocole Orpheus",
+      "description": "Ce protocole est normalement utilisé par le lecteur web pour lancer le client officiel ; l'activer peut empêcher le lancement du client officiel"
+    },
+    "streamingEnabled": {
+      "label": "Activer le streaming",
+      "description": "Quand désactivé, l'entrée de streaming est masquée de la barre latérale"
+    },
+    "externalApiEnabled": {
+      "label": "Autoriser le contrôle externe",
+      "description": "Permettre aux applications externes de contrôler le lecteur via l'API"
+    },
+    "externalApiWs": {
+      "label": "Activer WebSocket",
+      "description": "Les applications externes peuvent s'abonner aux événements et envoyer des commandes"
+    },
+    "externalApiAllowLan": {
+      "label": "Autoriser l'accès LAN",
+      "description": "Les autres appareils de votre réseau peuvent atteindre l'API via l'IP de cet appareil ; quand désactivé, seul cet appareil peut se connecter"
+    },
+    "externalApiPort": {
+      "label": "Port d'écoute",
+      "description": "Port TCP pour l'API externe (1024–65535)"
+    },
+    "externalApiPanel": {
+      "label": "",
+      "description": ""
+    },
+    "externalApi": {
+      "restart": "Redémarrer le serveur",
+      "restartHint": "Redémarrage requis après avoir changé le port ou l'accès LAN",
+      "restarted": "Serveur redémarré",
+      "portInUse": "Le port {port} est déjà utilisé, choisissez-en un autre",
+      "pendingChange": "Redémarrage en attente",
+      "pendingChangeHint": "Paramètres modifiés, redémarrez le serveur pour appliquer",
+      "endpoint": "Adresse",
+      "stopped": "Serveur ne fonctionne pas"
+    },
+    "closeAction": {
+      "label": "Action du bouton Fermer",
+      "description": "Que faire lorsque le bouton Fermer de la barre de titre est cliqué",
+      "quit": "Quitter l'application",
+      "hide": "Réduire dans la barre d'état"
+    },
+    "rememberCloseChoice": {
+      "label": "Mémoriser le choix de fermeture",
+      "description": "Quand désactivé, demande à chaque clic sur le bouton Fermer"
+    },
+    "closeDialog": {
+      "title": "Fermer la fenêtre",
+      "description": "Choisissez quoi faire cette fois",
+      "remember": "Mémoriser mon choix, ne plus demander",
+      "quit": "Quitter l'application",
+      "hide": "Réduire dans la barre d'état"
+    },
+    "storageManager": {
+      "label": "Gestion des données",
+      "description": "Sauvegarder, restaurer, réinitialiser les paramètres ou effacer toutes les données"
+    },
+    "backup": {
+      "label": "Sauvegarder les paramètres",
+      "description": "Exporter les paramètres actuels vers un fichier de sauvegarde",
+      "button": "Sauvegarder",
+      "exported": "Sauvegarde enregistrée",
+      "failed": "Échec de la sauvegarde"
+    },
+    "restore": {
+      "label": "Restaurer les paramètres",
+      "description": "Importer les paramètres depuis un fichier de sauvegarde. Les paramètres actuels seront écrasés.",
+      "button": "Restaurer",
+      "confirmTitle": "Restaurer les paramètres et relancer ?",
+      "confirmDesc": "Vos paramètres actuels seront écrasés par le fichier de sauvegarde, et l'application redémarrera immédiatement pour les appliquer. La bibliothèque locale, les listes de lecture et l'historique de lecture ne sont pas affectés.",
+      "invalid": "Fichier de sauvegarde invalide",
+      "failed": "Échec de la restauration"
+    },
+    "resetSettings": {
+      "label": "Réinitialiser les paramètres",
+      "description": "Restaurer tous les paramètres par défaut. Les listes de lecture et la bibliothèque locale ne sont pas affectées.",
+      "button": "Réinitialiser",
+      "confirmTitle": "Réinitialiser les paramètres ?",
+      "confirmDesc": "Tous les paramètres seront restaurés à leurs valeurs par défaut. Cette action est irréversible.",
+      "done": "Les paramètres ont été réinitialisés"
+    },
+    "resetAll": {
+      "label": "Effacer toutes les données",
+      "description": "Supprimer toutes les listes de lecture, l'état de connexion et les caches, puis réinitialiser les paramètres",
+      "button": "Effacer",
+      "confirmTitle": "Effacer toutes les données ?",
+      "confirmDesc": "Toutes les listes de lecture, l'état de connexion et les caches seront supprimés et les paramètres réinitialisés. Cette action est irréversible.",
+      "done": "Toutes les données ont été effacées"
+    },
+    "plugins": {
+      "securityWarningTitle": "Attention aux risques de sécurité avant d'installer",
+      "securityWarning": "Les plugins sont des codes tiers. L'application les isole autant que possible, mais le risque ne peut être entièrement éliminé — un plugin malveillant pourrait accéder à vos données ou effectuer des actions dangereuses. Installez uniquement des plugins provenant de sources fiables.",
+      "hint": "Installer depuis un fichier local ou une URL",
+      "hintDetail": "Étendez l'application avec des plugins. Voir la",
+      "docs": "doc des plugins",
+      "importLocal": "Local",
+      "importFromUrl": "Depuis une URL",
+      "importUrlTitle": "Installer un plugin depuis une URL",
+      "importUrlPlaceholder": "Collez un lien https:// vers un script .js",
+      "importUrlSubmit": "Installer",
+      "importUrlInvalid": "Veuillez entrer une URL http ou https valide",
+      "market": "Marché aux plugins",
+      "install": "Installer",
+      "installed": "Installé",
+      "marketEmpty": "Aucun plugin disponible",
+      "marketError": "Échec du chargement",
+      "publishHint": "Vous avez créé un plugin ?",
+      "publishAction": "Publier",
+      "importSuccess": "Plugin importé",
+      "importFailed": "Échec de l'importation du plugin",
+      "empty": "Aucun plugin installé",
+      "emptyHint": "Installez un plugin depuis un fichier local ou une URL pour activer des fonctionnalités étendues",
+      "enable": "Activer",
+      "enabled": "Activé",
+      "uninstall": "Désinstaller",
+      "configSubtitle": "Paramètres du plugin",
+      "uninstallConfirmTitle": "Désinstaller le plugin",
+      "uninstallConfirm": "Êtes-vous sûr de vouloir désinstaller « {name} » ? Cette action est irréversible.",
+      "uninstallSuccess": "Plugin désinstallé",
+      "uninstallFailed": "Échec de la désinstallation",
+      "by": "Par",
+      "sources": "Sources",
+      "pendingUpdate": "Mettre à jour",
+      "noChangelog": "Aucune note de version",
+      "openUpdateUrl": "Ouvrir la page de mise à jour",
+      "checkUpdate": "Vérifier la mise à jour",
+      "checkUpdateFailed": "Échec de la vérification de mise à jour",
+      "updateFound": "Nouvelle version disponible",
+      "updateLatest": "Déjà à jour",
+      "update": "Mettre à jour",
+      "updateSuccess": "Plugin mis à jour",
+      "updateFailed": "Échec de la mise à jour, utilisez « Ouvrir la page de mise à jour » pour installer manuellement",
+      "status": {
+        "ready": "Prêt",
+        "loading": "Chargement",
+        "error": "Erreur",
+        "disabled": "Désactivé",
+        "unloaded": "Déchargé"
+      },
+      "sectionSource": "Plugins source",
+      "sectionControl": "Plugins de contrôle",
+      "detail": {
+        "title": "Détails du plugin",
+        "intro": "À propos",
+        "grants": "Autorisations",
+        "contributes": "Capacités",
+        "info": "Infos",
+        "noDescription": "Aucune description",
+        "grantNone": "Ce plugin ne déclare aucune autorisation",
+        "autoGranted": "Autorisé automatiquement",
+        "sources": "Sources",
+        "events": "Événements",
+        "controls": "Contrôle de la lecture",
+        "controlsYes": "Oui",
+        "settingsCount": "Paramètres",
+        "menus": "Éléments de menu",
+        "id": "ID",
+        "author": "Auteur",
+        "apiLevel": "Niveau API",
+        "installed": "Installé",
+        "updated": "Mis à jour",
+        "homepage": "Page d'accueil"
+      },
+      "grant": {
+        "network": { "label": "Réseau", "desc": "Peut effectuer des requêtes réseau" },
+        "control": { "label": "Contrôle", "desc": "Peut contrôler le lecteur" },
+        "ui": { "label": "Interface", "desc": "Peut étendre ou modifier l'interface de l'application" }
+      }
+    },
+    "pluginManager": {
+      "label": "Gestionnaire de plugins",
+      "description": "Importer, activer ou désinstaller des scripts d'extension"
+    },
+    "enableLocalTTMLOverride": {
+      "label": "Activer la bibliothèque TTML locale",
+      "description": "Correspondre aux fichiers .ttml dans un dossier choisi par métadonnées de morceau ; prend la priorité sur les paroles en ligne lorsqu'elles sont trouvées"
+    },
+    "localLyricRepoDir": {
+      "label": "Dossier de la bibliothèque",
+      "description": "Choisir un dossier contenant des paroles TTML ; l'application le recherche par métadonnées",
+      "choose": "Choisir",
+      "clear": "Effacer",
+      "unset": "Non défini"
+    },
+    "fileCacheManager": {
+      "label": "Gestionnaire de cache",
+      "description": "Inspecter l'utilisation du cache et le vider"
+    },
+    "dbCacheManager": {
+      "label": "Gestionnaire de base de données",
+      "description": "Inspecter l'utilisation de la base de données et la vider"
+    },
+    "cacheDir": {
+      "label": "Répertoire du cache",
+      "open": "Ouvrir dans le gestionnaire de fichiers",
+      "change": "Changer",
+      "reset": "Réinitialiser",
+      "hint": "Les pochettes, avatars d'artistes et arrière-plans sont stockés dans ce dossier. Le changement vide les anciens caches ; le nouvel emplacement doit être un dossier vide.",
+      "changedHint": "Répertoire du cache changé",
+      "notEmpty": "Le dossier sélectionné n'est pas vide. Veuillez choisir un dossier vide.",
+      "switchConfirmTitle": "Changer le répertoire du cache ?",
+      "switchConfirmDesc": "Les caches actuels des pochettes/artistes/arrière-plans seront vidés avant le changement, et le nouvel emplacement doit être un dossier vide. Les caches de paroles en base de données ne sont pas affectés.",
+      "switchConfirmOk": "Choisir un dossier",
+      "resetConfirmTitle": "Réinitialiser au répertoire de cache par défaut ?",
+      "resetConfirmDesc": "Les caches de fichiers actuels seront vidés avant la réinitialisation."
+    },
+    "cacheUsage": {
+      "label": "Utilisation",
+      "total": "Total",
+      "refresh": "Actualiser"
+    },
+    "cacheCategory": {
+      "covers": "Vignettes de pochettes",
+      "artists": "Avatars d'artistes",
+      "backgrounds": "Arrière-plans",
+      "songs": "Fichiers audio",
+      "lyric": "Cache de contenu des paroles",
+      "lyricTTML": "Cache des paroles TTML",
+      "lyricMatch": "Cache de correspondance des paroles"
+    },
+    "enableSongCache": {
+      "label": "Cache des morceaux",
+      "description": "Mettre en cache localement les morceaux en ligne pour améliorer la vitesse de chargement"
+    },
+    "songCacheSizeLimit": {
+      "label": "Limite de taille",
+      "description": "Quand la limite est atteinte, les entrées sont supprimées automatiquement ; ∞ signifie illimité"
+    },
+    "downloadEnabled": {
+      "label": "Activer les téléchargements"
+    },
+    "downloadDir": {
+      "label": "Dossier de téléchargement",
+      "change": "Changer",
+      "serverPathHint": "Chemin du serveur"
+    },
+    "downloadTarget": {
+      "browser": "Enregistrer dans le navigateur",
+      "server": "Enregistrer sur le serveur",
+      "browserHint": "Les téléchargements sont transmis directement au navigateur et ne consomment pas d'espace disque serveur"
+    },
+    "downloadQuality": {
+      "label": "Qualité de téléchargement",
+      "description": "Qualité préférée pour les téléchargements ; la disponibilité réelle dépend de la plateforme et du compte"
+    },
+    "downloadUsePlayback": {
+      "label": "Simuler la lecture pour le téléchargement",
+      "description": "Utiliser le lien de lecture comme source audio lors du téléchargement"
+    },
+    "downloadFileTemplate": {
+      "label": "Format du nom de fichier",
+      "description": "Comment les fichiers téléchargés sont nommés",
+      "titleOnly": "Titre",
+      "artistTitle": "Artiste - Titre",
+      "titleArtist": "Titre - Artiste"
+    },
+    "downloadFolderScheme": {
+      "label": "Dossier intelligent",
+      "description": "Organiser les téléchargements en sous-dossiers selon une règle",
+      "none": "Pas de sous-dossiers",
+      "artist": "Par artiste",
+      "artistAlbum": "Par artiste / album"
+    },
+    "downloadOverwrite": {
+      "label": "Gestion des doublons",
+      "description": "Que faire quand le fichier cible existe déjà",
+      "rename": "Garder les deux (ajouter un numéro)",
+      "overwrite": "Écraser",
+      "skip": "Ignorer"
+    },
+    "downloadEmbedCover": {
+      "label": "Intégrer la pochette",
+      "description": "Écrire la pochette dans le fichier audio téléchargé"
+    },
+    "downloadEmbedMeta": {
+      "label": "Intégrer les métadonnées",
+      "description": "Écrire le titre, l'artiste et l'album dans les balises du fichier"
+    },
+    "downloadEmbedLyric": {
+      "label": "Intégrer les paroles",
+      "description": "Écrire les paroles dans les balises du fichier"
+    },
+    "downloadWriteLrc": {
+      "label": "Enregistrer le fichier de paroles",
+      "description": "Enregistrer également un fichier de paroles avec l'audio lors du téléchargement"
+    },
+    "downloadLyricFormat": {
+      "label": "Format du fichier de paroles",
+      "description": "Format des paroles enregistrées et intégrées",
+      "lrc": "LRC (ligne)",
+      "enhanced": "LRC amélioré (mot)"
+    },
+    "downloadSaveTtml": {
+      "label": "Enregistrer aussi en TTML",
+      "description": "Exporter un fichier TTML supplémentaire contenant l'original, la traduction et la romanisation en un seul fichier"
+    },
+    "cacheCategoryClear": {
+      "label": "Effacer",
+      "confirmTitle": "Effacer « {name} » ?",
+      "confirmDesc": "Toutes les données mises en cache dans cette catégorie seront supprimées. Cette action est irréversible."
+    },
+    "fileClearAll": {
+      "label": "Effacer les caches de fichiers",
+      "description": "Effacer tous les caches. Cette action est irréversible.",
+      "button": "Tout effacer",
+      "confirmTitle": "Effacer tous les caches de fichiers ?",
+      "confirmDesc": "Tous les caches de fichiers ci-dessus seront supprimés et regénérés à la prochaine utilisation. Cette action est irréversible."
+    },
+    "dbClearAll": {
+      "label": "Effacer les caches de la base de données",
+      "description": "Supprimer les caches de paroles et de correspondance stockés dans la base de données. Votre bibliothèque locale et vos données de compte ne sont pas affectées.",
+      "button": "Tout effacer",
+      "confirmTitle": "Effacer tous les caches de la base de données ?",
+      "confirmDesc": "Tous les caches de la base de données ci-dessus seront effacés. Cette action est irréversible."
+    }
+  },
+  "collection": {
+    "totalDuration": "Environ {time}",
+    "unknownAlbum": "Album inconnu",
+    "empty": "Aucun morceau",
+    "noDescription": "Pas encore de description~",
+    "album": "Album",
+    "playlist": "Liste de lecture",
+    "radio": "Radio",
+    "my": "Mes {type}s",
+    "subscribed": "{type}s abonnés",
+    "localPlaylist": "Listes de lecture locales",
+    "onlinePlaylist": "Listes de lecture en ligne",
+    "create": "Nouveau {type}",
+    "name": "Nom du {type}",
+    "description": "Description",
+    "delete": "Supprimer {type}",
+    "deleteConfirm": "Supprimer {type} « {title} » ? Cette action est irréversible",
+    "addTo": "Ajouter à {type}",
+    "removeFrom": "Retirer de {type}",
+    "tracksAdded": "Ajouté avec succès, {count} morceaux",
+    "alreadyInPlaylist": "Déjà dans la liste de lecture",
+    "edit": "Modifier {type}",
+    "subscribe": "S'abonner",
+    "unsubscribe": "Se désabonner",
+    "privacy": {
+      "private": "Rendre privé"
+    }
+  },
+  "artist": {
+    "label": "Artistes",
+    "songs": "Morceaux",
+    "totalArtists": "{count} artistes",
+    "albums": "Albums"
+  },
+  "album": {
+    "label": "Albums"
+  },
+  "folder": {
+    "label": "Dossiers",
+    "totalFolders": "{count} dossiers"
+  },
+  "errors": {
+    "dialogTitle": "Une erreur est survenue",
+    "deviceHint": "Aucun périphérique de sortie audio détecté. Veuillez connecter un casque ou des haut-parleurs et réessayer.",
+    "DEVICE_NOT_FOUND": "Aucun périphérique de sortie audio trouvé",
+    "DEVICE_INIT_FAILED": "Échec de l'initialisation du périphérique audio",
+    "FILE_NOT_FOUND": "Fichier introuvable ou inaccessible",
+    "FILE_NO_AUDIO_STREAM": "Aucun flux audio trouvé dans le fichier",
+    "FILE_DECODE_ERROR": "Échec du décodage audio",
+    "FILE_NOT_SELECTED": "Aucun fichier sélectionné",
+    "NETWORK_ERROR": "Impossible d'atteindre la source audio, vérifiez le réseau ou essayez une autre source",
+    "NETWORK_TIMEOUT": "La source audio a expiré, vérifiez le réseau ou essayez une autre source",
+    "URL_RESOLVE_FAILED": "Échec de l'obtention de l'URL de lecture",
+    "NO_PLUGIN_AVAILABLE": "Aucun plugin disponible pour cette plateforme",
+    "SCAN_NO_DIRS": "Aucun répertoire d'analyse configuré",
+    "SCAN_DIR_EXISTS": "Le répertoire existe déjà",
+    "SCAN_DIR_NOT_FOUND": "Répertoire introuvable",
+    "SCAN_DIR_NOT_SELECTED": "Aucun répertoire sélectionné",
+    "TAG_READ_FAILED": "Échec de la lecture des balises",
+    "TAG_WRITE_FAILED": "Échec de l'écriture des balises",
+    "UNKNOWN": "L'opération a échoué"
+  },
+  "tagEditor": {
+    "title": "Modifier les métadonnées",
+    "replaceCover": "Remplacer la pochette",
+    "onlineMatch": "Correspondance automatique des balises",
+    "matchHint": "Vous ne voulez pas remplir les balises manuellement ?",
+    "noMatches": "Aucune correspondance trouvée",
+    "lyricsPlaceholder": "Paroles en texte brut, écrites dans la balise du fichier telles quelles",
+    "saveSuccess": "Métadonnées enregistrées",
+    "saveFailed": "Échec de l'enregistrement",
+    "fields": {
+      "title": "Titre",
+      "artist": "Artiste",
+      "album": "Album",
+      "albumArtist": "Artiste de l'album",
+      "year": "Année",
+      "genre": "Genre",
+      "trackNumber": "Piste n°",
+      "discNumber": "Disque n°",
+      "lyrics": "Paroles intégrées"
+    }
+  }
+}

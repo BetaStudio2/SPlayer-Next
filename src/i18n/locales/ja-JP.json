@@ -1,0 +1,2004 @@
+{
+  "update": {
+    "dialogTitle": "新しいバージョンがあります",
+    "later": "後で",
+    "download": "ダウンロード",
+    "downloading": "ダウンロード中",
+    "installNow": "再起動してインストール",
+    "goDownload": "ダウンロードページへ",
+    "upToDate": "最新バージョンです",
+    "readyToast": "アップデートの準備ができました — 再起動してインストール",
+    "failed": "アップデートに失敗しました。後でもう一度お試しください"
+  },
+  "onboarding": {
+    "next": "次へ",
+    "back": "戻る",
+    "finish": "完了",
+    "footer": "スキップした項目はいつでも設定から調整できます",
+    "welcome": {
+      "title": "SPlayer-Next へようこそ",
+      "subtitle": "モダンなデスクトップ音楽プレイヤー — いくつかの簡単な手順で準備完了です",
+      "start": "はじめる",
+      "features": {
+        "local": {
+          "title": "ローカルライブラリ",
+          "desc": "フォルダをスキャンして、ライブラリを自動整理"
+        },
+        "quality": {
+          "title": "ロスレスオーディオ",
+          "desc": "ネイティブオーディオエンジン、幅広いロスレスフォーマット対応"
+        },
+        "streaming": {
+          "title": "ストリーミングサーバー",
+          "desc": "Subsonic / Jellyfin / Emby など"
+        },
+        "lyrics": {
+          "title": "豊富な歌詞表示",
+          "desc": "AMLL 単語単位歌詞、デスクトップ、Dynamic Island、タスクバー歌詞"
+        }
+      }
+    },
+    "agreement": {
+      "title": "利用規約と免責事項",
+      "subtitle": "続行する前に利用規約をお読みいただき、同意してください",
+      "scrollHint": "最後までスクロールすると同意できます",
+      "agree": "利用規約と免責事項を読み、同意します",
+      "accept": "同意して続行"
+    },
+    "library": {
+      "title": "ローカル音楽ライブラリ",
+      "subtitle": "フォルダを追加してスキャンすると、SPlayer-Next が自動的にインデックス化します。後から追加することもできます。"
+    },
+    "streaming": {
+      "title": "ストリーミングサーバー",
+      "subtitle": "Subsonic 互換サービス、Jellyfin または Emby に接続して、ホームミュージックサーバーにシームレスにアクセスできます。",
+      "hint": "設定完了後、設定 → メディアソース → ストリーミング からサーバーを追加し、接続をテストしてください。",
+      "servers": {
+        "subsonic": "Subsonic",
+        "navidrome": "Navidrome",
+        "jellyfin": "Jellyfin",
+        "emby": "Emby"
+      }
+    },
+    "preferences": {
+      "title": "言語とテーマ",
+      "subtitle": "インターフェース言語とテーマを選択してください。後から設定で細かく調整できます。",
+      "languageLabel": "インターフェース言語",
+      "modeLabel": "テーマモード",
+      "colorLabel": "アクセントカラー"
+    },
+    "hotkeys": {
+      "title": "キーボードショートカット",
+      "subtitle": "SPlayer-Next には、必要なときにいつでも使える完全な再生ショートカットが用意されています。",
+      "tips": {
+        "global": {
+          "title": "グローバルショートカット",
+          "desc": "ウィンドウがアクティブでなくても再生を制御 — メディアキーも含む"
+        },
+        "local": {
+          "title": "アプリ内ショートカット",
+          "desc": "スペースで再生/一時停止、矢印キーでスキップ、Ctrl+F で検索など"
+        },
+        "customize": {
+          "title": "完全カスタマイズ可能",
+          "desc": "設定 → ショートカット ですべてのショートカットを確認・再割り当て"
+        }
+      }
+    }
+  },
+  "common": {
+    "confirm": "確認",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "configure": "設定",
+    "more": "もっと見る",
+    "save": "保存",
+    "reset": "リセット",
+    "retry": "再試行",
+    "prev": "前へ",
+    "next": "次へ",
+    "search": "検索",
+    "loading": "読み込み中",
+    "noData": "データがありません",
+    "noMore": "これ以上ありません〜",
+    "refreshCache": "キャッシュを更新",
+    "copied": "コピーしました",
+    "copyFailed": "コピーに失敗しました",
+    "playAll": "すべて再生",
+    "totalSongs": "{count}曲",
+    "totalAlbums": "{count}枚のアルバム",
+    "totalArtists": "{count}組のアーティスト",
+    "totalPlaylists": "{count}個のプレイリスト"
+  },
+  "comments": {
+    "name": "曲のコメント",
+    "title": "\"{name}\" のコメント",
+    "hot": "人気のコメント",
+    "new": "最新のコメント",
+    "loading": "コメントを読み込み中…",
+    "empty": "まだコメントはありません",
+    "noSource": "利用可能なコメントソースがありません",
+    "location": "{location} から",
+    "page": "{page} / {total} ページ"
+  },
+  "equalizer": {
+    "title": "イコライザー",
+    "preamp": "プリアンプ",
+    "preset": {
+      "label": "プリセット",
+      "flat": "デフォルト",
+      "pop": "ポップ",
+      "rock": "ロック",
+      "classical": "クラシック",
+      "electronic": "エレクトロニック",
+      "bass": "バスブースト",
+      "vocal": "ボーカル",
+      "dance": "ダンス",
+      "soft": "ソフト",
+      "custom": "カスタム"
+    }
+  },
+  "speed": {
+    "title": "再生速度",
+    "speed": "速度",
+    "pitchSync": "ピッチを保持",
+    "pitchSyncTip": "速度変更時に元のピッチを維持",
+    "pitch": "ピッチ",
+    "semitone": "{n} st"
+  },
+  "autoClose": {
+    "title": "スリープタイマー",
+    "duration": "時間",
+    "unitHint": "分",
+    "custom": "カスタム",
+    "minute": "{n}分",
+    "waitSongEnd": "現在の曲が終わるのを待つ",
+    "waitSongEndTip": "時間が来たら、現在のトラックが終わってから停止",
+    "remaining": "残り時間",
+    "start": "開始",
+    "update": "更新",
+    "stop": "オフ"
+  },
+  "abLoop": {
+    "title": "A-B リピート",
+    "enable": "ループを有効化",
+    "enableTip": "A 点と B 点の両方を設定（B は A より後である必要があります）",
+    "pointA": "A 点",
+    "pointB": "B 点",
+    "setCurrent": "現在位置を設定",
+    "clear": "クリア",
+    "minus": "-{n}秒",
+    "plus": "+{n}秒",
+    "warningBLessThanA": "B は A より後である必要があります。ループは無効です"
+  },
+  "uiZoom": {
+    "title": "インターフェースズーム",
+    "range": "範囲: 50% - 200%",
+    "reset": "デフォルトにリセット"
+  },
+  "nav": {
+    "home": "ホーム",
+    "library": "ライブラリ",
+    "liked": "いいねした曲",
+    "history": "再生履歴",
+    "download": "ダウンロード",
+    "favorites": "お気に入り",
+    "cloud": "マイクラウド",
+    "streaming": "ストリーミング",
+    "reload": "リロード",
+    "devtools": "開発者ツール",
+    "globalSettings": "グローバル設定",
+    "searchPlaceholder": "曲、アーティスト、アルバムを検索",
+    "searchEmpty": "入力して検索を開始",
+    "searchGoto": "\"{keyword}\" を検索",
+    "searchSection": {
+      "quick": "クイック",
+      "history": "最近の検索",
+      "hot": "トレンド"
+    },
+    "link": {
+      "song": "[{id}] を再生",
+      "album": "アルバム [{id}] へ",
+      "artist": "アーティスト [{id}] へ",
+      "playlist": "プレイリスト [{id}] へ"
+    }
+  },
+  "home": {
+    "greetingLine": "{greeting}、{name}さん",
+    "greeting": {
+      "dawn": "おはようございます",
+      "morning": "おはようございます",
+      "noon": "こんにちは",
+      "afternoon": "こんにちは",
+      "evening": "こんばんは"
+    },
+    "stats": {
+      "weekDuration": "今週",
+      "newFavorites": "新しいお気に入り",
+      "listenStreak": "連続聴取",
+      "unitHour": "時間",
+      "unitSong": "曲",
+      "unitDay": "日"
+    },
+    "duration": {
+      "hm": "{hours}時間{minutes}分",
+      "hours": "{hours}時間",
+      "minutes": "{minutes}分"
+    },
+    "subtitle": {
+      "plain1": "今日も良い音楽があなたと共にありますように",
+      "plain2": "ヘッドホンを付けて、世界を静かにしましょう",
+      "plain3": "音楽の準備はできています — トラックを選んで始めましょう",
+      "streak": "{days}日連続で聴いています。この調子で続けましょう",
+      "weekListened": "今週は {duration} 聴いています",
+      "weekMore": "先週より {duration} 多く聴いています",
+      "weekLess": "先週より {duration} 少なく聴いています",
+      "favorites": "今週 {count} 件の新しいお気に入りを追加しました",
+      "recent": "今日は何を再生しますか？最近再生した {count} 曲から選んでください"
+    },
+    "quickActions": {
+      "luck": {
+        "title": "おまかせ再生",
+        "desc": "ランダムに曲を再生",
+        "empty": "まだ再生可能なトラックがありません"
+      },
+      "daily": {
+        "title": "デイリーピック",
+        "desc": "毎日新鮮なセレクション"
+      },
+      "heartMode": {
+        "title": "ハートモード",
+        "desc": "あなたの好みに合わせたスマート再生"
+      },
+      "fm": {
+        "title": "パーソナルFM",
+        "desc": "尽きることのないおすすめ"
+      }
+    },
+    "continue": {
+      "repeatTitle": "リピート再生中",
+      "repeatSubtitle": "あなたが最も再生した {count} 曲",
+      "continueTitle": "続けて聴く",
+      "continueSubtitle": "最近再生した {count} 曲",
+      "empty": "まだ再生履歴がありません — 何か聴いてみましょう",
+      "playCount": "{count} 回再生"
+    },
+    "recommend": {
+      "title": "あなたへのおすすめ",
+      "titleGuest": "おすすめプレイリスト",
+      "subtitle": "あなたの好みに合わせて厳選されたプレイリスト",
+      "subtitleGuest": "みんなが聴いている人気プレイリスト"
+    },
+    "radar": {
+      "title": "レーダー",
+      "subtitle": "あなたの好みに合った音楽を継続的におすすめ"
+    },
+    "artists": {
+      "title": "アーティスト",
+      "subtitle": "あなたに合いそうなアーティストを発見"
+    },
+    "albums": {
+      "title": "新着リリース",
+      "subtitle": "リリースされたばかりのアルバム"
+    },
+    "hero": {
+      "play": "再生",
+      "addQueue": "キューに追加",
+      "empty": "再生可能なトラックがありません",
+      "added": "{count} 曲をキューに追加しました",
+      "daily": {
+        "tag": "デイリーミックス",
+        "title": "「{song}」からスタート",
+        "subtitle": "あなたの好みに合わせて厳選 · {count} 曲"
+      },
+      "local": {
+        "tag": "ローカル",
+        "title": "「{song}」にランダムで辿り着きました",
+        "subtitle": "ライブラリからのランダムピック · {count} 曲"
+      },
+      "liked": {
+        "tag": "お気に入り",
+        "title": "お気に入りをもう一度〜",
+        "subtitle": "いいねしたすべての音楽 · {count} 曲"
+      }
+    }
+  },
+  "login": {
+    "qrTipWaiting": "クラウドミュージックアプリを開いてQRコードをスキャンしてください",
+    "qrTipScanned": "スキャンしました。アプリで確認してください",
+    "qrTipExpired": "QRコードの期限が切れました。更新中",
+    "qrTipDone": "ログインしました",
+    "qrTipUnknown": "不明な状態です。もう一度お試しください",
+    "qrRefresh": "QRコードを更新",
+    "autoFetch": "自動取得",
+    "autoFetchTitle": "続行する前に",
+    "autoFetchTip": "この機能はアカウントの安全性を保証できません — 自己責任でご利用ください。公式ページが空白や応答なしになった場合は閉じて再試行してください。",
+    "autoFetchConfirm": "理解しました",
+    "manualCookie": "手動Cookie",
+    "cookieHint": "Cookie の MUSIC_U フィールドのみが必要です。例: MUSIC_U=xxxx;",
+    "cookiePlaceholder": "Cookie を貼り付けてください。MUSIC_U=xxx; を含む必要があります",
+    "cookieInvalid": "無効な Cookie です。MUSIC_U が必要です。",
+    "cookieConfirm": "ログイン",
+    "success": "ログインしました",
+    "failed": "ログインに失敗しました。もう一度お試しください",
+    "unknownUser": "不明なユーザー",
+    "logout": "ログアウト",
+    "logoutConfirmTitle": "ログアウト",
+    "logoutConfirmDesc": "現在のアカウントからログアウトしますか？",
+    "logoutDone": "ログアウトしました"
+  },
+  "search": {
+    "title": "検索",
+    "titleSuffix": "検索結果",
+    "emptyKeyword": "キーワードを入力して検索を開始",
+    "noResults": "該当する結果がありません",
+    "noResultsHint": "別のキーワードを試すか、ソースを切り替えてください",
+    "errorTitle": "検索に失敗しました",
+    "tabs": {
+      "songs": "曲",
+      "albums": "アルバム",
+      "artists": "アーティスト",
+      "playlists": "プレイリスト"
+    }
+  },
+  "streaming": {
+    "hint": "ストリーミングプラットフォームに接続",
+    "hintDetail": "サーバーの認証情報は OS によって暗号化されローカルに保存されます。アップロードは一切行われません",
+    "errorCode": {
+      "auth": "認証に失敗しました",
+      "network": "ネットワークエラー",
+      "protocol": "プロトコルエラー",
+      "unknown": "不明なエラー"
+    },
+    "tabs": {
+      "songs": "曲",
+      "albums": "アルバム",
+      "artists": "アーティスト",
+      "playlists": "プレイリスト"
+    },
+    "empty": {
+      "noServer": "ストリーミングサーバーが設定されていません",
+      "addHint": "右上のボタンをクリックして追加してください",
+      "goToSettings": "設定へ",
+      "notConnected": "どのサーバーにも接続していません",
+      "noResults": "結果がありません"
+    },
+    "server": {
+      "type": "サーバータイプ",
+      "name": "サーバー名",
+      "namePlaceholder": "このサーバーの表示名",
+      "url": "サーバーURL",
+      "username": "ユーザー名",
+      "password": "パスワード",
+      "test": "接続テスト",
+      "testOk": "接続に成功しました",
+      "testFail": "接続に失敗しました",
+      "add": "サーバーを追加",
+      "added": "サーバーを追加しました",
+      "edit": "サーバーを編集",
+      "updated": "サーバーを更新しました",
+      "delete": "削除",
+      "removed": "サーバーを削除しました",
+      "deleteConfirmTitle": "サーバーを削除",
+      "deleteConfirm": "サーバー \"{name}\" を削除しますか？この操作は元に戻せません。",
+      "connect": "接続",
+      "connected": "接続済み",
+      "connectFailed": "接続に失敗しました",
+      "disconnect": "切断",
+      "disconnected": "切断しました",
+      "active": "アクティブ",
+      "lastConnected": "最終接続",
+      "errors": {
+        "nameEmpty": "サーバー名を入力してください",
+        "urlInvalid": "有効なURLを入力してください（http:// または https://）",
+        "usernameEmpty": "ユーザー名を入力してください",
+        "passwordEmpty": "パスワードを入力してください"
+      }
+    },
+    "actions": {
+      "settings": "ストリーミング設定"
+    }
+  },
+  "player": {
+    "prev": "前へ",
+    "next": "次へ",
+    "heartMode": {
+      "needLogin": "ログインしてハートモードを使用",
+      "noSeed": "ハートモードのシードトラックが利用できません",
+      "loading": "ハートモードを開始中…",
+      "entered": "ハートモードを開始しました",
+      "already": "既にハートモード中です",
+      "failed": "ハートモードの開始に失敗しました。後でもう一度お試しください"
+    },
+    "fm": {
+      "needLogin": "ログインしてパーソナルFMを使用",
+      "loading": "パーソナルFMを開始中…",
+      "entered": "パーソナルFMを開始しました",
+      "already": "既にパーソナルFM中です",
+      "failed": "パーソナルFMの開始に失敗しました。後でもう一度お試しください"
+    },
+    "lyricOffset": {
+      "title": "歌詞オフセット",
+      "hint": "正の値で歌詞が早まります。単位はミリ秒"
+    },
+    "lyricCredit": "歌詞提供",
+    "copyLyric": {
+      "title": "歌詞をコピー",
+      "contentLabel": "コピーする内容",
+      "translation": "翻訳",
+      "romaji": "ローマ字",
+      "emptyLine": "空白行",
+      "songName": "タイトル",
+      "artist": "アーティスト",
+      "selectAll": "すべて選択",
+      "deselectAll": "すべて解除",
+      "invert": "反転",
+      "selected": "{n} 件選択中",
+      "copy": "コピー",
+      "copyRaw": "原文をコピー",
+      "exportImage": "画像としてエクスポート",
+      "saved": "ダウンロードに保存しました",
+      "fileSuffix": "歌詞",
+      "exportFailed": "画像のエクスポートに失敗しました",
+      "empty": "コピーする内容がありません"
+    },
+    "repeatMode": {
+      "list": "すべてリピート",
+      "one": "1曲リピート",
+      "off": "リピートオフ"
+    },
+    "shuffleMode": {
+      "on": "シャッフルオン",
+      "off": "シャッフルオフ"
+    }
+  },
+  "songList": {
+    "title": "タイトル",
+    "album": "アルバム",
+    "actions": "操作",
+    "size": "サイズ",
+    "duration": "時間",
+    "noResults": "該当する曲がありません",
+    "sort": {
+      "mode": "並び替えモード",
+      "order": "並び順",
+      "default": "デフォルト",
+      "asc": "昇順",
+      "desc": "降順",
+      "byTitle": "タイトル順",
+      "byArtist": "アーティスト順",
+      "byPath": "ローカルパス順",
+      "byAlbum": "アルバム順",
+      "byDuration": "時間順",
+      "bySize": "サイズ順",
+      "byMtime": "更新日時順",
+      "byCtime": "作成日時順",
+      "byName": "名前順",
+      "byTrackCount": "曲数順",
+      "byTrack": "トラック番号順"
+    },
+    "context": {
+      "play": "再生",
+      "playNext": "次に再生",
+      "showInExplorer": "場所を開く",
+      "copyPath": "ファイルパスをコピー",
+      "editTags": "メタデータを編集",
+      "download": "曲をダウンロード",
+      "deleteFile": "ファイルを削除",
+      "searchSame": "名前で検索",
+      "more": "もっと見る",
+      "copyTitle": "タイトルをコピー",
+      "copyId": "曲IDをコピー",
+      "copyUrl": "曲リンクを共有"
+    },
+    "batch": {
+      "manage": "一括管理",
+      "selected": "{count} 件選択中",
+      "invert": "反転",
+      "addToQueue": "キューに追加",
+      "download": "ダウンロード",
+      "exit": "終了"
+    },
+    "delete": {
+      "removeConfirmOne": "「{title}」を {type} から削除しますか？",
+      "removeConfirm": "{count} 曲を {type} から削除しますか？",
+      "fileTitle": "ファイルを削除",
+      "fileConfirmOne": "「{title}」をディスクから完全に削除しますか？この操作は元に戻せません",
+      "fileConfirm": "{count} 個のファイルをディスクから完全に削除しますか？この操作は元に戻せません"
+    },
+    "toast": {
+      "addedToNext": "次に再生に追加しました"
+    }
+  },
+  "quality": {
+    "details": "音質",
+    "codec": "コーデック",
+    "sampleRate": "サンプルレート",
+    "bitDepth": "ビット深度",
+    "bitRate": "ビットレート",
+    "channels": "チャンネル",
+    "stereo": "ステレオ",
+    "mono": "モノラル",
+    "multiChannel": "マルチチャンネル"
+  },
+  "playlist": {
+    "title": "プレイリスト",
+    "empty": "プレイリストは空です",
+    "unknownArtist": "不明なアーティスト",
+    "clearList": "すべてクリア",
+    "locateCurrent": "再生中",
+    "clearConfirmTitle": "プレイリストをクリア",
+    "clearConfirmContent": "プレイリスト全体をクリアしてもよろしいですか？この操作は元に戻せません。"
+  },
+  "liked": {
+    "title": "いいねした曲",
+    "tabs": {
+      "local": "ローカル",
+      "online": "オンライン"
+    },
+    "empty": {
+      "local": "まだいいねしたローカル曲はありません — 曲の横のハートをクリックして追加",
+      "online": "まだいいねしたオンライン曲はありません"
+    },
+    "needLogin": "ログインしてオンラインのいいね曲を表示",
+    "toast": {
+      "added": "いいねに追加しました",
+      "removed": "いいねから削除しました",
+      "needLogin": "先にログインしてください",
+      "unsupported": "このソースはいいね機能をサポートしていません",
+      "failed": "操作に失敗しました。もう一度お試しください"
+    }
+  },
+  "cloud": {
+    "title": "マイクラウド",
+    "empty": "クラウドに曲がまだありません",
+    "needLogin": "ログインしてクラウドライブラリを表示",
+    "removeAction": "クラウドから削除",
+    "removeTitle": "クラウドから削除",
+    "removeConfirmOne": "「{title}」をクラウドから削除しますか？この操作は元に戻せません。",
+    "removeConfirm": "{count} 曲をクラウドから削除しますか？この操作は元に戻せません。",
+    "upload": {
+      "button": "アップロード",
+      "title": "クラウドにアップロード",
+      "selectFile": "ファイルを選択",
+      "emptyHint": "「ファイルを選択」をクリックして曲を追加",
+      "clearFinished": "完了したものをクリア",
+      "instant": "瞬時",
+      "done": "完了",
+      "reading": "読み取り中",
+      "retry": "再試行",
+      "remove": "削除",
+      "capacityFull": "クラウドの容量が不足しています",
+      "riskTip": "アップロードするとアカウントがフラグされる可能性があるため、注意してご利用ください。アップロード後、クラウドは曲のマッチングに時間を要します。後で再度更新して確認してください。",
+      "error": "アップロードに失敗しました",
+      "errorWithCode": "アップロードに失敗しました（{code}）"
+    }
+  },
+  "history": {
+    "title": "再生履歴",
+    "empty": "まだ再生履歴がありません — 何か再生してみましょう",
+    "clear": "履歴をクリア",
+    "clearConfirmTitle": "再生履歴をクリア",
+    "clearConfirmContent": "すべての再生履歴をクリアしますか？この操作は元に戻せません。"
+  },
+  "download": {
+    "title": "ダウンロード",
+    "activeCount": "{count} 件実行中",
+    "clearFinished": "完了したものをクリア",
+    "clearConfirmTitle": "完了したタスクをクリア",
+    "clearConfirmContent": "完了したタスクと失敗したタスクの記録をリストから削除します。ダウンロード済みのファイルは保持されます。続行しますか？",
+    "tabAll": "すべて",
+    "tabActive": "ダウンロード中",
+    "tabError": "エラー",
+    "tabDone": "完了",
+    "colStatus": "ステータス",
+    "colSize": "サイズ",
+    "empty": "ダウンロードタスクがありません",
+    "emptyDone": "まだ完了したダウンロードはありません",
+    "qualityDefault": "デフォルトに従う",
+    "cancel": "キャンセル",
+    "retry": "再試行",
+    "openFolder": "フォルダで表示",
+    "remove": "削除",
+    "deleteFile": "ファイルを削除",
+    "deleteConfirmTitle": "ダウンロードファイルを削除",
+    "deleteConfirmContent": "この曲ファイルをディスクから完全に削除します。この操作は元に戻せません。削除しますか？",
+    "tagWarning": "タグの書き込みに失敗しました。ファイルは保存されました",
+    "resolveFailed": "ダウンロードできません: {title}",
+    "savedToBrowser": "ブラウザダウンロードに送信しました: {title}",
+    "alreadyQueued": "既にダウンロードキューに入っています",
+    "alreadyDownloaded": "既にダウンロード済みです",
+    "started": "ダウンロードに追加しました: {title}",
+    "enqueued": "{count} 件をダウンロードに追加しました",
+    "status": {
+      "queued": "待機中",
+      "downloading": "ダウンロード中",
+      "done": "完了",
+      "failed": "失敗",
+      "canceled": "キャンセル済み",
+      "interrupted": "中断されました"
+    }
+  },
+  "daily": {
+    "title": "デイリーおすすめ",
+    "tagline": "あなたの音楽の好みに基づいています",
+    "today": "今日",
+    "refresh": "更新",
+    "empty": "デイリーおすすめは利用できません",
+    "needLogin": "ログインしてデイリーおすすめを表示"
+  },
+  "favorites": {
+    "title": "お気に入り",
+    "empty": "まだ何もありません — 探検して気に入ったものを保存してください",
+    "notLogin": "ログインしてお気に入りを表示",
+    "tabs": {
+      "playlist": "プレイリスト",
+      "album": "アルバム",
+      "artist": "アーティスト"
+    }
+  },
+  "library": {
+    "title": "ライブラリ",
+    "empty": "ライブラリは空です",
+    "emptyHint": "音楽フォルダを追加して開始",
+    "noLocalData": "ローカルコンテンツがありません",
+    "noLocalDataHint": "ライブラリに曲を追加すると、ここに集約表示されます",
+    "goLibrary": "ライブラリへ",
+    "addFolder": "フォルダを追加",
+    "scanAll": "フルスキャン",
+    "scanning": "スキャン中…",
+    "scanProgress": "スキャン中 {scanned}/{total}",
+    "scrape": "メタデータをスクレイピング",
+    "scraping": "スクレイピング中…",
+    "scrapeProgress": "スクレイピング中 {scraped}/{total}",
+    "scrapeAction": "メタデータをスクレイピング",
+    "scrapeActionDescription": "上記の設定に従ってディレクトリ内のオーディオファイルのスクレイピングを開始",
+    "scrapeRunningHint": "スクレイピング実行中です。お待ちください",
+    "scrapeScanning": "ファイルをスキャン中…",
+    "cancelScrape": "スクレイピングをキャンセル",
+    "startScrapeFailed": "スクレイピングの開始に失敗しました",
+    "organizing": "ファイルを整理中",
+    "scrapeFolders": "スクレイピングディレクトリ",
+    "scrapeFoldersDescription": "メタデータスクレイピング用のディレクトリを設定。空の場合はスキャンディレクトリを使用",
+    "addScrapeFolder": "フォルダを追加",
+    "noScrapeDirHint": "先にスクレイピングディレクトリを追加してください",
+    "organizeAfterScrape": "スクレイピング後に自動整理",
+    "organizeAfterScrapeDescription": "スクレイピングしたファイルをルールに従って音楽ライブラリディレクトリに移動",
+    "organizeOnly": "整理のみ",
+    "organizeNoTargetHint": "先に整理先ディレクトリを設定してください",
+    "organizeDone": "整理完了: 移動 {moved}、スキップ {skipped}、失敗 {failed}",
+    "organizeFailed": "整理に失敗しました",
+    "organizeTargetDir": "整理先ディレクトリ",
+    "organizeTargetDirPlaceholder": "空の場合は最初のスキャンディレクトリを使用",
+    "organizePattern": "整理パターン",
+    "organizePatternDescription": "変数: {artist} {albumArtist} {album} {genre} {year} {disc} {track} {title} {ext}、/ でディレクトリ階層を指定",
+    "organizePatternEmptyError": "パターンは空にできません",
+    "organizePatternNoTitleError": "パターンには {title} 変数を含める必要があります",
+    "organizePatternNoExtError": "パターンには {ext} 変数を含める必要があります",
+    "organizePatternUnknownVarError": "不明な変数: {{{name}}}",
+    "organizePatternPresets": {
+      "artistAlbum": "アーティスト/アルバム",
+      "artistOnly": "アーティストのみ",
+      "genreArtistAlbum": "ジャンル/アーティスト/アルバム",
+      "yearArtistAlbum": "年/アーティスト/アルバム"
+    },
+    "skipScraped": "スクレイピング済みファイルをスキップ",
+    "skipScrapedDescription": "MusicBrainz ID または ISRC があるファイルはスキップされます",
+    "dataSources": "データソース",
+    "noDataSourceError": "少なくとも1つのデータソースを選択してください",
+    "useMusicBrainz": "MusicBrainz",
+    "useMusicBrainzDescription": "MBID、ISRC、ジャンルなどの信頼できるメタデータソース",
+    "useDeezer": "Deezer",
+    "useDeezerDescription": "カバーアートとアルバムメタデータの補完",
+    "useItunes": "iTunes Search",
+    "useItunesDescription": "カバーアート、ジャンル、トラック番号の補完",
+    "useNetease": "NetEase Cloud",
+    "useNeteaseDescription": "中国語メタデータ、歌詞、カバーアート",
+    "useQQMusic": "QQ Music",
+    "useQQMusicDescription": "中国語メタデータ、歌詞、カバーアート",
+    "useKugou": "Kugou",
+    "useKugouDescription": "中国語メタデータ、歌詞、カバーアート",
+    "useKuwo": "Kuwo",
+    "useKuwoDescription": "中国語メタデータ、歌詞、カバーアート",
+    "useMigu": "Migu",
+    "useMiguDescription": "中国語メタデータとカバーアート",
+    "concurrentWorkers": "同時ワーカー数",
+    "concurrentWorkersDescription": "マルチソース同時クエリのスレッド数。値を高くすると CPU 使用率が上がりますが、クエリは高速化します。",
+    "folders": "音楽ディレクトリ",
+    "foldersDescription": "追加・削除時に曲が自動的に同期されます",
+    "removeFolder": "ディレクトリを削除",
+    "removeFolderConfirm": "このディレクトリを削除すると、ライブラリからその曲が削除されます！",
+    "nestedHint": "フォルダが既存のフォルダとネストされています。スキップしました",
+    "emptyScrapeHint": "スクレイピングディレクトリが設定されていません。スキャンディレクトリを使用します"
+  },
+  "settings": {
+    "title": "設定",
+    "subtitle": "エクスペリエンスをカスタマイズ",
+    "search": "設定を検索…",
+    "group": {
+      "general": "一般",
+      "player": "プレイヤー",
+      "lyric": "歌詞",
+      "externalLyric": "外部歌詞",
+      "appearance": "外観",
+      "hotkeys": "ホットキー設定",
+      "services": "サービス",
+      "mediaSource": "メディアソース",
+      "download": "ダウンロード",
+      "localCache": "ローカルとキャッシュ",
+      "plugins": "プラグインマネージャー",
+      "scraper": "スクレイピングとスキャン",
+      "other": "その他",
+      "about": "について"
+    },
+    "section": {
+      "network": "ネットワークとプロキシ",
+      "aboutApp": "アプリ情報",
+      "specialThanks": "スペシャルサンクス",
+      "developers": "開発者",
+      "community": "コミュニティ",
+      "update": "アップデート",
+      "language": "言語",
+      "playback": "プレイヤー",
+      "playControl": "再生コントロール",
+      "scrobble": "スクロブル",
+      "lyricContent": "歌詞内容",
+      "lyricTTML": "TTML歌詞",
+      "lyricExclude": "メタデータ除去",
+      "lyricGeneral": "内容とスタイル",
+      "lyricDisplay": "表示エフェクト",
+      "lyricSpring": "スプリングアニメーション",
+      "lyricLayout": "レイアウトと透明度",
+      "desktopLyric": "デスクトップ歌詞",
+      "dynamicIsland": "Dynamic Island 歌詞",
+      "taskbarLyric": "タスクバー歌詞",
+      "theme": "テーマ",
+      "appearanceStyle": "外観スタイル",
+      "layout": "レイアウト",
+      "font": "フォント",
+      "media": "メディアコントロール",
+      "device": "出力デバイス",
+      "hotkeys": "ホットキー",
+      "musicSpectrum": "ミュージックスペクトラム",
+      "discord": "Discord RPC",
+      "lastfm": "Last.fm",
+      "externalApi": "外部API",
+      "systemConfig": "システム",
+      "pluginManage": "プラグインをインポート",
+      "pluginsList": "プラグイン管理",
+      "streaming": "ストリーミング",
+      "songCache": "曲キャッシュ",
+      "downloadLocation": "ダウンロード設定",
+      "downloadGeneral": "ダウンロードオプション",
+      "downloadTags": "書き込む内容",
+      "cache": "キャッシュ",
+      "database": "データベース",
+      "library": "ライブラリ",
+      "scanner": "スキャン",
+      "scraper": "スクレイピング",
+      "backupReset": "バックアップとリセット",
+      "debug": "デバッグ",
+      "preset": "OCD設定"
+    },
+    "about": {
+      "checkUpdate": "アップデートを確認",
+      "checking": "確認中",
+      "newVersion": "アップデートがあります",
+      "openLogs": "ログを開く",
+      "officialSite": "公式サイト",
+      "showMore": "協力者をもっと見る",
+      "collapse": "折りたたむ"
+    },
+    "language": {
+      "label": "言語",
+      "description": "表示言語を切り替え"
+    },
+    "autoPlay": {
+      "label": "自動再生",
+      "description": "トラック読み込み後に自動的に再生を開始"
+    },
+    "fuckDjMode": {
+      "label": "Fuck DJ モード",
+      "description": "タイトルに DJ、TikTok、0.9、0.8、viral、car、hot、slow rock を含む曲を自動スキップ"
+    },
+    "uncensorProfanity": {
+      "label": "Fuck ** モード",
+      "description": "歌詞内の伏せられた不適切表現を元の単語に戻す"
+    },
+    "hideVipTag": {
+      "label": "VIPタグを非表示",
+      "description": "曲リストにVIPタグを表示しない"
+    },
+    "hideQualityTag": {
+      "label": "音質タグを非表示",
+      "description": "曲リストに音質タグを表示しない"
+    },
+    "showSubtitle": {
+      "label": "サブタイトルを表示",
+      "description": "曲リストにエイリアスなどのサブタイトル情報を表示"
+    },
+    "rememberLastTrack": {
+      "label": "再生位置を記憶",
+      "description": "起動時に再生位置を復元"
+    },
+    "showLyricInBar": {
+      "label": "再生中に歌詞を表示",
+      "description": "下部プレイヤーバーのアーティスト名を現在の歌詞に置き換え"
+    },
+    "fadeEnabled": {
+      "label": "フェードイン/アウト",
+      "description": "再生・一時停止時のオーディオフェード"
+    },
+    "fadeDuration": {
+      "label": "フェード時間",
+      "description": "フェードイン/アウトの時間（ms）"
+    },
+    "loudnessNormalization": {
+      "label": "ラウドネスノーマライゼーション",
+      "description": "トラック間の音量レベルを自動的に調整"
+    },
+    "songLevel": {
+      "label": "オンライン音質",
+      "description": "オンライントラックの優先音質。実際のレベルはアカウントの対応状況によります",
+      "switchTitle": "音質切替",
+      "switchHint": "アカウントの権限に依存します",
+      "unsupportedHint": "このトラックは音質切替に対応していません",
+      "lq": "標準（LQ）",
+      "sq": "高音質（SQ）",
+      "hq": "最高音質（HQ）",
+      "lossless": "ロスレス",
+      "hi-res": "ハイレゾ"
+    },
+    "outputDevice": {
+      "label": "出力デバイス",
+      "description": "オーディオ出力デバイスを選択",
+      "default": "システムデフォルト"
+    },
+    "pauseOnDeviceSwitch": {
+      "label": "デバイス切替時に一時停止",
+      "description": "出力デバイス切替時（Bluetoothデバイスの切断など）に再生を一時停止"
+    },
+    "timeFormat": {
+      "label": "時刻表示形式",
+      "description": "プレイヤーバーとフルプレイヤーでの時刻表示方法（クリックでクイック切替）",
+      "currentTotal": "経過時間 / 合計",
+      "remainingTotal": "残り時間 / 合計",
+      "currentRemaining": "経過時間 / 残り時間"
+    },
+    "showProgressTooltip": {
+      "label": "プログレスツールチップを表示",
+      "description": "プログレスバーをドラッグ時にツールチップを表示"
+    },
+    "showProgressLyric": {
+      "label": "ツールチップに歌詞を表示",
+      "description": "プログレスツールチップに現在の歌詞行を表示"
+    },
+    "snapToLyric": {
+      "label": "最寄りの歌詞にスナップ",
+      "description": "プログレス調整時に最寄りの歌詞行に自動スナップ"
+    },
+    "transitionStyle": {
+      "label": "トラック切り替え",
+      "description": "トラック切り替え時の遷移アニメーション",
+      "scale": "スケール",
+      "slide": "スライド"
+    },
+    "enableSpectrum": {
+      "label": "スペクトラムを有効化",
+      "description": "リアルタイムスペクトラム解析は CPU 負荷がかかります。低電力デバイスでは無効にすることを検討してください"
+    },
+    "spectrumBarWidth": {
+      "label": "バー幅",
+      "description": "小さい値ほど細く密集したバーになります"
+    },
+    "lyricSourcePreference": {
+      "label": "歌詞ソースの優先順位",
+      "description": "オンライン歌詞マッチング時のプラットフォーム優先度",
+      "auto": "スマート",
+      "qqmusic": "QMを優先",
+      "kugou": "KGを優先",
+      "netease": "NCMを優先",
+      "self": "自身を優先"
+    },
+    "lyricSourceOrder": {
+      "label": "ソース順序",
+      "description": "ソースの優先順位をカスタマイズ",
+      "hint": "自動モード時は上から順に試行し、見つからなければ次にフォールスルー"
+    },
+    "lyricFormatOrder": {
+      "label": "歌詞フォーマット優先順位",
+      "description": "歌詞フォーマットの優先順位をカスタマイズ",
+      "hint": "複数のフォーマットがある場合に最も優先度の高いものを選択 — 例：複数の外部歌詞ファイル、TTML アップグレードなど"
+    },
+    "smartPreferOnline": {
+      "label": "歌詞フォーマット自動アップグレード",
+      "description": "現在のフォーマットが低品質の場合、他のプラットフォームからより高ランクのフォーマットを取得"
+    },
+    "enableOnlineTTMLLyric": {
+      "label": "オンラインTTML歌詞を有効化",
+      "description": "AMLL TTML DB から歌詞を取得。単語単位のタイミング、翻訳、ローマ字表記をサポート"
+    },
+    "amllDbServer": {
+      "label": "AMLL TTML DB サーバー",
+      "description": "URL が正しいことを確認してください。間違っていると歌詞取得に失敗します",
+      "placeholder": "AMLL TTML DB URL を入力",
+      "warning": "これが何をするものかわからない場合は、デフォルトのままにしてください",
+      "hint": "URL は有効で、必要なプレースホルダーを含んでいる必要があります",
+      "placeholders": "%p はプラットフォームパス、%s は曲ID",
+      "docsHint": "詳細は",
+      "invalid": "無効なURLです — 必要なプレースホルダーがありません"
+    },
+    "enableExcludeLyrics": {
+      "label": "歌詞除外を有効化",
+      "description": "歌詞の先頭・末尾からメタデータ行（作詞家、作曲家、編曲者、プロデューサーなど）を除去"
+    },
+    "excludeLyricsRules": {
+      "label": "カスタムルール",
+      "description": "デフォルトルールに加えてキーワードと正規表現パターンを追加",
+      "button": "管理",
+      "hint": "ユーザールールはデフォルトルールとマージされます",
+      "tabKeywords": "キーワード",
+      "tabRegexes": "正規表現パターン",
+      "keywordHint": "キーワードフィルター — コロンより前の内容にマッチ",
+      "keywordPlaceholder": "キーワードを入力",
+      "regexHint": "JavaScript正規表現 — 大文字小文字を区別しないフラグでコンパイル",
+      "regexPlaceholder": "正規表現パターンを入力",
+      "add": "追加",
+      "remove": "削除",
+      "empty": "ルールが設定されていません",
+      "clear": "現在のリストをクリア",
+      "duplicate": "ルールは既に存在します",
+      "invalidRegex": "無効な正規表現パターンです"
+    },
+    "hotkeys": {
+      "label": "ホットキー",
+      "description": "アプリ内およびグローバルキーボードショートカットを管理",
+      "globalEnabled": "グローバルショートカットを有効化",
+      "globalEnabledHint": "アプリがフォーカスされていないときでも機能します。OSや他のアプリと競合する可能性があります。",
+      "colAction": "アクション",
+      "colInApp": "アプリ内",
+      "colGlobal": "グローバル",
+      "unbound": "未割り当て",
+      "recording": "ショートカットを押してください",
+      "resetRow": "デフォルトにリセット",
+      "resetAll": "すべてリセット",
+      "resetAllHint": "すべてのアクションのショートカットをデフォルトに戻す",
+      "confirmResetTitle": "デフォルトにリセットしますか？",
+      "confirmResetDesc": "すべてのショートカットがリセットされ、カスタマイズは上書きされます！",
+      "duplicateWith": "\"{action}\" と競合しています",
+      "crossScopeWith": "\"{action}\" のアプリ内バインディングと同じです。2回実行されます",
+      "osOccupied": "既にOSまたは別のアプリで使用されています",
+      "osDuplicate": "既に別のグローバルショートカットで使用されています",
+      "invalid": "無効なキーの組み合わせです",
+      "groups": {
+        "player": "再生",
+        "window": "ウィンドウ",
+        "view": "ビュー"
+      },
+      "actions": {
+        "togglePlay": "再生 / 一時停止",
+        "next": "次のトラック",
+        "prev": "前のトラック",
+        "seekForward": "5秒進む",
+        "seekBack": "5秒戻る",
+        "volumeUp": "音量上げ",
+        "volumeDown": "音量下げ",
+        "cycleRepeat": "リピートモード切替",
+        "toggleShuffle": "シャッフル切替",
+        "toggleDesktopLyric": "デスクトップ歌詞切替",
+        "toggleDynamicIsland": "Dynamic Island 切替",
+        "toggleTaskbarLyric": "タスクバー歌詞切替",
+        "openPlayer": "プレイヤービューを開く",
+        "closePlayer": "プレイヤービューを閉じる",
+        "togglePlaylist": "プレイリスト表示/非表示",
+        "openSearch": "検索を開く"
+      }
+    },
+    "engine": {
+      "label": "歌詞エンジン",
+      "description": "歌詞のレンダリングとスクロールに使用するエンジンタイプを選択"
+    },
+    "lyricEngine": {
+      "physics": "デフォルト",
+      "amll": "AMLL"
+    },
+    "confirm": {
+      "highResourceTitle": "リソース消費の大きい機能",
+      "highResourceContent": "有効にするとメモリとCPU使用率が著しく増加し、低スペックデバイスではカクつきが生じる可能性があります。それでも有効にしますか？",
+      "highParallelismTitle": "高並行スキャン",
+      "highParallelismContent": "極端な並行処理はシステムの遅延やメモリ不足エラーを引き起こす可能性があります。続行しますか？"
+    },
+    "scannerParallelism": {
+      "label": "スキャン並行数",
+      "description": "オーディオファイルスキャン時の同時スレッド数。0は自動"
+    },
+    "useAMSpring": {
+      "label": "スプリングアニメーションデバッグスイッチ",
+      "description": "applemusic-like-lyrics のスプリングバウンスとアクティブラインのスケーリング効果を有効化"
+    },
+    "amllVerticalSpringMass": {
+      "label": "縦スプリングの質量",
+      "description": "縦スクロールスプリング物理の質量。大きいと慣性が増加"
+    },
+    "amllVerticalSpringDamping": {
+      "label": "縦スプリングの減衰",
+      "description": "縦スクロールスプリング物理の減衰。大きいと振動が減少し速く収束"
+    },
+    "amllVerticalSpringStiffness": {
+      "label": "縦スプリングの剛性",
+      "description": "縦スクロールスプリング物理の剛性。大きいとより強く引き寄せられ速く跳ね返る"
+    },
+    "amllVerticalSpringSoft": {
+      "label": "縦ソフトスプリング",
+      "description": "縦スクロールにソフトなスプリングプロファイルを強制"
+    },
+    "amllScaleSpringMass": {
+      "label": "スケールスプリングの質量",
+      "description": "アクティブラインスケールアニメーションの質量。大きいとスケールバウンスの慣性が増加"
+    },
+    "amllScaleSpringDamping": {
+      "label": "スケールスプリングの減衰",
+      "description": "アクティブラインスケールアニメーションの減衰。大きいとスケールのジッターが減少し速く収束"
+    },
+    "amllScaleSpringStiffness": {
+      "label": "スケールスプリングの剛性",
+      "description": "アクティブラインスケールアニメーションの剛性。大きいと応答とスケーリングが速くなる"
+    },
+    "amllScaleSpringSoft": {
+      "label": "スケールソフトスプリング",
+      "description": "アクティブラインスケールアニメーションにソフトなスプリングプロファイルを強制"
+    },
+    "autoCenterCover": {
+      "label": "カバーを自動中央配置",
+      "description": "歌詞がない場合にカバーを中央に配置し歌詞エリアを非表示"
+    },
+    "adaptiveFontSize": {
+      "label": "適応的フォントサイズ",
+      "description": "ウィンドウサイズに応じて歌詞フォントサイズを自動調整"
+    },
+    "fontSize": {
+      "label": "フォントサイズ",
+      "description": "適応がオフの場合に有効"
+    },
+    "fontWeight": {
+      "label": "フォントウェイト",
+      "description": "歌詞テキストの太さ"
+    },
+    "lyricBlendMode": {
+      "label": "歌詞ブレンドモード",
+      "description": "歌詞と背景のブレンド方法を制御",
+      "normal": "ノーマル",
+      "screen": "スクリーン",
+      "plusLighter": "Plus Lighter"
+    },
+    "followCoverColor": {
+      "label": "カバー色に追従",
+      "description": "歌詞の色が現在のカバーアートに追従"
+    },
+    "autoImmersive": {
+      "label": "自動イマーシブモード",
+      "description": "マウスがアイドル状態またはウィンドウ外にあるとき、上下バーとカーソルを非表示"
+    },
+    "showTranslation": {
+      "label": "翻訳を表示",
+      "description": "翻訳歌詞を表示"
+    },
+    "showRomanization": {
+      "label": "ローマ字表記を表示",
+      "description": "ローマ字歌詞を表示"
+    },
+    "amllShowLineRomanization": {
+      "label": "行ローマ字表記を表示",
+      "description": "各行のローマ字歌詞を表示"
+    },
+    "amllShowWordRomanization": {
+      "label": "単語ローマ字表記を表示",
+      "description": "単語単位歌詞の各単語のローマ字表記を表示"
+    },
+    "enableWordHighlight": {
+      "label": "単語ハイライト",
+      "description": "単語単位の歌詞ハイライト進行を表示"
+    },
+    "enableFloatAnimation": {
+      "label": "単語フロート",
+      "description": "アクティブな単語が少し浮き上がる"
+    },
+    "enableEmphasizeEffect": {
+      "label": "強調エフェクト",
+      "description": "長い音節のスケールとグローアニメーション"
+    },
+    "enableBlur": {
+      "label": "行ブラー",
+      "description": "アクティブラインから離れた行を徐々にブラー"
+    },
+    "hidePassedLines": {
+      "label": "通過した行を非表示",
+      "description": "再生済みの歌詞行を自動非表示"
+    },
+    "springPreset": {
+      "label": "スプリングプリセット",
+      "description": "歌詞スクロールスプリングアニメーションの物理プリセット",
+      "default": "デフォルト",
+      "smooth": "より滑らか",
+      "responsive": "高速応答",
+      "jello": "ジェロ",
+      "heavy": "重く遅い",
+      "noBounce": "バウンスなし",
+      "custom": "カスタム"
+    },
+    "springMass": {
+      "label": "質量",
+      "description": "大きい値ほど動きが鈍くなり慣性が増加"
+    },
+    "springDamping": {
+      "label": "減衰",
+      "description": "大きい値ほど振動の減衰が速く、より滑らかな動きに"
+    },
+    "springStiffness": {
+      "label": "剛性",
+      "description": "大きい値ほどスプリングの戻りが速くなる"
+    },
+    "alignPosition": {
+      "label": "配置位置",
+      "description": "アクティブラインの垂直位置（0 = 上端、1 = 下端）"
+    },
+    "wordFadeWidth": {
+      "label": "フェード幅",
+      "description": "単語ハイライトマスクのグラデーション幅比率"
+    },
+    "inactiveAlpha": {
+      "label": "非アクティブ透明度",
+      "description": "非アクティブ行の基本透明度"
+    },
+    "desktopLyricEnabled": {
+      "label": "デスクトップ歌詞を有効化",
+      "description": "デスクトップにフローティング歌詞ウィンドウを表示"
+    },
+    "desktopLyricFontSize": {
+      "label": "フォントサイズ",
+      "description": "デスクトップ歌詞のテキストサイズ（px）"
+    },
+    "desktopLyricFontWeight": {
+      "label": "フォントウェイト",
+      "description": "デスクトップ歌詞のテキストの太さ"
+    },
+    "desktopLyricShowTranslation": {
+      "label": "翻訳を表示",
+      "description": "デスクトップ歌詞に翻訳を表示"
+    },
+    "desktopLyricDoubleLine": {
+      "label": "2行表示",
+      "description": "現在行と次行を同時に表示"
+    },
+    "desktopLyricAlign": {
+      "label": "配置",
+      "description": "歌詞テキストの水平配置",
+      "left": "左",
+      "center": "中央",
+      "right": "右",
+      "justify": "両端"
+    },
+    "desktopLyricWordByWord": {
+      "label": "単語単位",
+      "description": "単語ごとにハイライト進行を表示"
+    },
+    "desktopLyricAutoGenerateWordByWord": {
+      "label": "単語エフェクト自動生成",
+      "description": "オフの場合、実際の単語単位歌詞のみ適用"
+    },
+    "desktopLyricPlayedColor": {
+      "label": "再生済みの色",
+      "description": "再生済み歌詞テキストの色"
+    },
+    "desktopLyricUnplayedColor": {
+      "label": "未再生の色",
+      "description": "未再生歌詞テキストの色"
+    },
+    "desktopLyricStrokeColor": {
+      "label": "ストロークの色",
+      "description": "歌詞テキストの輪郭色。透明でストロークオフ"
+    },
+    "desktopLyricBackgroundMask": {
+      "label": "テキスト背景マスク",
+      "description": "読みやすさのため、各行の歌詞の後ろに半透明の背景ブロックを追加"
+    },
+    "desktopLyricBackgroundMaskColor": {
+      "label": "マスクの色",
+      "description": "テキスト背景マスクの色と透明度"
+    },
+    "desktopLyricAlwaysShowSongInfo": {
+      "label": "常に曲情報を表示",
+      "description": "常にトラックタイトルとアーティストを表示。オフの場合はホバー時のみ表示"
+    },
+    "desktopLyricAnimation": {
+      "label": "行トランジション",
+      "description": "歌詞行切替時のスライドイン/スライドアウトアニメーションを有効化"
+    },
+    "desktopLyricLimitBounds": {
+      "label": "画面内に制限",
+      "description": "ドラッグ時にウィンドウ位置を現在のディスプレイの作業領域内に制限"
+    },
+    "desktopLyricAlwaysOnTop": {
+      "label": "常に前面",
+      "description": "デスクトップ歌詞ウィンドウを他のウィンドウより前面に維持"
+    },
+    "desktopLyricLocked": {
+      "label": "ウィンドウをロック",
+      "description": "ウィンドウをクリックスルーおよびドラッグ不可にする"
+    },
+    "desktopLyricUseCSSDrag": {
+      "label": "CSSドラッグを有効化",
+      "description": "CSSベースのドラッグを有効化。Wayland環境で推奨"
+    },
+    "dynamicIslandEnabled": {
+      "label": "Dynamic Island を有効化",
+      "description": "画面上部にコンパクトなフローティング歌詞ウィンドウを表示。どこにでもドラッグ可能"
+    },
+    "dynamicIslandScale": {
+      "label": "スケール",
+      "description": "ウィンドウの高さとフォントサイズを同時にスケール。100%がデフォルトサイズ"
+    },
+    "dynamicIslandFontWeight": {
+      "label": "フォントウェイト",
+      "description": "Dynamic Island の歌詞テキストの太さ"
+    },
+    "dynamicIslandWordByWord": {
+      "label": "単語ハイライト",
+      "description": "単語単位のプログレッシブハイライトを表示"
+    },
+    "dynamicIslandDoubleLine": {
+      "label": "常に2行",
+      "description": "翻訳がない場合でも2行レイアウトを維持"
+    },
+    "dynamicIslandShowTranslation": {
+      "label": "翻訳を表示",
+      "description": "利用可能な場合、2行目に翻訳を表示"
+    },
+    "dynamicIslandPlayedColor": {
+      "label": "再生済みの色",
+      "description": "歌われた歌詞テキストの色"
+    },
+    "dynamicIslandUnplayedColor": {
+      "label": "未再生の色",
+      "description": "未再生の歌詞テキストとアーティスト名の色"
+    },
+    "dynamicIslandBackgroundColor": {
+      "label": "背景色",
+      "description": "Dynamic Island の背景色と透明度"
+    },
+    "dynamicIslandAlwaysOnTop": {
+      "label": "常に前面",
+      "description": "Dynamic Island ウィンドウを他のウィンドウより前面に維持"
+    },
+    "dynamicIslandNotchFusion": {
+      "label": "ノッチフュージョン",
+      "description": "物理的なMacBookノッチからアイランドを拡張"
+    },
+    "dynamicIslandSnapCentered": {
+      "label": "スナップ時に中央",
+      "description": "オフの場合、上部にスナップするとドラッグした水平位置を維持"
+    },
+    "dynamicIslandNonOcclusive": {
+      "label": "非排他モード",
+      "description": "クリックスルーウィンドウ。ホバー時に非表示"
+    },
+    "dynamicIslandUseCSSDrag": {
+      "label": "CSSドラッグを有効化",
+      "description": "CSSベースのドラッグを有効化。Wayland環境で推奨"
+    },
+    "taskbarLyricEnabled": {
+      "label": "タスクバー歌詞を有効化",
+      "description": "Windowsタスクバーに歌詞を埋め込む"
+    },
+    "taskbarLyricPosition": {
+      "label": "位置",
+      "description": "タスクバー内の歌詞位置。自動はタスクバーの配置に基づく",
+      "auto": "自動",
+      "left": "左",
+      "right": "右"
+    },
+    "taskbarLyricAutoMaxWidth": {
+      "label": "自動幅",
+      "description": "有効時は利用可能なタスクバー領域いっぱいに表示。オフの場合は以下の最大幅に制限"
+    },
+    "taskbarLyricMaxWidth": {
+      "label": "最大幅",
+      "description": "利用可能な領域で制限され、圧迫を避ける"
+    },
+    "taskbarLyricLeftMargin": {
+      "label": "左マージン",
+      "description": "歌詞と利用可能領域の左端との間隔。他のタスクバーウィジェットを避けるため"
+    },
+    "taskbarLyricRightMargin": {
+      "label": "右マージン",
+      "description": "歌詞と利用可能領域の右端との間隔。他のタスクバーウィジェットを避けるため"
+    },
+    "taskbarLyricColorMode": {
+      "label": "カラーモード",
+      "description": "タスクバー歌詞のテキストと背景の配色",
+      "taskbar": "タスクバーに合わせる",
+      "taskbarInverse": "タスクバーに合わせる（反転）",
+      "light": "ライト",
+      "dark": "ダーク"
+    },
+    "taskbarLyricFontSize": {
+      "label": "フォントサイズ",
+      "description": "タスクバー歌詞のテキストサイズ（px）"
+    },
+    "taskbarLyricShowCover": {
+      "label": "カバーを表示",
+      "description": "歌詞の横に現在のトラックのカバーサムネイルを表示"
+    },
+    "taskbarLyricDoubleLine": {
+      "label": "2行表示",
+      "description": "現在の歌詞を翻訳または次行と一緒に表示"
+    },
+    "taskbarLyricShowTranslation": {
+      "label": "翻訳を表示",
+      "description": "2行モードで翻訳を優先表示。ない場合は次行を表示"
+    },
+    "taskbarLyricWordByWord": {
+      "label": "単語単位",
+      "description": "単語ごとにハイライト進行を表示"
+    },
+    "playerBgType": {
+      "label": "プレイヤー背景",
+      "description": "フルスクリーンプレイヤーの背景タイプ",
+      "blur": "ブラー",
+      "solid": "単色",
+      "animation": "フルイド"
+    },
+    "playerBgFlowSpeed": {
+      "label": "流速",
+      "description": "フルイド背景のアニメーション流速"
+    },
+    "playerBgRenderScale": {
+      "label": "レンダリングスケール",
+      "description": "高い値ほどエッジのジャギーが減り滑らかに見えますが、GPU負荷が増加します"
+    },
+    "playerBgFps": {
+      "label": "フレームレート",
+      "description": "フルイド背景のレンダリングフレームレート。高いほど滑らかですが負荷も増加"
+    },
+    "playerBgFreezeOnPause": {
+      "label": "一時停止時にフリーズ",
+      "description": "再生一時停止中にフルイド背景アニメーションを停止"
+    },
+    "playerBgBeat": {
+      "label": "ビートパルス",
+      "description": "フルイド背景を音楽の低周波ビートに合わせてパルスさせる"
+    },
+    "coverLayout": {
+      "label": "カバーレイアウト",
+      "description": "フルスクリーンプレイヤーでのカバー表示",
+      "default": "デフォルト",
+      "fullscreen": "全画面"
+    },
+    "themeMode": {
+      "label": "テーマモード",
+      "description": "アプリケーションのカラーテーマ",
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "システム"
+    },
+    "themeSource": {
+      "label": "テーマカラーソース",
+      "description": "テーマカラーの決定方法",
+      "default": "デフォルトカラー",
+      "custom": "カスタムカラー",
+      "cover": "カバー/背景から",
+      "solid": "テーマカラーなし"
+    },
+    "customColor": {
+      "label": "カスタムテーマカラー",
+      "description": "カスタムソースで使用するプライマリカラー"
+    },
+    "globalTint": {
+      "label": "グローバルティント",
+      "description": "テーマカラーのティントをインターフェース全体に適用"
+    },
+    "appearanceStyle": {
+      "label": "外観スタイル",
+      "description": "アプリケーション背景のレンダリング方法",
+      "solid": "単色",
+      "image": "カスタム画像"
+    },
+    "backgroundImage": {
+      "label": "背景画像",
+      "description": "ローカル画像をアプリの背景として選択",
+      "select": "画像を選択",
+      "replace": "置き換え",
+      "clear": "クリア"
+    },
+    "backgroundBlur": {
+      "label": "背景ブラー",
+      "description": "背景画像に適用するガウシアンブラー"
+    },
+    "backgroundDim": {
+      "label": "暗転オーバーレイ",
+      "description": "前景の読みやすさのための黒オーバーレイの透明度"
+    },
+    "backgroundScale": {
+      "label": "スケール",
+      "description": "背景画像のスケール係数"
+    },
+    "layoutMode": {
+      "label": "レイアウトモード",
+      "description": "アプリケーションのレイアウトスタイル",
+      "default": "クラシック",
+      "sidebarFull": "没入型サイドバー",
+      "floating": "ダイナミックフローティング"
+    },
+    "routeTransition": {
+      "label": "ページトランジション",
+      "description": "ページ切替時のアニメーション効果",
+      "none": "なし",
+      "fade": "フェード",
+      "slide": "スライド",
+      "zoom": "ズーム"
+    },
+    "sidebarCollapsed": {
+      "label": "サイドバーを折りたたむ",
+      "description": "サイドバーをアイコンのみ表示に折りたたむ"
+    },
+    "sidebarNavStyle": {
+      "label": "ナビハイライトスタイル",
+      "description": "サイドバーナビゲーションハイライトインジケーターのアニメーションスタイルを切替",
+      "default": "静的",
+      "animated": "スライディング"
+    },
+    "sidebarPlaylistCover": {
+      "label": "プレイリストカバーを表示",
+      "description": "サイドバーにデフォルトアイコンの代わりにプレイリストカバーを表示"
+    },
+    "showQualitySwitch": {
+      "label": "クイック音質切替を表示",
+      "description": "プレイヤーバーにオンライン音質タグを表示してクイック切替"
+    },
+    "toastStyle": {
+      "label": "トーストメッセージスタイル",
+      "description": "通知メッセージの表示スタイル",
+      "default": "モダン",
+      "classic": "クラシック"
+    },
+    "fontConfig": {
+      "label": "フォント設定",
+      "description": "アプリ、歌詞、外部歌詞ウィンドウのフォントを設定",
+      "title": "フォント設定",
+      "loading": "システムフォントを読み込み中",
+      "placeholder": "フォント名を入力",
+      "useSystem": "システムデフォルト",
+      "useGlobal": "グローバルに従う",
+      "modeLabel": "入力方法",
+      "modeHint": "以下のすべてのフィールドでこの方法を使用",
+      "modeSelect": "手動選択",
+      "modeCustom": "カスタムフォント",
+      "resetRow": "デフォルトにリセット",
+      "fieldLabel": "{name} フォント",
+      "groups": {
+        "general": "一般",
+        "appLyric": "歌詞フォント",
+        "externalLyric": "外部歌詞ウィンドウ"
+      },
+      "fields": {
+        "global": "グローバル",
+        "lyric": "歌詞",
+        "desktopLyric": "デスクトップ歌詞",
+        "dynamicIsland": "Dynamic Island 歌詞",
+        "taskbarLyric": "タスクバー歌詞"
+      }
+    },
+    "systemMediaControls": {
+      "label": "システムメディアコントロール",
+      "description": "システムメディアコントロールに再生情報を表示"
+    },
+    "discordEnabled": {
+      "label": "Discordステータス",
+      "description": "Discordに再生ステータスを表示"
+    },
+    "discordShowWhenPaused": {
+      "label": "一時停止中も表示",
+      "description": "一時停止中もDiscordステータスを表示し続ける"
+    },
+    "discordDisplayMode": {
+      "label": "簡易ステータス表示",
+      "description": "詳細パネルが開いていないときにユーザー名の下に表示するテキスト",
+      "name": "アプリ名",
+      "details": "曲名",
+      "state": "アーティスト名"
+    },
+    "lastfmEnabled": {
+      "label": "Last.fm",
+      "description": "Last.fmアカウントを接続してスクロブルとお気に入り同期"
+    },
+    "lastfmScrobble": {
+      "label": "スクロブリング",
+      "description": "一定時間再生後にLast.fmに再生記録を送信"
+    },
+    "lastfmNowPlaying": {
+      "label": "Now Playing",
+      "description": "現在再生中のトラックをLast.fmに送信"
+    },
+    "lastfmLoveSync": {
+      "label": "お気に入り同期",
+      "description": "いいねをLast.fmのLove/Unloveにミラーリング"
+    },
+    "lastfm": {
+      "connect": "アカウントを接続",
+      "connecting": "ブラウザで認証を完了してください…",
+      "cancel": "キャンセル",
+      "disconnect": "切断",
+      "connectedAs": "接続済み: {name}",
+      "notConnected": "Last.fmアカウントが接続されていません",
+      "connectHint": "接続をクリックするとブラウザで認証ページが開きます",
+      "toast": {
+        "connected": "Last.fmに接続しました: {name}",
+        "timeout": "認証がタイムアウトしました。もう一度お試しください",
+        "canceled": "認証がキャンセルされました",
+        "failed": "接続に失敗しました。もう一度お試しください",
+        "disconnected": "Last.fmから切断しました"
+      }
+    },
+    "rememberWindowState": {
+      "label": "ウィンドウ状態を記憶",
+      "description": "次回起動時にウィンドウのサイズ、位置、最大化状態を復元"
+    },
+    "autoCheckUpdate": {
+      "label": "アップデートを自動確認",
+      "description": "起動時および定期的にバックグラウンドで新しいバージョンを確認"
+    },
+    "checkUpdate": {
+      "label": "アップデートを確認",
+      "description": "今すぐ新しいバージョンを確認"
+    },
+    "showPerformanceMonitor": {
+      "label": "パフォーマンスモニター",
+      "description": "FPS/フレーム時間/メモリを表示するフローティングウィジェット。クリックで切替"
+    },
+    "taskbarProgress": {
+      "label": "タスクバープログレス",
+      "description": "タスクバーアイコンに再生進行状況を表示"
+    },
+    "taskbarThumbnailCover": {
+      "label": "タスクバーカバープレビュー",
+      "description": "タスクバーホバー時のウィンドウプレビューにアルバムカバーを使用。オフにするとシステムのライブウィンドウを表示"
+    },
+    "networkProxyProtocol": {
+      "label": "ネットワークプロキシ",
+      "description": "オンラインリクエスト用の手動プロキシを設定",
+      "off": "プロキシオフ",
+      "http": "HTTPプロキシ",
+      "https": "HTTPSプロキシ",
+      "socks5": "SOCKS5プロキシ"
+    },
+    "networkProxyHost": {
+      "label": "プロキシサーバー",
+      "description": "プロキシサーバーのアドレスを入力（例: 127.0.0.1）",
+      "placeholder": "127.0.0.1"
+    },
+    "networkProxyPort": {
+      "label": "プロキシポート",
+      "description": "プロキシサーバーのポートを入力（例: 7890）"
+    },
+    "networkProxyTest": {
+      "label": "プロキシをテスト",
+      "description": "プロキシ設定が正常に接続できるかテスト",
+      "success": "プロキシは利用可能です",
+      "failed": "プロキシのテストに失敗しました。設定を確認してください"
+    },
+    "neteaseRealIp": {
+      "label": "Real IP を使用",
+      "description": "海外や一部の地域で制限される場合があります。有効にすると解決を試みます"
+    },
+    "neteaseScrobbleEnabled": {
+      "label": "スクロブルを有効化",
+      "description": "トラックが十分に再生された後、自動的にNCMに再生記録を報告"
+    },
+    "neteaseScrobbleMode": {
+      "label": "NCMスクロブル方式",
+      "description": "自動NCM再生記録に使用する報告インターフェースを選択",
+      "legacy": "従来のログAPI",
+      "ncbl": "NCBL暗号化API"
+    },
+    "orpheusProtocol": {
+      "label": "Orpheusプロトコルでアプリを起動",
+      "description": "このプロトコルは通常、Webプレイヤーが公式クライアントを起動するために使用します。有効にすると公式クライアントの起動が妨げられる可能性があります"
+    },
+    "streamingEnabled": {
+      "label": "ストリーミングを有効化",
+      "description": "無効にすると、サイドバーからストリーミングエントリが非表示になります"
+    },
+    "externalApiEnabled": {
+      "label": "外部制御を許可",
+      "description": "外部アプリがAPIを介してプレイヤーを制御できるようにする"
+    },
+    "externalApiWs": {
+      "label": "WebSocketを有効化",
+      "description": "外部アプリがイベントの購読とコマンドの送信を行えるようにする"
+    },
+    "externalApiAllowLan": {
+      "label": "LANアクセスを許可",
+      "description": "ネットワーク上の他のデバイスがこのデバイスのIPを介してAPIにアクセス可能。オフの場合はこのデバイスのみ接続可能"
+    },
+    "externalApiPort": {
+      "label": "リスンポート",
+      "description": "外部APIのTCPポート（1024–65535）"
+    },
+    "externalApiPanel": {
+      "label": "",
+      "description": ""
+    },
+    "externalApi": {
+      "restart": "サーバーを再起動",
+      "restartHint": "ポートまたはLANアクセスを変更した場合は再起動が必要",
+      "restarted": "サーバーを再起動しました",
+      "portInUse": "ポート {port} は既に使用中です。別のポートを選択してください",
+      "pendingChange": "再起動が保留中",
+      "pendingChangeHint": "設定が変更されました。サーバーを再起動して適用",
+      "endpoint": "アドレス",
+      "stopped": "サーバーは実行中ではありません"
+    },
+    "closeAction": {
+      "label": "閉じるボタンの動作",
+      "description": "タイトルバーの閉じるボタンがクリックされたときの動作",
+      "quit": "アプリケーションを終了",
+      "hide": "トレイに最小化"
+    },
+    "rememberCloseChoice": {
+      "label": "閉じる選択を記憶",
+      "description": "オフの場合、閉じるボタンをクリックするたびに確認"
+    },
+    "closeDialog": {
+      "title": "ウィンドウを閉じる",
+      "description": "今回の動作を選択",
+      "remember": "選択を記憶し、次回から確認しない",
+      "quit": "アプリケーションを終了",
+      "hide": "トレイに最小化"
+    },
+    "storageManager": {
+      "label": "データ管理",
+      "description": "設定のバックアップ、復元、リセット、または全データのクリア"
+    },
+    "backup": {
+      "label": "設定をバックアップ",
+      "description": "現在の設定をバックアップファイルにエクスポート",
+      "button": "バックアップ",
+      "exported": "バックアップを保存しました",
+      "failed": "バックアップに失敗しました"
+    },
+    "restore": {
+      "label": "設定を復元",
+      "description": "バックアップファイルから設定をインポート。現在の設定は上書きされます。",
+      "button": "復元",
+      "confirmTitle": "設定を復元して再起動しますか？",
+      "confirmDesc": "現在の設定はバックアップファイルで上書きされ、アプリはすぐに再起動して適用されます。ローカルライブラリ、プレイリスト、再生履歴は影響を受けません。",
+      "invalid": "無効なバックアップファイルです",
+      "failed": "復元に失敗しました"
+    },
+    "resetSettings": {
+      "label": "設定をリセット",
+      "description": "すべての設定をデフォルトに戻します。プレイリストとローカルライブラリは影響を受けません。",
+      "button": "リセット",
+      "confirmTitle": "設定をリセットしますか？",
+      "confirmDesc": "すべての設定がデフォルトに戻ります。この操作は元に戻せません。",
+      "done": "設定がリセットされました"
+    },
+    "resetAll": {
+      "label": "すべてのデータをクリア",
+      "description": "すべてのプレイリスト、ログイン状態、キャッシュを消去し、設定をリセット",
+      "button": "クリア",
+      "confirmTitle": "すべてのデータをクリアしますか？",
+      "confirmDesc": "すべてのプレイリスト、ログイン状態、キャッシュが消去され、設定がリセットされます。この操作は元に戻せません。",
+      "done": "すべてのデータがクリアされました"
+    },
+    "plugins": {
+      "securityWarningTitle": "インストール前のセキュリティ注意事項",
+      "securityWarning": "プラグインはサードパーティコードです。アプリは可能な限りサンドボックス化しますが、リスクを完全に排除することはできません — 悪意のあるプラグインがデータにアクセスしたり危険な操作を行う可能性があります。信頼できるソースからのみプラグインをインストールしてください。",
+      "hint": "ローカルファイルまたはURLからインストール",
+      "hintDetail": "プラグインでアプリを拡張。詳細は",
+      "docs": "プラグインドキュメント",
+      "importLocal": "ローカル",
+      "importFromUrl": "URLから",
+      "importUrlTitle": "URLからプラグインをインストール",
+      "importUrlPlaceholder": ".js スクリプトの https:// リンクを貼り付け",
+      "importUrlSubmit": "インストール",
+      "importUrlInvalid": "有効なhttpまたはhttps URLを入力してください",
+      "market": "プラグインマーケット",
+      "install": "インストール",
+      "installed": "インストール済み",
+      "marketEmpty": "利用可能なプラグインはありません",
+      "marketError": "読み込みに失敗しました",
+      "publishHint": "プラグインを作成しましたか？",
+      "publishAction": "公開",
+      "importSuccess": "プラグインをインポートしました",
+      "importFailed": "プラグインのインポートに失敗しました",
+      "empty": "プラグインがインストールされていません",
+      "emptyHint": "ローカルファイルまたはURLからプラグインをインストールして拡張機能を有効化",
+      "enable": "有効化",
+      "enabled": "有効",
+      "uninstall": "アンインストール",
+      "configSubtitle": "プラグイン設定",
+      "uninstallConfirmTitle": "プラグインをアンインストール",
+      "uninstallConfirm": "「{name}」をアンインストールしてもよろしいですか？この操作は元に戻せません。",
+      "uninstallSuccess": "プラグインをアンインストールしました",
+      "uninstallFailed": "アンインストールに失敗しました",
+      "by": "作成者",
+      "sources": "ソース",
+      "pendingUpdate": "更新",
+      "noChangelog": "リリースノートはありません",
+      "openUpdateUrl": "更新ページを開く",
+      "checkUpdate": "更新を確認",
+      "checkUpdateFailed": "更新の確認に失敗しました",
+      "updateFound": "新しいバージョンがあります",
+      "updateLatest": "既に最新版です",
+      "update": "更新",
+      "updateSuccess": "プラグインを更新しました",
+      "updateFailed": "更新に失敗しました。「更新ページを開く」から手動でインストールしてください",
+      "status": {
+        "ready": "準備完了",
+        "loading": "読み込み中",
+        "error": "エラー",
+        "disabled": "無効",
+        "unloaded": "アンロード済み"
+      },
+      "sectionSource": "ソースプラグイン",
+      "sectionControl": "コントロールプラグイン",
+      "detail": {
+        "title": "プラグイン詳細",
+        "intro": "概要",
+        "grants": "権限",
+        "contributes": "機能",
+        "info": "情報",
+        "noDescription": "説明なし",
+        "grantNone": "このプラグインは権限を宣言していません",
+        "autoGranted": "自動付与",
+        "sources": "ソース",
+        "events": "イベント",
+        "controls": "再生制御",
+        "controlsYes": "あり",
+        "settingsCount": "設定",
+        "menus": "メニュー項目",
+        "id": "ID",
+        "author": "作成者",
+        "apiLevel": "APIレベル",
+        "installed": "インストール日",
+        "updated": "更新日",
+        "homepage": "ホームページ"
+      },
+      "grant": {
+        "network": { "label": "ネットワーク", "desc": "ネットワークリクエストを実行できます" },
+        "control": { "label": "制御", "desc": "プレイヤーを制御できます" },
+        "ui": { "label": "インターフェース", "desc": "アプリのインターフェースを拡張または変更できます" }
+      }
+    },
+    "pluginManager": {
+      "label": "プラグインマネージャー",
+      "description": "拡張スクリプトのインポート、有効化、アンインストール"
+    },
+    "enableLocalTTMLOverride": {
+      "label": "ローカルTTMLライブラリを有効化",
+      "description": "選択したフォルダ内の .ttml を曲のメタデータでマッチング。見つかった場合はオンライン歌詞より優先"
+    },
+    "localLyricRepoDir": {
+      "label": "ライブラリフォルダ",
+      "description": "TTML歌詞を含むフォルダを選択。アプリはメタデータで検索",
+      "choose": "選択",
+      "clear": "クリア",
+      "unset": "未設定"
+    },
+    "fileCacheManager": {
+      "label": "キャッシュマネージャー",
+      "description": "キャッシュ使用量を確認してクリア"
+    },
+    "dbCacheManager": {
+      "label": "データベースマネージャー",
+      "description": "データベース使用量を確認してクリア"
+    },
+    "cacheDir": {
+      "label": "キャッシュディレクトリ",
+      "open": "ファイルマネージャーで開く",
+      "change": "変更",
+      "reset": "リセット",
+      "hint": "カバー、アーティストアバター、背景画像はこのフォルダに保存されます。切り替えると古いキャッシュは消去されます。新しい場所は空のフォルダである必要があります。",
+      "changedHint": "キャッシュディレクトリを切り替えました",
+      "notEmpty": "選択したフォルダは空ではありません。空のフォルダを選択してください。",
+      "switchConfirmTitle": "キャッシュディレクトリを切り替えますか？",
+      "switchConfirmDesc": "切り替え前に現在のカバー/アーティスト/背景キャッシュはクリアされ、新しい場所は空のフォルダである必要があります。データベースベースの歌詞キャッシュは影響を受けません。",
+      "switchConfirmOk": "フォルダを選択",
+      "resetConfirmTitle": "デフォルトのキャッシュディレクトリにリセットしますか？",
+      "resetConfirmDesc": "リセット前に現在のファイルキャッシュはクリアされます。"
+    },
+    "cacheUsage": {
+      "label": "使用量",
+      "total": "合計",
+      "refresh": "更新"
+    },
+    "cacheCategory": {
+      "covers": "カバーサムネイル",
+      "artists": "アーティストアバター",
+      "backgrounds": "背景画像",
+      "songs": "曲ファイル",
+      "lyric": "歌詞コンテンツキャッシュ",
+      "lyricTTML": "TTML歌詞キャッシュ",
+      "lyricMatch": "歌詞マッチキャッシュ"
+    },
+    "enableSongCache": {
+      "label": "曲キャッシュ",
+      "description": "オンライントラックをローカルにキャッシュして読み込み速度を向上"
+    },
+    "songCacheSizeLimit": {
+      "label": "サイズ制限",
+      "description": "制限に達するとエントリが自動的に削除されます。∞は無制限"
+    },
+    "downloadEnabled": {
+      "label": "ダウンロードを有効化"
+    },
+    "downloadDir": {
+      "label": "ダウンロードフォルダ",
+      "change": "変更",
+      "serverPathHint": "サーバーパス"
+    },
+    "downloadTarget": {
+      "browser": "ブラウザに保存",
+      "server": "サーバーに保存",
+      "browserHint": "ダウンロードはブラウザに直接渡され、サーバーのディスク容量を消費しません"
+    },
+    "downloadQuality": {
+      "label": "ダウンロード音質",
+      "description": "ダウンロードの優先音質。実際の利用可否はプラットフォームとアカウントに依存"
+    },
+    "downloadUsePlayback": {
+      "label": "再生リンクをダウンロードに使用",
+      "description": "ダウンロード時に再生リンクを音声ソースとして使用"
+    },
+    "downloadFileTemplate": {
+      "label": "ファイル名形式",
+      "description": "ダウンロードファイルの命名方法",
+      "titleOnly": "タイトル",
+      "artistTitle": "アーティスト - タイトル",
+      "titleArtist": "タイトル - アーティスト"
+    },
+    "downloadFolderScheme": {
+      "label": "スマートフォルダ分け",
+      "description": "ルールに従ってダウンロードをサブフォルダに整理",
+      "none": "サブフォルダなし",
+      "artist": "アーティスト別",
+      "artistAlbum": "アーティスト/アルバム別"
+    },
+    "downloadOverwrite": {
+      "label": "重複処理",
+      "description": "対象ファイルが既に存在する場合の動作",
+      "rename": "両方保持（番号追加）",
+      "overwrite": "上書き",
+      "skip": "スキップ"
+    },
+    "downloadEmbedCover": {
+      "label": "カバーを埋め込む",
+      "description": "ダウンロードした音声ファイルにカバーを書き込む"
+    },
+    "downloadEmbedMeta": {
+      "label": "メタデータを埋め込む",
+      "description": "タイトル、アーティスト、アルバムをファイルタグに書き込む"
+    },
+    "downloadEmbedLyric": {
+      "label": "歌詞を埋め込む",
+      "description": "歌詞をファイルタグに書き込む"
+    },
+    "downloadWriteLrc": {
+      "label": "歌詞ファイルを保存",
+      "description": "ダウンロード時に歌詞ファイルも一緒に保存"
+    },
+    "downloadLyricFormat": {
+      "label": "歌詞ファイル形式",
+      "description": "保存および埋め込み歌詞の形式",
+      "lrc": "LRC（行単位）",
+      "enhanced": "Enhanced LRC（単語単位）"
+    },
+    "downloadSaveTtml": {
+      "label": "TTMLとしても保存",
+      "description": "原文、翻訳、ローマ字を1ファイルに含むTTMLファイルを追加でエクスポート"
+    },
+    "cacheCategoryClear": {
+      "label": "クリア",
+      "confirmTitle": "「{name}」をクリアしますか？",
+      "confirmDesc": "このカテゴリのすべてのキャッシュデータが削除されます。この操作は元に戻せません。"
+    },
+    "fileClearAll": {
+      "label": "ファイルキャッシュをクリア",
+      "description": "すべてのキャッシュをクリアします。この操作は元に戻せません。",
+      "button": "すべてクリア",
+      "confirmTitle": "すべてのファイルキャッシュをクリアしますか？",
+      "confirmDesc": "上記のすべてのファイルキャッシュが削除され、次回使用時に再生成されます。この操作は元に戻せません。"
+    },
+    "dbClearAll": {
+      "label": "データベースキャッシュをクリア",
+      "description": "データベースに保存された歌詞とマッチングキャッシュを消去します。ローカルライブラリとアカウントデータは影響を受けません。",
+      "button": "すべてクリア",
+      "confirmTitle": "すべてのデータベースキャッシュをクリアしますか？",
+      "confirmDesc": "上記のすべてのデータベースキャッシュがクリアされます。この操作は元に戻せません。"
+    }
+  },
+  "collection": {
+    "totalDuration": "約{time}",
+    "unknownAlbum": "不明なアルバム",
+    "empty": "曲がありません",
+    "noDescription": "まだ説明がありません〜",
+    "album": "アルバム",
+    "playlist": "プレイリスト",
+    "radio": "ラジオ",
+    "my": "マイ{type}",
+    "subscribed": "登録{type}",
+    "localPlaylist": "ローカルプレイリスト",
+    "onlinePlaylist": "オンラインプレイリスト",
+    "create": "新規{type}",
+    "name": "{type}名",
+    "description": "説明",
+    "delete": "{type}を削除",
+    "deleteConfirm": "{type}「{title}」を削除しますか？この操作は元に戻せません",
+    "addTo": "{type}に追加",
+    "removeFrom": "{type}から削除",
+    "tracksAdded": "正常に追加されました。{count}曲",
+    "alreadyInPlaylist": "既にプレイリストに存在します",
+    "edit": "{type}を編集",
+    "subscribe": "登録",
+    "unsubscribe": "登録解除",
+    "privacy": {
+      "private": "非公開にする"
+    }
+  },
+  "artist": {
+    "label": "アーティスト",
+    "songs": "曲",
+    "totalArtists": "{count}組のアーティスト",
+    "albums": "アルバム"
+  },
+  "album": {
+    "label": "アルバム"
+  },
+  "folder": {
+    "label": "フォルダ",
+    "totalFolders": "{count}個のフォルダ"
+  },
+  "errors": {
+    "dialogTitle": "問題が発生しました",
+    "deviceHint": "オーディオ出力デバイスが検出されませんでした。ヘッドホンまたはスピーカーを接続して再試行してください。",
+    "DEVICE_NOT_FOUND": "オーディオ出力デバイスが見つかりません",
+    "DEVICE_INIT_FAILED": "オーディオデバイスの初期化に失敗しました",
+    "FILE_NOT_FOUND": "ファイルが見つからないか、アクセスできません",
+    "FILE_NO_AUDIO_STREAM": "ファイルにオーディオストリームが見つかりません",
+    "FILE_DECODE_ERROR": "オーディオのデコードに失敗しました",
+    "FILE_NOT_SELECTED": "ファイルが選択されていません",
+    "NETWORK_ERROR": "音声ソースに到達できませんでした。ネットワークを確認するか、別のソースをお試しください",
+    "NETWORK_TIMEOUT": "音声ソースがタイムアウトしました。ネットワークを確認するか、別のソースをお試しください",
+    "URL_RESOLVE_FAILED": "再生URLの取得に失敗しました",
+    "NO_PLUGIN_AVAILABLE": "このプラットフォームで利用可能なプラグインがありません",
+    "SCAN_NO_DIRS": "スキャンディレクトリが設定されていません",
+    "SCAN_DIR_EXISTS": "ディレクトリは既に存在します",
+    "SCAN_DIR_NOT_FOUND": "ディレクトリが見つかりません",
+    "SCAN_DIR_NOT_SELECTED": "ディレクトリが選択されていません",
+    "TAG_READ_FAILED": "タグの読み取りに失敗しました",
+    "TAG_WRITE_FAILED": "タグの書き込みに失敗しました",
+    "UNKNOWN": "操作に失敗しました"
+  },
+  "tagEditor": {
+    "title": "メタデータを編集",
+    "replaceCover": "カバーを置き換え",
+    "onlineMatch": "タグを自動マッチ",
+    "matchHint": "手動でタグを入力したくないですか？",
+    "noMatches": "一致するものが見つかりません",
+    "lyricsPlaceholder": "プレーンテキスト歌詞。そのままファイルタグに書き込まれます",
+    "saveSuccess": "メタデータを保存しました",
+    "saveFailed": "保存に失敗しました",
+    "fields": {
+      "title": "タイトル",
+      "artist": "アーティスト",
+      "album": "アルバム",
+      "albumArtist": "アルバムアーティスト",
+      "year": "年",
+      "genre": "ジャンル",
+      "trackNumber": "トラック番号",
+      "discNumber": "ディスク番号",
+      "lyrics": "埋め込み歌詞"
+    }
+  }
+}
