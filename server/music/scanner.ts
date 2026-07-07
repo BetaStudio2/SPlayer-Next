@@ -340,17 +340,6 @@ export const parseToUpsert = async (filePath: string): Promise<UpsertTrack | nul
     }
   }
 
-  // 嵌入歌词：music-metadata 把 USLT/SYLT/LYRICS 等标签合并到 common.lyrics（string[]）
-  let lyrics: string | undefined;
-  if (Array.isArray(common.lyrics) && common.lyrics.length > 0) {
-    const joined = common.lyrics
-      .map((l) => (typeof l === "string" ? l : l?.text ?? ""))
-      .filter((t) => t && t.trim().length > 0)
-      .join("\n")
-      .trim();
-    if (joined) lyrics = joined;
-  }
-
   return {
     id,
     path: filePath,
@@ -368,7 +357,6 @@ export const parseToUpsert = async (filePath: string): Promise<UpsertTrack | nul
     fileSize: s.size,
     mtime: Math.round(s.mtimeMs),
     ctime: Math.round(s.ctimeMs),
-    lyrics,
   };
 };
 

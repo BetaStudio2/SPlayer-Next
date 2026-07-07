@@ -5,7 +5,8 @@ import { Hono } from "hono";
 import { store } from "@main/store";
 import { getBackgroundsDir } from "@main/utils/config";
 import { toCacheUrl } from "@main/utils/protocol";
-import { libraryLog } from "@main/utils/logger";
+import { libraryLog, serverLog } from "@main/utils/logger";
+import { testNetworkProxy } from "@main/utils/proxy";
 
 const app = new Hono();
 
@@ -34,6 +35,13 @@ app.post("/replace", async (c) => {
 app.post("/reset", (c) => {
   store.clear();
   return c.json({ success: true });
+});
+
+/** POST /testProxy —— 测试网络代理连通性 */
+app.post("/testProxy", async (c) => {
+  const ok = await testNetworkProxy();
+  if (!ok) serverLog.warn("[config] proxy test failed");
+  return c.json({ ok });
 });
 
 /* ------------------------------------------------------------------ */

@@ -23,7 +23,6 @@ interface TrackRow {
   file_mtime: number | null;
   file_ctime: number | null;
   scanned_at: number;
-  lyrics: string | null;
 }
 
 /** 将数据库行解析为 Track */
@@ -138,8 +137,6 @@ export interface UpsertTrack {
   fileSize: number;
   mtime: number;
   ctime: number;
-  /** 文件内嵌歌词原文（可能为 LRC/纯文本） */
-  lyrics?: string;
 }
 
 /**
@@ -155,9 +152,9 @@ export const upsertTracks = (tracks: UpsertTrack[]): void => {
   const d = getDb();
   const stmt = d.prepare(`
     INSERT INTO tracks
-      (id, path, title, track, artists, album, duration, cover, codec, sample_rate, bit_rate, channels, bits_per_sample, file_size, file_mtime, file_ctime, scanned_at, lyrics)
+      (id, path, title, track, artists, album, duration, cover, codec, sample_rate, bit_rate, channels, bits_per_sample, file_size, file_mtime, file_ctime, scanned_at)
     VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       path = excluded.path,
       title = excluded.title,
@@ -174,8 +171,7 @@ export const upsertTracks = (tracks: UpsertTrack[]): void => {
       file_size = excluded.file_size,
       file_mtime = excluded.file_mtime,
       file_ctime = excluded.file_ctime,
-      scanned_at = excluded.scanned_at,
-      lyrics = excluded.lyrics
+      scanned_at = excluded.scanned_at
   `);
   const now = Date.now();
   const tx = d.transaction(() => {
@@ -198,20 +194,11 @@ export const upsertTracks = (tracks: UpsertTrack[]): void => {
         Math.round(t.mtime),
         Math.round(t.ctime),
         now,
-        t.lyrics ?? null,
       );
     }
   });
   tx();
   invalidateTracksCache();
-};
-
-/** 按 ID 取单曲内嵌歌词原文（无歌词返回 null） */
-export const getTrackLyrics = (id: string): string | null => {
-  const row = getDb()
-    .prepare("SELECT lyrics FROM tracks WHERE id = ?")
-    .get(id) as { lyrics: string | null } | undefined;
-  return row?.lyrics ?? null;
 };
 
 /** 批量删除曲目（按路径），同时清理关联的 scrape_queue 孤儿项 */

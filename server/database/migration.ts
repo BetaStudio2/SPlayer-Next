@@ -86,16 +86,8 @@ export const migrate = (d: Database.Database): void => {
     v = 4;
   }
 
-  // v4 → v5: tracks 增加 lyrics 列（保存文件内嵌歌词原文）
+  // v4 → v5: 刮削器新增列 + 刮削队列表
   if (v < 5) {
-    if (!hasColumn(d, "tracks", "lyrics")) {
-      d.exec("ALTER TABLE tracks ADD COLUMN lyrics TEXT");
-    }
-    v = 5;
-  }
-
-  // v5 → v6: 刮削器新增列 + 刮削队列表
-  if (v < 6) {
     const scrapeCols = [
       ["mbid", "TEXT"],
       ["album_mbid", "TEXT"],
@@ -111,13 +103,13 @@ export const migrate = (d: Database.Database): void => {
         d.exec(`ALTER TABLE tracks ADD COLUMN ${col} ${type}`);
       }
     }
-    // 这些列升级到 v7 后以 ALTER TABLE 方式补上
+    // 这些列升级到 v6 后以 ALTER TABLE 方式补上
     // scrape_queue 已迁移至独立的 scraper-state.db
-    v = 6;
+    v = 5;
   }
 
-  // v6 → v7: 刮削器增强 - 新增 composer, album_artist, disc_number, year, cover_data 字段
-  if (v < 7) {
+  // v5 → v6: 刮削器增强 - 新增 composer, album_artist, disc_number, year, cover_data 字段
+  if (v < 6) {
     const extraCols = [
       ["composer", "TEXT"],
       ["album_artist", "TEXT"],
@@ -131,11 +123,12 @@ export const migrate = (d: Database.Database): void => {
         d.exec(`ALTER TABLE tracks ADD COLUMN ${col} ${type}`);
       }
     }
-    v = 7;
+    v = 6;
   }
 
   // 版本无关部分
-  // 补 tracks.lyrics 列（兜底：旧 DB 可能在 user_version >=5 时跳过了 v4→v5 迁移）
+  // tracks.lyrics 列 — 供 C# Scanner 写入 + Go Subsonic 读取，
+  // Electron 主端不引用此列，仅作为数据库层契约存在。
   if (!hasColumn(d, "tracks", "lyrics")) {
     d.exec("ALTER TABLE tracks ADD COLUMN lyrics TEXT");
   }

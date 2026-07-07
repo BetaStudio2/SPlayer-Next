@@ -1,10 +1,8 @@
 /**
  * Subsonic 歌词处理
  *
- * 读取文件内嵌歌词元数据（已通过扫描器写入 DB）。
  * 通用 LRC 解析逻辑在 @main/utils/lrc 中。
  */
-import { getTrackLyrics } from "@main/database";
 import { parseLrc, formatLrcTimestamp, type LrcLine } from "@main/utils/lrc";
 import type { Track } from "@shared/types/player";
 
@@ -21,11 +19,6 @@ export interface PreparedSubsonicLyric {
   classicText: string;
   structuredLines: LrcLine[];
 }
-
-const trimLyricText = (text?: string | null): string | undefined => {
-  const trimmed = text?.trim();
-  return trimmed ? trimmed : undefined;
-};
 
 /** 将歌词数据准备为 Subsonic 协议格式 */
 export const prepareSubsonicLyric = (lyric: TrackLyricPayload): PreparedSubsonicLyric => {
@@ -46,12 +39,8 @@ export const prepareSubsonicLyric = (lyric: TrackLyricPayload): PreparedSubsonic
 };
 
 /**
- * 为指定 Track 读取内嵌歌词（从 DB 的 lyrics 列）
+ * 为指定 Track 读取内嵌歌词（已移至 lyric_cache 表）
  */
-export const fetchLyricForTrack = async (track: Track): Promise<TrackLyricPayload | null> => {
-  if (track.id) {
-    const embedded = trimLyricText(getTrackLyrics(track.id));
-    if (embedded) return { main: embedded };
-  }
+export const fetchLyricForTrack = async (_track: Track): Promise<TrackLyricPayload | null> => {
   return null;
 };

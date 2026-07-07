@@ -169,7 +169,6 @@ export {
   getAlbumTracks,
   getArtistTracks,
   getTracksByIds,
-  getTrackLyrics,
   getRandomTrack,
   getRandomTracks,
   invalidateTracksCache,
