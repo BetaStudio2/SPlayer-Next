@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSettingsStore } from "@/stores/settings";
 import { isElectron } from "@/utils/config";
+import { CURRENT_AGREEMENT_VERSION } from "@shared/constants/agreement";
 import WindowControls from "@/components/layout/WindowControls.vue";
 import StepWelcome from "@/components/onboarding/StepWelcome.vue";
 import StepPreferences from "@/components/onboarding/StepPreferences.vue";
@@ -52,6 +53,7 @@ const complete = async (): Promise<void> => {
   completing.value = true;
   try {
     await settings.setSystem("system.onboardingCompleted", true);
+    await settings.setSystem("system.agreedAgreementVersion", CURRENT_AGREEMENT_VERSION);
     await router.replace("/");
   } finally {
     completing.value = false;
