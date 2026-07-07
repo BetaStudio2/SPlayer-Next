@@ -75,7 +75,7 @@ COPY web/ ./web/
 COPY src/ ./src/
 COPY shared/ ./shared/
 COPY public/ ./public/
-COPY USER_AGREEMENT.md ./
+COPY package.json USER_AGREEMENT.md ./
 COPY tsconfig.json tsconfig.web.json tsconfig.node.json ./
 RUN cd web && npm run build && npm cache clean --force
 

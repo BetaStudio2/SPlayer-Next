@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
@@ -13,10 +14,12 @@ import Components from "unplugin-vue-components/vite";
 const rootDir = resolve(fileURLToPath(import.meta.url), "..", "..");
 const webDir = resolve(fileURLToPath(import.meta.url), "..");
 
+const pkg = JSON.parse(readFileSync(resolve(rootDir, "package.json"), "utf-8"));
+
 export default defineConfig({
   root: webDir,
   define: {
-    __APP_VERSION__: JSON.stringify("1.0.0-web"),
+    __APP_VERSION__: JSON.stringify(pkg.version),
     __APP_REPO_URL__: JSON.stringify("https://github.com/SPlayer-Dev/SPlayer-Next"),
     __APP_REPO_NAME__: JSON.stringify("SPlayer-Next"),
     __APP_AUTHOR__: JSON.stringify("imsyy"),

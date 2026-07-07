@@ -1,4 +1,5 @@
 import path from "node:path";
+import { readFileSync } from "node:fs";
 import { store } from "@main/store";
 import { defaultCacheDir, musicDir } from "./paths";
 
@@ -20,7 +21,8 @@ export const isLinux = process.platform === "linux";
 export const isPortable = false;
 
 /** 软件版本 */
-export const appVersion = "1.0.0-web";
+const __pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf-8"));
+export const appVersion: string = __pkg.version || "1.0.0";
 
 /** 应用名称 */
 export const appName = "SPlayer-Next";

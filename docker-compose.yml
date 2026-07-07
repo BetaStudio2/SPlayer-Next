@@ -1,104 +1,85 @@
-# SPlayer-Next Docker Compose（单容器部署）
+# SPlayer-Next Docker Compose
 #
-# SPlayer-Next 同时具备两个能力：
-#   a) 本地音乐库 —— 扫描挂载的音乐目录，浏览器直接播放
-#   b) Subsonic API 服务 —— 类似 Navidrome，供任意 Subsonic 客户端连接
+# 单容器部署：TS API (8080) + Go Subsonic (8081，通过 8080 代理)
 #
-# 架构：
-#   ┌───────────────────────────────────────────────┐
-#   │                 splayer 容器                  │
-#   │  ┌───────────┐  ┌────────────┐                │
-#   │  │ TS API    │  │ Go Subsonic│                │
-#   │  │ :8080     │  │ :8081      │                │
-#   │  └─────┬─────┘  └─────┬──────┘                │
-#   │        │              │                       │
-#   │        └──────┬───────┘                       │
-#   │               │                               │
-#   │      ┌────────▼────────┐                      │
-#   │      │ 共享数据目录     │                      │
-#   │      │ /app/data       │                      │
-#   │      └────────┬────────┘                      │
-#   │               │                               │
-#   │   C# Scanner / C++ Scraper 按需在容器内执行   │
-#   └───────────────────────────────────────────────┘
+# 快速开始：
+#   docker compose up -d              # 构建并启动
+#   docker compose logs -f            # 查看日志
+#   docker compose down               # 停止
 #
-# 用法：
-#   docker compose up -d           # 启动
-#   docker compose logs -f         # 查看日志
-#   docker compose down            # 停止
+# 国内加速构建：
+#   CN_MIRROR=1 docker compose up -d  # 使用国内镜像源
 #
-# 架构选择：默认 amd64；ARM 设备上改为 arm64
+# 自定义配置（可选）：
+#   cp .env.example .env              # 编辑 .env 修改参数
 
 services:
   splayer:
-    image: splayer-next:amd64
-    # ARM 设备请改为：
-    # image: splayer-next:arm64
-    # 或从本地构建：
-    # build:
-    #   context: .
-    #   dockerfile: ${SPLAYER_DOCKERFILE:-Dockerfile}
+    image: splayer-next:${SPLAYER_ARCH:-amd64}
+    build:
+      context: .
+      dockerfile: ${SPLAYER_DOCKERFILE:-Dockerfile}
+      args:
+        # 构建并发数，按 CPU 核心数调整
+        BUILD_JOBS: ${BUILD_JOBS:-1}
+        # 国内加速：=1 时使用阿里云/国内镜像源
+        CN_MIRROR: ${CN_MIRROR:-0}
     container_name: splayer-next
     restart: unless-stopped
+
     ports:
-      # Web + Subsonic API 共用端口
-      - "8080:8080"
+      # Web UI + Subsonic API（Go 后端通过 8080 代理访问）
+      - "${SPLAYER_PORT:-8080}:8080"
+      # 如需直接访问 Go Subsonic 原生端口（不推荐）：
+      # - "8081:8081"
+
     volumes:
-      # ────────────────────────────────────────────────
-      # 数据持久化（必选）
-      #   SQLite 数据库 / Subsonic 用户 / 配置 / 缓存 / 日志
-      # ────────────────────────────────────────────────
+      # ── 数据持久化（必选）：SQLite 数据库 / 配置 / 缓存 ──
       - ./data:/app/data
 
-      # ────────────────────────────────────────────────
-      # 独立刮削整理目录（推荐设置）
-      #   用于将音乐文件刮削后，按特定规则整理到 /app/music 下。
-      #   若不设置，则只能在 /app/music 中就地刮削。
-      # ────────────────────────────────────────────────
+      # ── 刮削整理目录（可选）：刮削后按规则整理到此目录 ──
       - ./scrape:/app/scrape
 
-      # ────────────────────────────────────────────────
-      # 音乐文件目录（至少挂载一个）
-      #   SPlayer 启动后自动扫描，支持多层子目录
-      # ────────────────────────────────────────────────
-
-      # 示例 A：本地相对路径
+      # ── 音乐文件目录（至少挂载一个，支持多层子目录）──
+      # 示例：本地相对路径
       - ./music:/app/music:ro
-
-      # 示例 B：本地绝对路径（取消注释使用）
-      # - /home/user/Music:/app/music/本地音乐:ro
-
-      # 示例 C：NAS / 网络存储（取消注释并替换 IP）
-      # - //192.168.1.100/share/music:/app/music/NAS音乐:ro
-
-      # 示例 D：多音乐源（各自独立子目录）
+      # 示例：绝对路径（取消注释使用）
+      # - /path/to/your/music:/app/music/本地音乐:ro
+      # 示例：多音乐源
       # - /mnt/hdd1/无损:/app/music/无损:ro
       # - /mnt/hdd2/流行:/app/music/流行:ro
 
     environment:
       NODE_ENV: production
       PORT: 8080
-      # SPA 静态文件目录（镜像内置路径，一般无需修改）
       SPA_DIR: /app/public
-      # 数据根目录（镜像内置 /app/data，与 volume 挂载对齐）
       SPLAYER_DATA_DIR: /app/data
-      # 曲库根目录（镜像内置 /app/music，与 volume 挂载对齐）
       SPLAYER_MUSIC_DIR: /app/music
-      # 独立刮削整理目录（可选，与 volume 挂载对齐）
       SPLAYER_SCRAPE_DIR: /app/scrape
+
       # 加密密钥（生产环境请更换为随机字符串）
       PROXY_KEY: ${PROXY_KEY:-dev-proxy-key}
       SPLAYER_ENCRYPTION_KEY: ${SPLAYER_ENCRYPTION_KEY:-}
+
       # Go Subsonic 后端地址（容器内通信，无需修改）
       SUBSONIC_BACKEND_URL: http://127.0.0.1:8081
+
+      # 时区
+      TZ: ${TZ:-Asia/Shanghai}
+
+    # 资源限制（按需调整）
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-512M}
 
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 5s
-      start_period: 10s
+      start_period: 15s
       retries: 3
 
     # Subsonic 客户端连接信息：
-    #   URL:      http://<你的IP>:8080
-    #   首次访问后进入设置 → 流媒体 → 初始化管理员账号
+    #   服务器 URL: http://<你的IP>:8080
+    #   首次访问：设置 → 流媒体 → 初始化管理员账号
