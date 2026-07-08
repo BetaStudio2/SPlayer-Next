@@ -397,18 +397,18 @@ watch(
                 </div>
               </div>
 
-              <div class="flex-1 flex flex-col gap-0.5 min-w-0">
+              <div class="flex-1 flex flex-col gap-1.5 min-w-0">
                 <button
                   v-for="item in displayStats"
                   :key="'cl-' + item.format"
                   type="button"
-                  class="flex items-center gap-2.5 text-xs rounded-lg px-3 py-2 transition-all duration-150 bg-on-surface/[0.03]"
+                  class="flex items-center gap-2.5 text-xs rounded-lg px-3 py-2.5 transition-all duration-150 bg-surface-panel border border-solid border-outline-variant/15"
                   :class="
                     hoveredFormat === item.format
-                      ? 'bg-on-surface/[0.1]'
+                      ? 'bg-surface-panel border-primary/30'
                       : hoveredFormat !== null
                         ? 'opacity-30'
-                        : 'hover:bg-on-surface/[0.07]'
+                        : 'hover:border-primary/20'
                   "
                   @mouseenter="setHover(item.format)"
                 >
@@ -500,18 +500,18 @@ watch(
                 </div>
               </div>
 
-              <div class="flex-1 flex flex-col gap-0.5 min-w-0">
+              <div class="flex-1 flex flex-col gap-1.5 min-w-0">
                 <button
                   v-for="item in displayStats"
                   :key="'sl-' + item.format"
                   type="button"
-                  class="flex items-center gap-2.5 text-xs rounded-lg px-3 py-2 transition-all duration-150 bg-on-surface/[0.03]"
+                  class="flex items-center gap-2.5 text-xs rounded-lg px-3 py-2.5 transition-all duration-150 bg-surface-panel border border-solid border-outline-variant/15"
                   :class="
                     hoveredFormat === item.format
-                      ? 'bg-on-surface/[0.1]'
+                      ? 'bg-surface-panel border-primary/30'
                       : hoveredFormat !== null
                         ? 'opacity-30'
-                        : 'hover:bg-on-surface/[0.07]'
+                        : 'hover:border-primary/20'
                   "
                   @mouseenter="setHover(item.format)"
                 >

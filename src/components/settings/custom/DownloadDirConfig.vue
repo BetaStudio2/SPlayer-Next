@@ -147,7 +147,8 @@ onMounted(load);
       </SButton>
       <SButton v-if="!isWeb || target === 'server'" variant="secondary" @click="change">
         <template #icon>
-          <IconLucidePencil v-if="isWeb" />
+          <IconLucideFolderOpen v-if="!isWeb" />
+          <IconLucidePencil v-else />
         </template>
         {{ t("settings.downloadDir.change") }}
       </SButton>
