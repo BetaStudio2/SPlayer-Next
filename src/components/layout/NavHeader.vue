@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useSettingsDialog } from "@/settings/useSettingsDialog";
+import { useWindowControls } from "@/composables/useWindowControls";
 import { useThemeStore } from "@/stores/theme";
 import { useUpdateStore } from "@/stores/update";
 import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
@@ -17,6 +18,7 @@ const { show: showSettings } = useSettingsDialog();
 const theme = useThemeStore();
 const update = useUpdateStore();
 const isWeb = !window.navigator.userAgent.includes("Electron");
+const { isBorderless } = useWindowControls();
 
 /** 界面缩放弹窗开关 */
 const uiZoomOpen = ref(false);
@@ -106,10 +108,9 @@ const onMenuSelect = (key: string): void => {
         </template>
       </SDropdownMenu>
       <template v-if="!isWeb">
-        <SDivider vertical />
+        <SDivider v-if="isBorderless" vertical />
         <WindowControls />
-      </template>
-    </div>
+      </template>    </div>
     <UiZoomDialog v-model:open="uiZoomOpen" />
   </div>
 </template>

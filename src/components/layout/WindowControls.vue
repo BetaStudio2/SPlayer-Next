@@ -13,7 +13,7 @@ const props = defineProps<{
 }>();
 
 const isWeb = !window.navigator.userAgent.includes("Electron");
-const { isMaximized, minimize, toggleMaximize, close, quit } = useWindowControls();
+const { isMaximized, isBorderless, minimize, toggleMaximize, close, quit } = useWindowControls();
 
 const onClose = (): void => {
   props.directQuit ? quit() : close();
@@ -21,9 +21,8 @@ const onClose = (): void => {
 </script>
 
 <template>
-  <div v-if="!isWeb" class="flex items-center gap-3 shrink-0">
-    <SButton
-      class="app-no-drag"
+  <div v-if="!isWeb" class="flex items-center gap-3 shrink-0">    <SButton
+      class="window-control-button app-no-drag"
       :type="cover ? 'cover' : undefined"
       :variant="cover ? 'ghost' : 'tertiary'"
       circle
@@ -34,7 +33,7 @@ const onClose = (): void => {
       <template #icon><IconMinus /></template>
     </SButton>
     <SButton
-      class="app-no-drag"
+      class="window-control-button app-no-drag"
       :type="cover ? 'cover' : undefined"
       :variant="cover ? 'ghost' : 'tertiary'"
       circle
@@ -47,7 +46,7 @@ const onClose = (): void => {
       </template>
     </SButton>
     <SButton
-      class="app-no-drag"
+      class="window-control-button window-control-button-close app-no-drag"
       :type="cover ? 'cover' : undefined"
       :variant="cover ? 'ghost' : 'tertiary'"
       circle
@@ -58,3 +57,19 @@ const onClose = (): void => {
     </SButton>
   </div>
 </template>
+
+<style scoped>
+.window-control-button {
+  position: relative;
+}
+
+.window-control-button::before {
+  content: "";
+  position: absolute;
+  inset: -12px -6px;
+}
+
+.window-control-button-close::before {
+  right: -12px;
+}
+</style>

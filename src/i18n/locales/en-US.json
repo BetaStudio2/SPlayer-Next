@@ -98,6 +98,7 @@
     "configure": "Configure",
     "more": "More",
     "save": "Save",
+    "saveAndRelaunch": "Save & Relaunch",
     "reset": "Reset",
     "retry": "Retry",
     "prev": "Previous",
@@ -200,6 +201,11 @@
       "quick": "Quick",
       "history": "Recent searches",
       "hot": "Trending"
+    },
+    "searchMenu": {
+      "copy": "Copy",
+      "paste": "Paste",
+      "pasteSearch": "Paste and Search"
     },
     "link": {
       "song": "Play [{id}]",
@@ -1028,12 +1034,8 @@
     "confirm": {
       "highResourceTitle": "Resource-Intensive Feature",
       "highResourceContent": "Enabling it may noticeably increase memory and CPU usage, and could cause stuttering on lower-end devices. Enable it anyway?",
-      "highParallelismTitle": "High Concurrency Scan",
-      "highParallelismContent": "Extreme parallelism may cause system lag or out-of-memory errors. Proceed anyway?"
-    },
-    "scannerParallelism": {
-      "label": "Scan Parallelism",
-      "description": "Number of concurrent threads used when scanning audio files. 0 means auto"
+      "restartRequiredTitle": "Restart Required",
+      "restartRequiredContent": "This setting requires an app restart. Save and relaunch now?"
     },
     "useAMSpring": {
       "label": "Spring Animation Debug Switch",
@@ -1565,6 +1567,10 @@
     "rememberWindowState": {
       "label": "Remember Window State",
       "description": "Restore window size, position and maximized state on next launch"
+    },
+    "borderlessWindow": {
+      "label": "Enable Borderless Window",
+      "description": "Disable to use the system native window frame and title bar"
     },
     "autoCheckUpdate": {
       "label": "Auto Check for Updates",

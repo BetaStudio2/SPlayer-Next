@@ -33,6 +33,22 @@ const generalCategory: SettingCategory = {
           visible: () => !isWeb,
         },
         {
+          key: "borderlessWindow",
+          type: "switch",
+          binding: { store: "settings", path: "system.system.borderlessWindow" },
+          defaultValue: true,
+          confirm: {
+            titleKey: "settings.confirm.restartRequiredTitle",
+            contentKey: "settings.confirm.restartRequiredContent",
+            type: "warning",
+            confirmTextKey: "common.saveAndRelaunch",
+          },
+          action: async (next) => {
+            await window.api.config.set("system.borderlessWindow", next);
+            await window.api.system.relaunch();
+          },
+        },
+        {
           key: "taskbarProgress",
           type: "switch",
           binding: { store: "settings", path: "system.system.taskbarProgress" },
@@ -97,6 +113,15 @@ const generalCategory: SettingCategory = {
           type: "switch",
           binding: { store: "settings", path: "appearance.showPerformanceMonitor" },
           defaultValue: false,
+        },
+        {
+          key: "devtools",
+          type: "button",
+          action: async () => {
+            const { useRouter } = await import("vue-router");
+            useRouter().push("/admin");
+          },
+          visible: () => !isWeb,
         },
       ],
     },
