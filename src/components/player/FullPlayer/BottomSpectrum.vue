@@ -111,29 +111,43 @@ const draw = (): void => {
   ctx.beginPath();
   if (isSplit) {
     // 立体声模式：左侧低频段，右侧高频段
-    // 与对称模式同样的 bin 重叠平滑 + 保底 2 bin，保证密度和过渡均匀
+    // 用浮点加权平均替代 floor 整数分配，消除 halfUsable/numBars 非整除时的 bin 数交替跳变
     for (let i = 0; i < numBars; i++) {
       const xRight = halfWidth + i * slotWidth;
       const xLeft = halfWidth - (i + 1) * slotWidth;
 
-      // 左侧取低频段（SKIP_LOW 起 halfUsable 个 bin）
-      const lStartBin = SKIP_LOW + Math.floor((i * halfUsable) / numBars);
-      const lEndBin = SKIP_LOW + Math.floor(((i + 1) * halfUsable) / numBars);
-      const lLo = Math.max(SKIP_LOW, lStartBin - 1);
-      const lHi = Math.min(SKIP_LOW + halfUsable, Math.max(lEndBin, lStartBin + 1) + 1);
+      // 左侧低频段：bins [SKIP_LOW, SKIP_LOW + halfUsable)
+      const lStart = (i / numBars) * halfUsable;
+      const lEnd = ((i + 1) / numBars) * halfUsable;
+      const lLo = Math.floor(lStart);
+      const lHi = Math.ceil(lEnd);
       let lSum = 0;
-      for (let j = lLo; j < lHi; j++) lSum += display[j];
-      const lH = (lSum / (lHi - lLo)) * cssHeight;
+      let lW = 0;
+      for (let j = lLo; j < lHi; j++) {
+        const w = Math.min(lEnd, j + 1) - Math.max(lStart, j);
+        if (w > 0) {
+          lSum += display[SKIP_LOW + j] * w;
+          lW += w;
+        }
+      }
+      const lH = (lW > 0 ? lSum / lW : 0) * cssHeight;
       if (lH > 0.5) ctx.roundRect(xLeft, cssHeight - lH, barWidth, lH, props.radius);
 
-      // 右侧取高频段（SKIP_LOW + halfUsable 起 halfUsable 个 bin）
-      const rStartBin = SKIP_LOW + halfUsable + Math.floor((i * halfUsable) / numBars);
-      const rEndBin = SKIP_LOW + halfUsable + Math.floor(((i + 1) * halfUsable) / numBars);
-      const rLo = Math.max(SKIP_LOW + halfUsable, rStartBin - 1);
-      const rHi = Math.min(FFT_SIZE, Math.max(rEndBin, rStartBin + 1) + 1);
+      // 右侧高频段：bins [SKIP_LOW + halfUsable, FFT_SIZE)
+      const rStart = (i / numBars) * halfUsable;
+      const rEnd = ((i + 1) / numBars) * halfUsable;
+      const rLo = Math.floor(rStart);
+      const rHi = Math.ceil(rEnd);
       let rSum = 0;
-      for (let j = rLo; j < rHi; j++) rSum += display[j];
-      const rH = (rSum / (rHi - rLo)) * cssHeight;
+      let rW = 0;
+      for (let j = rLo; j < rHi; j++) {
+        const w = Math.min(rEnd, j + 1) - Math.max(rStart, j);
+        if (w > 0) {
+          rSum += display[SKIP_LOW + halfUsable + j] * w;
+          rW += w;
+        }
+      }
+      const rH = (rW > 0 ? rSum / rW : 0) * cssHeight;
       if (rH > 0.5) ctx.roundRect(xRight, cssHeight - rH, barWidth, rH, props.radius);
     }
   } else {
