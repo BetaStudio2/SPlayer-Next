@@ -104,6 +104,28 @@ COPY server/ ./
 COPY shared/ ../shared/
 RUN npm run build && npm prune --production && npm cache clean --force
 
+# ===== Go Monitor Builder =====
+FROM ${GO_IMAGE} AS monitor-builder
+ARG BUILD_JOBS
+ARG CN_MIRROR
+ARG GO_PROXY
+ARG GO_SUMDB
+
+# 配置国内源
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources; \
+    fi
+
+WORKDIR /src
+COPY server/monitor/go.mod server/monitor/go.sum ./
+ENV GOPROXY=${GO_PROXY}
+ENV GOSUMDB=${GO_SUMDB}
+ENV CGO_ENABLED=0
+RUN go mod download
+COPY server/monitor/ ./
+RUN GOMAXPROCS="${BUILD_JOBS}" go build -p "${BUILD_JOBS}" -ldflags="-s -w" -o /out/splayer-monitor . && \
+    go clean -modcache
+
 # ===== Go Subsonic Builder =====
 FROM ${GO_IMAGE} AS subsonic-builder
 ARG BUILD_JOBS
@@ -306,6 +328,7 @@ COPY --from=scanner-builder /out/ /app/bin/
 COPY --from=scraper-builder /out/splayer-scraper /app/bin/splayer-scraper
 COPY --from=downloader-builder /out/splayer-downloader /app/bin/splayer-downloader
 COPY --from=transcoder-builder /out/subsonic-transcoder /app/bin/subsonic-transcoder
+COPY --from=monitor-builder /out/splayer-monitor /app/bin/splayer-monitor
 
 RUN cat > /usr/local/bin/splayer-entrypoint <<'EOF' && chmod +x /usr/local/bin/splayer-entrypoint
 #!/bin/bash
@@ -371,6 +394,7 @@ ENV SPLAYER_DATA_DIR=/app/data
 ENV SPLAYER_SCRAPE_DIR=/app/scrape
 ENV SUBSONIC_BACKEND_URL=http://127.0.0.1:8081
 ENV SUBSONIC_PORT=8081
+ENV SPLAYER_MONITOR_ENABLED=true
 ENV TZ=Asia/Shanghai
 
 EXPOSE 8080 8081
