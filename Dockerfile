@@ -117,7 +117,7 @@ RUN if [ "${CN_MIRROR}" = "1" ]; then \
     fi
 
 WORKDIR /src
-COPY server/monitor/go.mod server/monitor/go.sum ./
+COPY server/monitor/go.mod ./
 ENV GOPROXY=${GO_PROXY}
 ENV GOSUMDB=${GO_SUMDB}
 ENV CGO_ENABLED=0
