@@ -9,6 +9,7 @@ import { initLogger, serverLog } from "@main/utils/logger";
 import { getAppCacheDir } from "@main/utils/config";
 import { startMemoryManager, stopMemoryManager } from "@main/utils/memory";
 import { startWatcher, stopWatcher } from "@main/music/watcher";
+import { startMonitor, stopMonitor } from "./monitor/index";
 import proxy from "./routes/proxy";
 import music from "./routes/music";
 import lyric from "./routes/lyric";
@@ -150,6 +151,7 @@ const httpServer = serve({ fetch: app.fetch, port: PORT }, (info) => {
   serverLog.info(`[server] listening on http://localhost:${info.port}`);
   startMemoryManager();
   startWatcher();
+  startMonitor();
 });
 // 挂载 WebSocket 到同一 HTTP server（路径 /ws）
 // serve() 返回类型为 ServerType（含 Http2Server 联合），运行时为 http.Server
@@ -158,6 +160,7 @@ attachWebSocket(httpServer as unknown as HttpServer);
 const shutdown = (): void => {
   stopMemoryManager();
   void stopWatcher();
+  stopMonitor();
   closeDatabase();
 };
 process.on("SIGTERM", shutdown);
