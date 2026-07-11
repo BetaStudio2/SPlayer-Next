@@ -21,6 +21,7 @@ import subsonicInject from "./routes/subsonic-inject";
 import dbProxy from "./routes/db";
 import scraper from "./routes/scraper";
 import comments from "./routes/comments";
+import admin from "./routes/admin";
 import { attachWebSocket } from "./routes/ws";
 
 initLogger();
@@ -55,6 +56,8 @@ app.route("/api/db", dbProxy);
 app.route("/api/scraper", scraper);
 /** 歌曲评论（/api/comments/*，供 Web GUI 查看评论） */
 app.route("/api/comments", comments);
+/** 服务端监控仪表盘（/api/admin/*，代理 Go sidecar） */
+app.route("/api/admin", admin);
 
 /** /api/cache/* 静态：服务 musicbrainz 歌手头像等缓存文件 */
 const CACHE_MIME: Record<string, string> = {
