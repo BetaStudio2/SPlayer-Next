@@ -864,7 +864,7 @@
     },
     "serverTranscode": {
       "label": "服务端转码",
-      "description": "通过服务端 C 引擎将本地音频转码为 OGG/Opus 格式播放"
+      "description": "通过服务端 C 引擎将音频转码为 OGG/Opus 格式播放"
     },
     "outputDevice": {
       "label": "输出设备",

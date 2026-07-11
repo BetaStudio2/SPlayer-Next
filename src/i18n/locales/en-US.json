@@ -876,7 +876,7 @@
     },
     "serverTranscode": {
       "label": "Server-Side Transcoding",
-      "description": "Transcode local audio to OGG/Opus format via server-side C engine"
+      "description": "Transcode server-side media to OGG/Opus format via C engine"
     },
     "outputDevice": {
       "label": "Output Device",
