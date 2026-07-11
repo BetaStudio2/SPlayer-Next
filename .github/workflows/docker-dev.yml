@@ -7,6 +7,8 @@ on:
     paths:
       - "Dockerfile"
       - "server/**"
+      - "src/**"
+      - "shared/**"
       - "native/download-engine/**"
       - "scripts/**"
       - ".github/workflows/docker-dev.yml"
