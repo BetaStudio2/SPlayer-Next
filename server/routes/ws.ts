@@ -19,6 +19,23 @@ import { getScanProgress } from "@main/music/scanner";
 import { getScrapeProgress } from "@main/music/scraper";
 import { serverLog } from "@main/utils/logger";
 
+/** 全局 WebSocketServer 实例 */
+let globalWss: WebSocketServer | null = null;
+
+/** 获取全局 WebSocketServer 实例 */
+export const getWebSocketServer = (): WebSocketServer | null => globalWss;
+
+/** 向指定流广播消息 */
+export const broadcastToStream = (streamId: string, message: Record<string, unknown>): void => {
+  if (!globalWss) return;
+  const payload = JSON.stringify({ ...message, streamId });
+  for (const client of globalWss.clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  }
+};
+
 /**
  * 把 WebSocket 服务挂到已有 HTTP server 上
  * @param server @hono/node-server 返回的 http.Server 实例
@@ -26,6 +43,7 @@ import { serverLog } from "@main/utils/logger";
  */
 export const attachWebSocket = (server: Server): WebSocketServer => {
   const wss = new WebSocketServer({ noServer: true });
+  globalWss = wss;
 
   // 拦截 HTTP server 的 upgrade 事件，仅处理 /ws 路径
   server.on("upgrade", (req, socket, head) => {
