@@ -215,6 +215,8 @@ export interface PlayerApi {
   setFftEnabled: (enabled: boolean) => Promise<IpcResponse>;
   /** 获取 FFT 频谱数据 */
   getFftData: () => Promise<IpcResponse<number[]>>;
+  /** 获取立体声 FFT 频谱数据（左右声道分离，Electron 端暂返回空） */
+  getFftDataStereo: () => Promise<IpcResponse<{ left: number[]; right: number[] }>>;
   /** 设置渐入渐出时长（毫秒） */
   setFadeDuration: (ms: number) => Promise<IpcResponse>;
   /** 获取渐入渐出时长（毫秒） */

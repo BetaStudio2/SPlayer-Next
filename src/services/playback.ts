@@ -117,8 +117,11 @@ export const setSpeed = (value: number): void => {
   speed = value;
 };
 
-/** 最新 FFT 频谱帧 */
+/** 最新 FFT 频谱帧（单声道，L+R 均值） */
 let fftFrame: number[] = [];
+/** 立体声 FFT 帧（左右声道分离） */
+let fftFrameLeft: number[] = [];
+let fftFrameRight: number[] = [];
 
 /** 主进程推送 FFT 数据时调用 */
 export const setFftFrame = (data: number[]): void => {
@@ -128,9 +131,21 @@ export const setFftFrame = (data: number[]): void => {
 /** RAF 循环读取最新频谱帧 */
 export const getFftFrame = (): readonly number[] => fftFrame;
 
+/** 主进程推送立体声 FFT 数据时调用 */
+export const setFftFrameStereo = (left: number[], right: number[]): void => {
+  fftFrameLeft = left;
+  fftFrameRight = right;
+};
+
+/** RAF 循环读取最新立体声频谱帧 */
+export const getFftFrameStereo = (): { left: readonly number[]; right: readonly number[] } => ({
+  left: fftFrameLeft,
+  right: fftFrameRight,
+});
+
 // ---------------------------------------------------------------------------
 // Web 端 FFT 桥接：Electron 主进程通过 IPC push 调用 setFftFrame，
-// 浏览器 Web 端没有 IPC push，需要在 RAF 中轮询 WebAudioPlayer.getFftData()
+// 浏览器 Web 端轮询 WebAudioPlayer.getFftDataStereo() 同时获取 L/R 声道数据
 // ---------------------------------------------------------------------------
 let _fftPollRaf = 0;
 let _fftPollActive = false;
@@ -141,15 +156,21 @@ export const startFftPolling = (): void => {
   const poll = async () => {
     if (!_fftPollActive) return;
     try {
-      const res = await window.api.player.getFftData();
-      if (res.success && res.data && res.data.length > 0) {
-        // WebAudio getByteFrequencyData 返回 Uint8Array (0-255)，
-        // 需要归一化到 0-1 与 Electron/Rust 端保持一致
-        const normalized = new Array(res.data.length);
-        for (let i = 0; i < res.data.length; i++) {
-          normalized[i] = res.data[i] / 255;
+      const res = await window.api.player.getFftDataStereo();
+      if (res.success && res.data && res.data.left.length > 0) {
+        // WebAudio getByteFrequencyData 返回 Uint8Array (0-255)，归一化到 0-1
+        const { left, right } = res.data;
+        const lNorm = new Array(left.length);
+        const rNorm = new Array(right.length);
+        const mono = new Array(left.length);
+        for (let i = 0; i < left.length; i++) {
+          lNorm[i] = left[i] / 255;
+          rNorm[i] = right[i] / 255;
+          mono[i] = (lNorm[i] + rNorm[i]) / 2;
         }
-        fftFrame = normalized;
+        fftFrameLeft = lNorm;
+        fftFrameRight = rNorm;
+        fftFrame = mono;
       }
     } catch { /* player 未初始化或 api 不可用 */ }
     _fftPollRaf = requestAnimationFrame(poll);
@@ -164,6 +185,8 @@ export const stopFftPolling = (): void => {
     _fftPollRaf = 0;
   }
   fftFrame = [];
+  fftFrameLeft = [];
+  fftFrameRight = [];
 };
 
 /** 重置位置/时长/播放标志 */

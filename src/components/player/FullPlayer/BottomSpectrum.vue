@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useStatusStore } from "@/stores/status";
 import { useSettingsStore } from "@/stores/settings";
-import { getFftFrame } from "@/services/playback";
+import { getFftFrame, getFftFrameStereo } from "@/services/playback";
 import { acquireFft, releaseFft } from "@/services/fftCapture";
 
 interface Props {
@@ -36,16 +36,22 @@ const BAR_GAP = 3;
 /** 后端推送间隔（ms），用于时间插值 */
 const PUSH_INTERVAL = 50;
 
-/** 上一帧推送数据 */
+// --- 单声道平滑缓冲（对称模式 + Electron 降级） ---
 const prev = new Float32Array(FFT_SIZE);
-/** 当前帧推送数据 */
 const curr = new Float32Array(FFT_SIZE);
-/** 实际渲染显示值（经过指数平滑） */
 const display = new Float32Array(FFT_SIZE);
-/** 上一次推送数据的引用，用于检测新帧到达 */
 let lastRef: readonly number[] = [];
-/** 上一次推送到达的时间戳 */
 let lastUpdate = 0;
+
+// --- 立体声平滑缓冲（split 模式 + Web 端立体声 FFT） ---
+const prevL = new Float32Array(FFT_SIZE);
+const currL = new Float32Array(FFT_SIZE);
+const displayL = new Float32Array(FFT_SIZE);
+const prevR = new Float32Array(FFT_SIZE);
+const currR = new Float32Array(FFT_SIZE);
+const displayR = new Float32Array(FFT_SIZE);
+let lastStereoRefL: readonly number[] = [];
+let lastUpdateStereo = 0;
 
 /** 调整画布大小 */
 const resizeCanvas = (): void => {
@@ -68,7 +74,7 @@ const draw = (): void => {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  // 检测新帧推送
+  // --- 单声道帧检测 + 时间插值平滑 ---
   const data = getFftFrame();
   if (data !== lastRef) {
     lastRef = data;
@@ -76,10 +82,7 @@ const draw = (): void => {
     for (let i = 0; i < FFT_SIZE; i++) curr[i] = data[i] ?? 0;
     lastUpdate = performance.now();
   }
-
-  // 时间插值：在 prev → curr 之间按时间平滑过渡，消除 20Hz stair-step
   const t = Math.min((performance.now() - lastUpdate) / PUSH_INTERVAL, 1);
-  // 上行快（响应灵敏），下行慢（视觉柔和）
   const ATTACK = 0.4;
   const DECAY = 0.88;
 
@@ -92,12 +95,42 @@ const draw = (): void => {
     }
   }
 
+  // --- 立体声帧检测 + 时间插值平滑 ---
+  const stereo = getFftFrameStereo();
+  const hasStereo = stereo.left.length > 0;
+  if (hasStereo) {
+    if (stereo.left !== lastStereoRefL) {
+      lastStereoRefL = stereo.left;
+      prevL.set(currL);
+      prevR.set(currR);
+      for (let i = 0; i < FFT_SIZE; i++) {
+        currL[i] = stereo.left[i] ?? 0;
+        currR[i] = stereo.right[i] ?? 0;
+      }
+      lastUpdateStereo = performance.now();
+    }
+    const tS = Math.min((performance.now() - lastUpdateStereo) / PUSH_INTERVAL, 1);
+    for (let i = 0; i < FFT_SIZE; i++) {
+      const targetL = prevL[i] + (currL[i] - prevL[i]) * tS;
+      if (targetL > displayL[i]) {
+        displayL[i] = displayL[i] + (targetL - displayL[i]) * ATTACK;
+      } else {
+        displayL[i] = displayL[i] * DECAY + targetL * (1 - DECAY);
+      }
+      const targetR = prevR[i] + (currR[i] - prevR[i]) * tS;
+      if (targetR > displayR[i]) {
+        displayR[i] = displayR[i] + (targetR - displayR[i]) * ATTACK;
+      } else {
+        displayR[i] = displayR[i] * DECAY + targetR * (1 - DECAY);
+      }
+    }
+  }
+
   const cssWidth = canvas.clientWidth;
   const cssHeight = canvas.clientHeight;
   const usableLen = FFT_SIZE - SKIP_LOW;
   const barWidth = Math.max(1, settings.player.spectrumBarWidth);
   const slotWidth = barWidth + BAR_GAP;
-  // 一侧能放下的 bar 数；不再限制 ≤ usableLen，允许过采样（多个相邻 bar 共用一个 bin 的均值）
   const numBars = Math.floor(cssWidth / 2 / slotWidth);
   if (numBars === 0) return;
 
@@ -109,8 +142,10 @@ const draw = (): void => {
 
   ctx.beginPath();
   if (isSplit) {
-    // 立体声模式：两侧均使用全频段，高频在中心、低频在边缘（与对称模式频率方向相反）
-    // 两侧各用 usableLen 个 bin，保证与对称模式相同的 bin/bar 密度
+    // 立体声模式：高频在中心、低频在边缘
+    // 有立体声数据时左侧用 L 声道、右侧用 R 声道；无立体声时两侧共用 mono
+    const leftData = hasStereo ? displayL : display;
+    const rightData = hasStereo ? displayR : display;
     for (let i = 0; i < numBars; i++) {
       const xRight = halfWidth + i * slotWidth;
       const xLeft = halfWidth - (i + 1) * slotWidth;
@@ -120,19 +155,23 @@ const draw = (): void => {
       const end = ((numBars - i) / numBars) * usableLen;
       const lo = Math.floor(start);
       const hi = Math.ceil(end);
-      let sum = 0;
+
+      let sumL = 0;
+      let sumR = 0;
       let weight = 0;
       for (let j = lo; j < hi; j++) {
         const w = Math.min(end, j + 1) - Math.max(start, j);
         if (w > 0) {
-          sum += display[SKIP_LOW + j] * w;
+          sumL += leftData[SKIP_LOW + j] * w;
+          sumR += rightData[SKIP_LOW + j] * w;
           weight += w;
         }
       }
-      const h = (weight > 0 ? sum / weight : 0) * cssHeight;
-      if (h > 0.5) {
-        ctx.roundRect(xLeft, cssHeight - h, barWidth, h, props.radius);
-        ctx.roundRect(xRight, cssHeight - h, barWidth, h, props.radius);
+      if (weight > 0) {
+        const hL = (sumL / weight) * cssHeight;
+        const hR = (sumR / weight) * cssHeight;
+        if (hL > 0.5) ctx.roundRect(xLeft, cssHeight - hL, barWidth, hL, props.radius);
+        if (hR > 0.5) ctx.roundRect(xRight, cssHeight - hR, barWidth, hR, props.radius);
       }
     }
   } else {
@@ -202,6 +241,13 @@ onBeforeUnmount(() => {
   curr.fill(0);
   display.fill(0);
   lastRef = [];
+  prevL.fill(0);
+  currL.fill(0);
+  displayL.fill(0);
+  prevR.fill(0);
+  currR.fill(0);
+  displayR.fill(0);
+  lastStereoRefL = [];
 });
 </script>
 

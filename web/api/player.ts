@@ -39,7 +39,10 @@ class WebAudioPlayer implements PlayerApi {
   private audio: HTMLAudioElement;
   private ctx: AudioContext | null = null;
   private sourceNode: MediaElementAudioSourceNode | null = null;
-  private analyser: AnalyserNode | null = null;
+  private analyserL: AnalyserNode | null = null;
+  private analyserR: AnalyserNode | null = null;
+  private splitter: ChannelSplitterNode | null = null;
+  private merger: ChannelMergerNode | null = null;
   private normalizerNode: AudioWorkletNode | null = null;
   private normalizerReady = false;
   private preamp: GainNode | null = null;
@@ -77,8 +80,13 @@ class WebAudioPlayer implements PlayerApi {
     this.preamp = this.ctx.createGain();
     this.volumeGain = this.ctx.createGain();
     this.volumeGain.gain.value = this.volume;
-    this.analyser = this.ctx.createAnalyser();
-    this.analyser.fftSize = 1024;
+    // 立体声 FFT：splitter 分出左右声道各接一个 AnalyserNode，merger 合回立体声输出
+    this.analyserL = this.ctx.createAnalyser();
+    this.analyserL.fftSize = 1024;
+    this.analyserR = this.ctx.createAnalyser();
+    this.analyserR.fftSize = 1024;
+    this.splitter = this.ctx.createChannelSplitter(2);
+    this.merger = this.ctx.createChannelMerger(2);
     // 10 频段 EQ 链
     const freqs = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
     this.eqNodes = freqs.map((f) => {
@@ -89,11 +97,15 @@ class WebAudioPlayer implements PlayerApi {
       n.gain.value = 0;
       return n;
     });
-    // 连接：source → preamp → [eq / normalization] → volume → analyser → destination
+    // 连接：source → preamp → [eq / normalization] → volume → splitter → [L/R analyser] → merger → destination
     const node: AudioNode = this.sourceNode;
     node.connect(this.preamp);
-    this.volumeGain.connect(this.analyser);
-    this.analyser.connect(this.ctx.destination);
+    this.volumeGain.connect(this.splitter);
+    this.splitter.connect(this.analyserL, 0);
+    this.splitter.connect(this.analyserR, 1);
+    this.analyserL.connect(this.merger, 0, 0);
+    this.analyserR.connect(this.merger, 0, 1);
+    this.merger.connect(this.ctx.destination);
     this.applyProcessingChain();
     // 异步加载响度归一化 worklet（不阻塞播放路径）
     if (this.normalization && !this.normalizerReady) {
@@ -351,10 +363,27 @@ class WebAudioPlayer implements PlayerApi {
   }
 
   async getFftData(): Promise<IpcResponse<number[]>> {
-    if (!this.fftEnabled || !this.analyser) return ok([]);
-    const arr = new Uint8Array(this.analyser.frequencyBinCount);
-    this.analyser.getByteFrequencyData(arr);
-    return ok(Array.from(arr));
+    if (!this.fftEnabled || !this.analyserL || !this.analyserR) return ok([]);
+    const arrL = new Uint8Array(this.analyserL.frequencyBinCount);
+    const arrR = new Uint8Array(this.analyserR.frequencyBinCount);
+    this.analyserL.getByteFrequencyData(arrL);
+    this.analyserR.getByteFrequencyData(arrR);
+    const mono = new Array(arrL.length);
+    for (let i = 0; i < arrL.length; i++) {
+      mono[i] = (arrL[i] + arrR[i]) / 2;
+    }
+    return ok(mono);
+  }
+
+  async getFftDataStereo(): Promise<IpcResponse<{ left: number[]; right: number[] }>> {
+    if (!this.fftEnabled || !this.analyserL || !this.analyserR) {
+      return ok({ left: [], right: [] });
+    }
+    const arrL = new Uint8Array(this.analyserL.frequencyBinCount);
+    const arrR = new Uint8Array(this.analyserR.frequencyBinCount);
+    this.analyserL.getByteFrequencyData(arrL);
+    this.analyserR.getByteFrequencyData(arrR);
+    return ok({ left: Array.from(arrL), right: Array.from(arrR) });
   }
 
   async setFadeDuration(ms: number): Promise<IpcResponse> {
@@ -406,7 +435,10 @@ class WebAudioPlayer implements PlayerApi {
       } catch {}
       this.ctx = null;
       this.sourceNode = null;
-      this.analyser = null;
+      this.analyserL = null;
+      this.analyserR = null;
+      this.splitter = null;
+      this.merger = null;
       this.preamp = null;
       this.volumeGain = null;
       this.eqNodes = [];

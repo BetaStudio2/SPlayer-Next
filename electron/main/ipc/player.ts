@@ -514,6 +514,11 @@ export const registerPlayerIpc = (): void => {
     return { success: true, data: getPlayer().getFftData() };
   });
 
+  // 获取立体声 FFT 频谱数据（Electron 端暂不支持，返回空数组）
+  ipcMain.handle("player:getFftDataStereo", () => {
+    return { success: true, data: { left: [], right: [] } };
+  });
+
   // 按需读取外部歌词文件内容
   // 后缀白名单：该通道只服务歌词文件，防止被当成任意文件读取接口
   // 必须与引擎扫描列表一致（native/audio-engine/src/metadata.rs 的 LYRIC_EXTENSIONS）
