@@ -5,6 +5,8 @@ edition = "2021"
 description = "signalsmith-stretch 封装，为 C 音频引擎提供变速变调能力"
 publish = false
 
+[workspace]
+
 [lib]
 crate-type = ["staticlib"]
 
