@@ -104,27 +104,69 @@ const draw = (): void => {
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   ctx.fillStyle = getComputedStyle(canvas).color;
 
+  const isSplit = settings.player.spectrumDisplayMode === "split";
   const halfWidth = cssWidth / 2;
-  for (let i = 0; i < numBars; i++) {
-    // 每个 bar 覆盖一段 bin，再扩 1 个邻居做空间平滑，避免相邻 bin 方差导致的悬崖
-    const startBin = SKIP_LOW + Math.floor((i * usableLen) / numBars);
-    const endBin = SKIP_LOW + Math.floor(((i + 1) * usableLen) / numBars);
-    const lo = Math.max(SKIP_LOW, startBin - 1);
-    const hi = Math.min(FFT_SIZE, Math.max(endBin, startBin + 1) + 1);
-    let sum = 0;
-    for (let j = lo; j < hi; j++) sum += display[j];
-    const v = sum / (hi - lo);
+  /** 每个频段覆盖的 bin 数 */
+  const binStep = isSplit ? Math.floor(usableLen / 2 / numBars) || 1 : usableLen / numBars;
 
-    const barHeight = v * cssHeight;
-    if (barHeight <= 0.5) continue;
-    const y = cssHeight - barHeight;
+  for (let i = 0; i < numBars; i++) {
     const xRight = halfWidth + i * slotWidth;
     const xLeft = halfWidth - (i + 1) * slotWidth;
-    ctx.beginPath();
-    ctx.roundRect(xRight, y, barWidth, barHeight, props.radius);
-    ctx.roundRect(xLeft, y, barWidth, barHeight, props.radius);
-    ctx.fill();
+
+    if (isSplit) {
+      // 立体声模式：左侧低频（lower half），右侧高频（upper half）
+      const binOffset = Math.floor(i * binStep);
+      const lBinStart = SKIP_LOW + binOffset;
+      const lBinEnd = Math.min(SKIP_LOW + Math.floor(usableLen / 2), lBinStart + Math.max(1, Math.floor(binStep) + 1));
+      const rBinStart = SKIP_LOW + Math.floor(usableLen / 2) + binOffset;
+      const rBinEnd = Math.min(FFT_SIZE, rBinStart + Math.max(1, Math.floor(binStep) + 1));
+
+      // 左 bar
+      const lValue = getAvgBin(lBinStart, lBinEnd);
+      const barHeightL = lValue * cssHeight;
+      if (barHeightL > 0.5) {
+        ctx.beginPath();
+        ctx.roundRect(xLeft, cssHeight - barHeightL, barWidth, barHeightL, props.radius);
+        ctx.fill();
+      }
+
+      // 右 bar
+      const rValue = getAvgBin(rBinStart, rBinEnd);
+      const barHeightR = rValue * cssHeight;
+      if (barHeightR > 0.5) {
+        ctx.beginPath();
+        ctx.roundRect(xRight, cssHeight - barHeightR, barWidth, barHeightR, props.radius);
+        ctx.fill();
+      }
+    } else {
+      // 对称模式：两侧显示相同数据（原行为）
+      const startBin = SKIP_LOW + Math.floor((i * usableLen) / numBars);
+      const endBin = SKIP_LOW + Math.floor(((i + 1) * usableLen) / numBars);
+      const lo = Math.max(SKIP_LOW, startBin - 1);
+      const hi = Math.min(FFT_SIZE, Math.max(endBin, startBin + 1) + 1);
+      let sum = 0;
+      for (let j = lo; j < hi; j++) sum += display[j];
+      const v = sum / (hi - lo);
+
+      const barHeight = v * cssHeight;
+      if (barHeight <= 0.5) continue;
+      const y = cssHeight - barHeight;
+      ctx.beginPath();
+      ctx.roundRect(xRight, y, barWidth, barHeight, props.radius);
+      ctx.roundRect(xLeft, y, barWidth, barHeight, props.radius);
+      ctx.fill();
+    }
   }
+};
+
+/** 取一段 bin 的均值 */
+const getAvgBin = (lo: number, hi: number): number => {
+  const loClamp = Math.max(SKIP_LOW, lo);
+  const hiClamp = Math.min(FFT_SIZE, hi);
+  if (loClamp >= hiClamp) return 0;
+  let sum = 0;
+  for (let j = loClamp; j < hiClamp; j++) sum += display[j];
+  return sum / (hiClamp - loClamp);
 };
 
 const { resume, pause } = useRafFn(draw, { immediate: false });

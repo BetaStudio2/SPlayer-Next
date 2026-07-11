@@ -269,6 +269,16 @@ const playerCategory: SettingCategory = {
               defaultValue: 4,
               marks: { 1: "1", 4: "4", 8: "8", 12: "12" },
             },
+            {
+              key: "spectrumDisplayMode",
+              type: "select",
+              binding: { store: "settings", path: "player.spectrumDisplayMode" },
+              options: [
+                { value: "mirror", labelKey: "settings.spectrumDisplayMode.mirror" },
+                { value: "split", labelKey: "settings.spectrumDisplayMode.split" },
+              ],
+              defaultValue: "mirror",
+            },
           ],
         },
       ],

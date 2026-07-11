@@ -895,6 +895,12 @@
       "label": "Balkenbreite",
       "description": "Kleinere Werte ergeben dünnere, dichtere Balken"
     },
+    "spectrumDisplayMode": {
+      "label": "Anzeigemodus",
+      "description": "Der Spiegelmodus zeigt dasselbe Spektrum auf beiden Seiten; der Stereo-Modus teilt den Frequenzbereich in links und rechts auf",
+      "mirror": "Spiegel",
+      "split": "Stereo"
+    },
     "lyricSourcePreference": {
       "label": "Liedtextquellen-Präferenz",
       "description": "Plattformpriorität beim Abgleich von Online-Liedtexten",

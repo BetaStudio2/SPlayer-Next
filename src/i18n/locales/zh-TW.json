@@ -895,6 +895,12 @@
       "label": "條形寬度",
       "description": "數值越小，條形越細、越密集"
     },
+    "spectrumDisplayMode": {
+      "label": "頻譜顯示模式",
+      "description": "對稱模式兩側鏡像顯示相同頻譜，立體聲模式將頻段分左右兩側展示",
+      "mirror": "對稱",
+      "split": "立體聲"
+    },
     "lyricSourcePreference": {
       "label": "歌詞來源偏好",
       "description": "匹配線上歌詞時的平台優先順序",

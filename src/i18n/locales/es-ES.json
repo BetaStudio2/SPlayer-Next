@@ -895,6 +895,12 @@
       "label": "Ancho de barra",
       "description": "Valores más pequeños dan barras más finas y densas"
     },
+    "spectrumDisplayMode": {
+      "label": "Modo de visualización",
+      "description": "El modo espejo muestra el mismo espectro en ambos lados; el modo estéreo divide el rango de frecuencia en izquierda y derecha",
+      "mirror": "Espejo",
+      "split": "Estéreo"
+    },
     "lyricSourcePreference": {
       "label": "Preferencia de fuente de letra",
       "description": "Prioridad de plataforma al buscar letras en línea",

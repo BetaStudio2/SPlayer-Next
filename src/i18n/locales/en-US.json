@@ -920,6 +920,12 @@
       "label": "Bar Width",
       "description": "Smaller values give thinner, denser bars"
     },
+    "spectrumDisplayMode": {
+      "label": "Display Mode",
+      "description": "Mirror mode shows mirrored bars on both sides; split mode divides the frequency range left and right",
+      "mirror": "Mirror",
+      "split": "Split"
+    },
     "lyricSourcePreference": {
       "label": "Lyric Source Preference",
       "description": "Platform priority when matching online lyrics",

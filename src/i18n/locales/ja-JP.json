@@ -895,6 +895,12 @@
       "label": "バー幅",
       "description": "小さい値ほど細く密集したバーになります"
     },
+    "spectrumDisplayMode": {
+      "label": "表示モード",
+      "description": "ミラーモードは両側に同じスペクトルを表示、ステレオモードは周波数帯域を左右に分割します",
+      "mirror": "ミラー",
+      "split": "ステレオ"
+    },
     "lyricSourcePreference": {
       "label": "歌詞ソースの優先順位",
       "description": "オンライン歌詞マッチング時のプラットフォーム優先度",

@@ -895,6 +895,12 @@
       "label": "Largeur des barres",
       "description": "Des valeurs plus petites donnent des barres plus fines et plus denses"
     },
+    "spectrumDisplayMode": {
+      "label": "Mode d'affichage",
+      "description": "Le mode miroir affiche le même spectre des deux côtés ; le mode stéréo divise la plage de fréquences à gauche et à droite",
+      "mirror": "Miroir",
+      "split": "Stéréo"
+    },
     "lyricSourcePreference": {
       "label": "Préférence de source des paroles",
       "description": "Priorité de la plateforme lors de la correspondance des paroles en ligne",

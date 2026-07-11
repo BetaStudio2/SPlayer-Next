@@ -1,5 +1,6 @@
 import { dialog } from "@/composables/useDialog";
 import { useSettingsStore } from "@/stores/settings";
+import { isElectron } from "@/utils/config";
 import SRadio from "@/components/ui/SRadio.vue";
 import SCheckbox from "@/components/ui/SCheckbox.vue";
 
@@ -10,7 +11,8 @@ export const useWindowControls = () => {
 
   const isMaximized = ref(false);
   const isFullscreen = ref(false);
-  const isBorderless = computed(() => settings.system.system.borderlessWindow);
+  /** Web 模式下无原生窗口，隐藏三键 */
+  const isBorderless = computed(() => isElectron && settings.system.system.borderlessWindow);
 
   const minimize = (): void => window.api.window.minimize();
   const toggleMaximize = (): void => window.api.window.toggleMaximize();

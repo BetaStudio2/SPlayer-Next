@@ -6,6 +6,9 @@ import type { QualityLevel } from "@/utils/quality";
 
 /** 播放器背景类型 */
 export type PlayerBgType = "blur" | "solid" | "animation";
+
+/** 频谱显示模式 */
+export type SpectrumDisplayMode = "mirror" | "split";
 export type CoverLayout = "default" | "fullscreen";
 
 /**
@@ -174,6 +177,8 @@ export interface PlayerSettings {
   enableSpectrum: boolean;
   /** 频谱单条宽度（px） */
   spectrumBarWidth: number;
+  /** 频谱显示模式 */
+  spectrumDisplayMode: SpectrumDisplayMode;
   /** 在线歌曲音质偏好；实际可用级别取决于账号权限 */
   songLevel: QualityLevel;
   /** 允许完整音源不可用时播放试听片段 */

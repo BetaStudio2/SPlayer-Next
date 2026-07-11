@@ -91,6 +91,7 @@ export const useSettingsStore = defineStore(
       pauseOnDeviceSwitch: false,
       enableSpectrum: false,
       spectrumBarWidth: 4,
+      spectrumDisplayMode: "mirror",
       songLevel: "hq",
       allowTrialPlay: false,
       serverTranscode: false,

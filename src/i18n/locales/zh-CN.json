@@ -908,6 +908,12 @@
       "label": "频谱条宽度",
       "description": "数值越小柱条越细越密"
     },
+    "spectrumDisplayMode": {
+      "label": "频谱显示模式",
+      "description": "对称模式两侧镜像显示相同频谱，立体声模式将频段分左右两侧展示",
+      "mirror": "对称",
+      "split": "立体声"
+    },
     "lyricSourcePreference": {
       "label": "歌词来源偏好",
       "description": "匹配在线歌词时的平台优先级",

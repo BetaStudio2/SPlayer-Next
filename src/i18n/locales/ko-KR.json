@@ -895,6 +895,12 @@
       "label": "막대 너비",
       "description": "값이 작을수록 더 얇고 조밀한 막대가 생성됩니다"
     },
+    "spectrumDisplayMode": {
+      "label": "디스플레이 모드",
+      "description": "미러 모드는 양쪽에 동일한 스펙트럼을 표시하고, 스테레오 모드는 주파수 대역을 좌우로 나눕니다",
+      "mirror": "미러",
+      "split": "스테레오"
+    },
     "lyricSourcePreference": {
       "label": "가사 소스 우선순위",
       "description": "온라인 가사 매칭 시 플랫폼 우선순위",
