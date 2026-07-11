@@ -8,7 +8,6 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import { wsManager } from "@/services/ws";
 import { toast } from "@/composables/useToast";
 import IconLucideArrowLeft from "~icons/lucide/arrow-left";
 import IconLucideCpu from "~icons/lucide/cpu";
@@ -107,25 +106,42 @@ function handleLogs(data: LogEntry[]): void {
   }
 }
 
-const unsubs: (() => void)[] = [];
+/* ---- SSE / 实时推送 ---- */
+let eventSource: EventSource | null = null;
 
 onMounted(() => {
-  wsManager.connect();
-  wsManager.send(JSON.stringify({ type: "admin:subscribe" }));
   connected.value = true;
 
-  const unsubStats = wsManager.on("admin:stats", (data) => {
-    handleStats(data as Stats);
-  });
-  const unsubLogs = wsManager.on("admin:logs", (data) => {
-    handleLogs(data as LogEntry[]);
-  });
-  unsubs.push(unsubStats, unsubLogs);
+  eventSource = new EventSource("/api/admin/stream");
+  eventSource.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      if (payload.type === "stats") {
+        handleStats(payload.data as Stats);
+      } else if (payload.type === "logs") {
+        handleLogs(payload.data as LogEntry[]);
+      }
+    } catch {
+      // 忽略解析错误
+    }
+  };
+  eventSource.onerror = () => {
+    polling.value = false;
+    // EventSource 会自动重连
+  };
 
-  onUnmounted(() => {
-    wsManager.send(JSON.stringify({ type: "admin:unsubscribe" }));
-    unsubs.forEach((fn) => fn());
-  });
+  // 初始加载：通过 REST 拉取一次历史日志
+  fetch("/api/admin/logs?tail=100")
+    .then((res) => res.ok && res.json())
+    .then((data) => { if (data) logs.value = data as LogEntry[]; })
+    .catch(() => { /* ignore */ });
+});
+
+onUnmounted(() => {
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
 });
 
 /* ---- 手动刷新 ---- */
