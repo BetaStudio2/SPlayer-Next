@@ -1,6 +1,7 @@
 import type { Track, TrackDetail } from "@shared/types/player";
 import type { LyricData, LyricFormat, LyricInput, LyricMatchResult } from "@shared/types/lyrics";
 import type { Platform } from "@shared/types/platform";
+import type { SourceCapability } from "@shared/types/plugin";
 import { isPlatform } from "@shared/types/platform";
 import { detectFormat } from "@/utils/lyric/parse";
 import { useSettingsStore } from "@/stores/settings";
@@ -243,7 +244,8 @@ export const resolvePluginLyric = async (track: Track): Promise<ResolvedLyric | 
   for (const info of plugins.list) {
     if (!info.enabled || info.status.state !== "ready") continue;
     for (const [source, cap] of Object.entries(info.status.sources)) {
-      if (!cap.actions.includes("musicLyric")) continue;
+      const capability = cap as SourceCapability;
+      if (!capability.actions.includes("musicLyric")) continue;
       const resp = await window.api.plugins.matchLyric({
         pluginId: info.manifest.id,
         source,
