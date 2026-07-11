@@ -26,7 +26,7 @@ export const commentsApi: CommentsApi = {
 
   async get(args: MusicCommentQuery): Promise<MusicCommentResponse> {
     try {
-      const res = await post("/", args);
+      const res = await post("", args);
       return (await res.json()) as MusicCommentResponse;
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : "network error" };
