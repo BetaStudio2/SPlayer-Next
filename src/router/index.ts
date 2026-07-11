@@ -88,6 +88,13 @@ const router = createRouter({
           name: "search",
           component: () => import("@/pages/Search.vue"),
         },
+        {
+          path: "admin",
+          name: "admin",
+          component: () => import("@/pages/Admin.vue"),
+          /** Web 服务端模式专属：服务端监控仪表盘 */
+          meta: { webOnly: true },
+        },
         ...(isElectron
           ? [
               {

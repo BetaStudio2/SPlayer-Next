@@ -113,6 +113,7 @@ const generalCategory: SettingCategory = {
           type: "switch",
           binding: { store: "settings", path: "appearance.showPerformanceMonitor" },
           defaultValue: false,
+          visible: () => !isWeb,
         },
         {
           key: "devtools",
@@ -121,7 +122,7 @@ const generalCategory: SettingCategory = {
             const { useRouter } = await import("vue-router");
             useRouter().push("/admin");
           },
-          visible: () => !isWeb,
+          visible: () => isWeb,
         },
       ],
     },

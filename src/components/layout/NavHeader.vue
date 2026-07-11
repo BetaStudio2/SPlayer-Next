@@ -42,16 +42,19 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
     icon: themeIcon.value,
     disabled: theme.appearanceStyle === "image",
   },
-  { key: "uiZoom", label: t("uiZoom.title"), icon: IconScaling },
+  { key: "uiZoom", label: t("uiZoom.title"), icon: IconScaling, show: isWeb },
   { key: "reload", label: t("nav.reload"), icon: IconRefreshCw, separator: true },
-  { key: "devtools", label: t("nav.devtools"), icon: IconTerminal, show: !isWeb },
+  { key: "devtools", label: t("nav.devtools"), icon: IconTerminal },
   { key: "settings", label: t("nav.globalSettings"), icon: IconSettings },
 ]);
 
 const onMenuSelect = (key: string): void => {
   if (key === "theme") theme.cycleMode();
   else if (key === "reload") location.reload();
-  else if (key === "devtools" && !isWeb) window.api.system.toggleDevTools();
+  else if (key === "devtools") {
+    if (isWeb) router.push("/admin");
+    else window.api.system.toggleDevTools();
+  }
   else if (key === "uiZoom") uiZoomOpen.value = true;
   else if (key === "settings") showSettings();
 };
