@@ -106,54 +106,37 @@ const draw = (): void => {
 
   const isSplit = settings.player.spectrumDisplayMode === "split";
   const halfWidth = cssWidth / 2;
-  const halfUsable = Math.floor(usableLen / 2);
 
   ctx.beginPath();
   if (isSplit) {
-    // 立体声模式：左侧低频段，右侧高频段
-    // 用浮点加权平均替代 floor 整数分配，消除 halfUsable/numBars 非整除时的 bin 数交替跳变
+    // 立体声模式：两侧均使用全频段，高频在中心、低频在边缘（与对称模式频率方向相反）
+    // 两侧各用 usableLen 个 bin，保证与对称模式相同的 bin/bar 密度
     for (let i = 0; i < numBars; i++) {
       const xRight = halfWidth + i * slotWidth;
       const xLeft = halfWidth - (i + 1) * slotWidth;
 
-      // 左侧低频段：bins [SKIP_LOW, SKIP_LOW + halfUsable)
       // 反向映射：i=0（中心）取高频端，i=numBars-1（边缘）取低频端
-      const lStart = ((numBars - i - 1) / numBars) * halfUsable;
-      const lEnd = ((numBars - i) / numBars) * halfUsable;
-      const lLo = Math.floor(lStart);
-      const lHi = Math.ceil(lEnd);
-      let lSum = 0;
-      let lW = 0;
-      for (let j = lLo; j < lHi; j++) {
-        const w = Math.min(lEnd, j + 1) - Math.max(lStart, j);
+      const start = ((numBars - i - 1) / numBars) * usableLen;
+      const end = ((numBars - i) / numBars) * usableLen;
+      const lo = Math.floor(start);
+      const hi = Math.ceil(end);
+      let sum = 0;
+      let weight = 0;
+      for (let j = lo; j < hi; j++) {
+        const w = Math.min(end, j + 1) - Math.max(start, j);
         if (w > 0) {
-          lSum += display[SKIP_LOW + j] * w;
-          lW += w;
+          sum += display[SKIP_LOW + j] * w;
+          weight += w;
         }
       }
-      const lH = (lW > 0 ? lSum / lW : 0) * cssHeight;
-      if (lH > 0.5) ctx.roundRect(xLeft, cssHeight - lH, barWidth, lH, props.radius);
-
-      // 右侧高频段：bins [SKIP_LOW + halfUsable, FFT_SIZE)
-      // 反向映射：i=0（中心）取高频端，i=numBars-1（边缘）取低频端
-      const rStart = ((numBars - i - 1) / numBars) * halfUsable;
-      const rEnd = ((numBars - i) / numBars) * halfUsable;
-      const rLo = Math.floor(rStart);
-      const rHi = Math.ceil(rEnd);
-      let rSum = 0;
-      let rW = 0;
-      for (let j = rLo; j < rHi; j++) {
-        const w = Math.min(rEnd, j + 1) - Math.max(rStart, j);
-        if (w > 0) {
-          rSum += display[SKIP_LOW + halfUsable + j] * w;
-          rW += w;
-        }
+      const h = (weight > 0 ? sum / weight : 0) * cssHeight;
+      if (h > 0.5) {
+        ctx.roundRect(xLeft, cssHeight - h, barWidth, h, props.radius);
+        ctx.roundRect(xRight, cssHeight - h, barWidth, h, props.radius);
       }
-      const rH = (rW > 0 ? rSum / rW : 0) * cssHeight;
-      if (rH > 0.5) ctx.roundRect(xRight, cssHeight - rH, barWidth, rH, props.radius);
     }
   } else {
-    // 对称模式：两侧显示相同数据
+    // 对称模式：两侧显示相同数据，低频在中心、高频在边缘
     for (let i = 0; i < numBars; i++) {
       const xRight = halfWidth + i * slotWidth;
       const xLeft = halfWidth - (i + 1) * slotWidth;
