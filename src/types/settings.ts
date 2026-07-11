@@ -178,6 +178,8 @@ export interface PlayerSettings {
   songLevel: QualityLevel;
   /** 允许完整音源不可用时播放试听片段 */
   allowTrialPlay: boolean;
+  /** 服务端转码（Web 模式）：将本地音频通过 C 引擎转码为 OGG/Opus */
+  serverTranscode: boolean;
   /** 时间显示格式 */
   timeFormat: TimeFormat;
   /** 显示进度条悬浮信息 */

@@ -874,6 +874,10 @@
       "label": "Allow Trial Playback",
       "description": "Play trial clips returned by the platform only when full sources and plugins are unavailable"
     },
+    "serverTranscode": {
+      "label": "Server-Side Transcoding",
+      "description": "Transcode local audio to OGG/Opus format via server-side C engine"
+    },
     "outputDevice": {
       "label": "Output Device",
       "description": "Select audio output device",

@@ -3,6 +3,9 @@ import { useSettingsStore } from "@/stores/settings";
 import DeviceSelector from "@/components/settings/custom/DeviceSelector.vue";
 import IconLucidePlay from "~icons/lucide/play";
 
+/** 是否为 Web 服务端模式 */
+const isWeb = !navigator.userAgent.includes("Electron");
+
 /** 当前是否为流体背景 */
 const isAnimationBg = () => useSettingsStore().player.playerBgType === "animation";
 
@@ -74,6 +77,13 @@ const playerCategory: SettingCategory = {
           type: "switch",
           binding: { store: "settings", path: "player.allowTrialPlay" },
           defaultValue: false,
+        },
+        {
+          key: "serverTranscode",
+          type: "switch",
+          binding: { store: "settings", path: "player.serverTranscode" },
+          defaultValue: false,
+          visible: () => isWeb,
         },
       ],
     },

@@ -93,6 +93,7 @@ export const useSettingsStore = defineStore(
       spectrumBarWidth: 4,
       songLevel: "hq",
       allowTrialPlay: false,
+      serverTranscode: false,
       timeFormat: "current-total",
       showProgressTooltip: true,
       showProgressLyric: false,
