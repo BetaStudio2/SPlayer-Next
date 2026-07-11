@@ -106,37 +106,33 @@ const draw = (): void => {
 
   const isSplit = settings.player.spectrumDisplayMode === "split";
   const halfWidth = cssWidth / 2;
-  /** 每个频段覆盖的 bin 数 */
-  const binStep = isSplit ? Math.floor(usableLen / 2 / numBars) || 1 : usableLen / numBars;
 
+  // 统一用比例分配 bin 范围，确保全频段填满
+  const halfUsable = Math.floor(usableLen / 2);
+
+  ctx.beginPath();
   for (let i = 0; i < numBars; i++) {
     const xRight = halfWidth + i * slotWidth;
     const xLeft = halfWidth - (i + 1) * slotWidth;
 
     if (isSplit) {
-      // 立体声模式：左侧低频（lower half），右侧高频（upper half）
-      const binOffset = Math.floor(i * binStep);
-      const lBinStart = SKIP_LOW + binOffset;
-      const lBinEnd = Math.min(SKIP_LOW + Math.floor(usableLen / 2), lBinStart + Math.max(1, Math.floor(binStep) + 1));
-      const rBinStart = SKIP_LOW + Math.floor(usableLen / 2) + binOffset;
-      const rBinEnd = Math.min(FFT_SIZE, rBinStart + Math.max(1, Math.floor(binStep) + 1));
+      // 立体声模式：左侧低频段，右侧高频段
+      // 用比例分配确保每个 bin 都被覆盖，与镜向模式一致
+      const lStartBin = SKIP_LOW + Math.floor((i * halfUsable) / numBars);
+      const lEndBin = SKIP_LOW + Math.floor(((i + 1) * halfUsable) / numBars);
+      const rStartBin = SKIP_LOW + halfUsable + Math.floor((i * halfUsable) / numBars);
+      const rEndBin = SKIP_LOW + halfUsable + Math.floor(((i + 1) * halfUsable) / numBars);
 
-      // 左 bar
-      const lValue = getAvgBin(lBinStart, lBinEnd);
+      const lValue = getAvgBin(lStartBin, lEndBin);
       const barHeightL = lValue * cssHeight;
       if (barHeightL > 0.5) {
-        ctx.beginPath();
         ctx.roundRect(xLeft, cssHeight - barHeightL, barWidth, barHeightL, props.radius);
-        ctx.fill();
       }
 
-      // 右 bar
-      const rValue = getAvgBin(rBinStart, rBinEnd);
+      const rValue = getAvgBin(rStartBin, rEndBin);
       const barHeightR = rValue * cssHeight;
       if (barHeightR > 0.5) {
-        ctx.beginPath();
         ctx.roundRect(xRight, cssHeight - barHeightR, barWidth, barHeightR, props.radius);
-        ctx.fill();
       }
     } else {
       // 对称模式：两侧显示相同数据（原行为）
@@ -151,12 +147,11 @@ const draw = (): void => {
       const barHeight = v * cssHeight;
       if (barHeight <= 0.5) continue;
       const y = cssHeight - barHeight;
-      ctx.beginPath();
       ctx.roundRect(xRight, y, barWidth, barHeight, props.radius);
       ctx.roundRect(xLeft, y, barWidth, barHeight, props.radius);
-      ctx.fill();
     }
   }
+  ctx.fill();
 };
 
 /** 取一段 bin 的均值 */
