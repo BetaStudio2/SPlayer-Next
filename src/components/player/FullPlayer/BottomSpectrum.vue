@@ -117,8 +117,9 @@ const draw = (): void => {
       const xLeft = halfWidth - (i + 1) * slotWidth;
 
       // 左侧低频段：bins [SKIP_LOW, SKIP_LOW + halfUsable)
-      const lStart = (i / numBars) * halfUsable;
-      const lEnd = ((i + 1) / numBars) * halfUsable;
+      // 反向映射：i=0（中心）取高频端，i=numBars-1（边缘）取低频端
+      const lStart = ((numBars - i - 1) / numBars) * halfUsable;
+      const lEnd = ((numBars - i) / numBars) * halfUsable;
       const lLo = Math.floor(lStart);
       const lHi = Math.ceil(lEnd);
       let lSum = 0;
@@ -134,8 +135,9 @@ const draw = (): void => {
       if (lH > 0.5) ctx.roundRect(xLeft, cssHeight - lH, barWidth, lH, props.radius);
 
       // 右侧高频段：bins [SKIP_LOW + halfUsable, FFT_SIZE)
-      const rStart = (i / numBars) * halfUsable;
-      const rEnd = ((i + 1) / numBars) * halfUsable;
+      // 反向映射：i=0（中心）取高频端，i=numBars-1（边缘）取低频端
+      const rStart = ((numBars - i - 1) / numBars) * halfUsable;
+      const rEnd = ((numBars - i) / numBars) * halfUsable;
       const rLo = Math.floor(rStart);
       const rHi = Math.ceil(rEnd);
       let rSum = 0;
