@@ -849,6 +849,10 @@
       "lossless": "無損",
       "hi-res": "Hi-Res"
     },
+    "serverTranscode": {
+      "label": "服務端轉碼",
+      "description": "通過服務端 C 引擎將音訊轉碼為 OGG/Opus 格式播放"
+    },
     "outputDevice": {
       "label": "輸出裝置",
       "description": "選擇音訊輸出裝置",

@@ -849,6 +849,10 @@
       "lossless": "Sans perte",
       "hi-res": "Haute résolution"
     },
+    "serverTranscode": {
+      "label": "Transcodage côté serveur",
+      "description": "Transcoder l'audio en OGG/Opus via le moteur C du serveur"
+    },
     "outputDevice": {
       "label": "Périphérique de sortie",
       "description": "Sélectionner le périphérique de sortie audio",

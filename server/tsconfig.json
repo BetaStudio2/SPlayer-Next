@@ -19,5 +19,5 @@
     }
   },
   "include": ["./**/*.ts"],
-  "exclude": ["dist", "node_modules", "scraper/build"]
+  "exclude": ["dist", "node_modules", "scraper/build", "audio-engine/build"]
 }

@@ -849,6 +849,10 @@
       "lossless": "ロスレス",
       "hi-res": "ハイレゾ"
     },
+    "serverTranscode": {
+      "label": "サーバーサイドトランスコード",
+      "description": "サーバーサイドの C エンジンで音声を OGG/Opus にトランスコード"
+    },
     "outputDevice": {
       "label": "出力デバイス",
       "description": "オーディオ出力デバイスを選択",
