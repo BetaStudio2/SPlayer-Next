@@ -83,6 +83,13 @@ class WebSocketManager {
     };
   }
 
+  /** 发送消息 */
+  send(data: string): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(data);
+    }
+  }
+
   /** 发送事件 */
   private emit(type: string, data: unknown): void {
     this.handlers.get(type)?.forEach((handler) => {
