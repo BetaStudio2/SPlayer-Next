@@ -1,8 +1,9 @@
 import { defineAsyncComponent } from "vue";
 import type { SettingCategory } from "@/types/settings-schema";
 import IconLucideWand2 from "~icons/lucide/wand-2";
+import { isElectron } from "@/utils/config";
 
-const isWeb = typeof window !== "undefined" && !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 const scraperCategory: SettingCategory = {
   id: "scraper",

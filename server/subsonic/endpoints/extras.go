@@ -320,7 +320,7 @@ func DeleteShare(w http.ResponseWriter, r *http.Request) {
 // GetScanStatus /rest/getScanStatus.view
 // 优先从 TS 后端拉取实时扫描进度，不可达时回退到数据库最后扫描时间
 func GetScanStatus(w http.ResponseWriter, r *http.Request) {
-	tsURL := os.Getenv("SUBSONIC_TS_URL")
+	tsURL := os.Getenv("SPLAYER_SUBSONIC_TS_URL")
 	if tsURL == "" {
 		tsURL = "http://127.0.0.1:8080"
 	}
@@ -376,7 +376,7 @@ func GetScanStatus(w http.ResponseWriter, r *http.Request) {
 // StartScan /rest/startScan.view
 // 通过回调 TS 服务端 /scan 触发实际扫描（TS 是扫描的真正执行者）
 func StartScan(w http.ResponseWriter, r *http.Request) {
-	tsURL := os.Getenv("SUBSONIC_TS_URL")
+	tsURL := os.Getenv("SPLAYER_SUBSONIC_TS_URL")
 	if tsURL == "" {
 		tsURL = "http://127.0.0.1:8080"
 	}

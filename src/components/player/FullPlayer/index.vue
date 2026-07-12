@@ -629,3 +629,35 @@ const showComments = (): void => {
   margin-left: 0.5em;
 }
 </style>
+
+<style>
+/* 全屏播放器媒体信息滑动过渡 — 从 global.css 迁移至组件级 */
+.slide-edge-next-enter-active {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+.slide-edge-next-leave-active {
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+.slide-edge-next-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+.slide-edge-next-leave-to {
+  opacity: 0;
+  transform: translateX(-100%);
+}
+.slide-edge-prev-enter-active {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+.slide-edge-prev-leave-active {
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+.slide-edge-prev-enter-from {
+  opacity: 0;
+  transform: translateX(-100%);
+}
+.slide-edge-prev-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+</style>

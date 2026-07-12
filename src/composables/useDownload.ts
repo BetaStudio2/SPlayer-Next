@@ -11,6 +11,7 @@ import { resolveDownloadSource } from "@/services/downloadSource";
 import { resolveDownloadLyric } from "@/services/downloadLyric";
 import { buildDownloadLyric } from "@/utils/lyric/serialize";
 import { toast } from "@/composables/useToast";
+import { isElectron } from "@/utils/config";
 
 /** 下载选项 */
 interface EnqueueOptions {
@@ -22,7 +23,7 @@ interface EnqueueOptions {
 
 const isTerminal = (status: DownloadStatus): boolean =>
   status !== "queued" && status !== "downloading";
-const isWeb = !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 /** 可下载音质档位（展示顺序） */
 const DOWNLOAD_QUALITY_LEVELS: QualityLevel[] = ["hi-res", "lossless", "hq", "sq", "lq"];

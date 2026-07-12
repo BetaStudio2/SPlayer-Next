@@ -5,6 +5,8 @@ import IconLucideRotateCcw from "~icons/lucide/rotate-ccw";
 import IconLucideCheck from "~icons/lucide/check";
 import IconLucidePencil from "~icons/lucide/pencil";
 
+import { isElectron } from "@/utils/config";
+
 defineOptions({ inheritAttrs: false });
 
 const { t } = useI18n();
@@ -12,7 +14,7 @@ const settings = useSettingsStore();
 
 const dir = ref("");
 /** Web 服务端模式：内联编辑状态 */
-const isWeb = !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 const editing = ref(false);
 const editValue = ref("");
 const saving = ref(false);

@@ -45,7 +45,7 @@ func main() {
 	// 端点分发：所有 /rest/* 请求统一进入 handler
 	r.Handle("/*", http.HandlerFunc(dispatch))
 
-	port := os.Getenv("SUBSONIC_PORT")
+	port := os.Getenv("SPLAYER_SUBSONIC_PORT")
 	if port == "" {
 		port = "8081"
 	}

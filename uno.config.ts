@@ -50,6 +50,14 @@ export default defineConfig({
           "{ from { transform: translateX(-100%) } to { transform: translateX(0) } }",
         "drawer-out-left":
           "{ from { transform: translateX(0) } to { transform: translateX(-100%) } }",
+        "slide-edge-next-in":
+          "{ from { opacity: 0; transform: translateX(100%) } to { opacity: 1; transform: translateX(0) } }",
+        "slide-edge-next-out":
+          "{ from { opacity: 1; transform: translateX(0) } to { opacity: 0; transform: translateX(-100%) } }",
+        "slide-edge-prev-in":
+          "{ from { opacity: 0; transform: translateX(-100%) } to { opacity: 1; transform: translateX(0) } }",
+        "slide-edge-prev-out":
+          "{ from { opacity: 1; transform: translateX(0) } to { opacity: 0; transform: translateX(100%) } }",
       },
       durations: {
         "popover-in": "200ms",

@@ -177,21 +177,11 @@ IMAGE_NAME="splayer-next"
 if [[ "$CN_MIRROR_MODE" == "1" || ( -z "$CN_MIRROR_MODE" && "${USE_CN_MIRROR:-0}" == "1" ) ]]; then
   CN_MIRROR_ARG="1"
   # 国内镜像名 (Fedora 版本)
-  GO_IMAGE="docker.m.daocloud.io/library/golang:1.23-bookworm"
   FEDORA_IMAGE="docker.m.daocloud.io/library/fedora:42"
-  RUST_IMAGE="docker.m.daocloud.io/library/rust:1-bookworm"
-  DOTNET_SDK_IMAGE="mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim"
-  GO_PROXY="https://goproxy.cn,direct"
-  GO_SUMDB="sum.golang.google.cn"
 else
   CN_MIRROR_ARG="0"
   # 国际镜像名 (Fedora 版本)
-  GO_IMAGE="golang:1.23-bookworm"
   FEDORA_IMAGE="fedora:42"
-  RUST_IMAGE="rust:1-bookworm"
-  DOTNET_SDK_IMAGE="mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim"
-  GO_PROXY="https://proxy.golang.org,direct"
-  GO_SUMDB="sum.golang.org"
 fi
 DOCKERFILE="Dockerfile"
 
@@ -324,12 +314,7 @@ for arch in "${TARGET_ARCHS[@]}"; do
     --tag "$latest_tag" \
     --build-arg "BUILD_JOBS=$BUILD_JOBS" \
     --build-arg "CN_MIRROR=$CN_MIRROR_ARG" \
-    --build-arg "GO_IMAGE=$GO_IMAGE" \
     --build-arg "FEDORA_IMAGE=$FEDORA_IMAGE" \
-    --build-arg "RUST_IMAGE=$RUST_IMAGE" \
-    --build-arg "DOTNET_SDK_IMAGE=$DOTNET_SDK_IMAGE" \
-    --build-arg "GO_PROXY=$GO_PROXY" \
-    --build-arg "GO_SUMDB=$GO_SUMDB" \
     --load \
     --progress=auto \
     . 2>&1 | tee "$_build_out"

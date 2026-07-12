@@ -1,39 +1,29 @@
-# SPlayer-Next 统一 Dockerfile (Fedora 42 版本)
+# SPlayer-Next 统一 Dockerfile（Fedora all-in-one）
 # 单镜像打包：
 #   - TS API + 前端静态资源
-#   - Go Subsonic
+#   - Go Subsonic / Monitor
 #   - C# Scanner
 #   - C++ Scraper
-#   - Rust Downloader
+#   - C Audio Engine（FFmpeg 解码 → OGG/Opus 转码）
+#   - Rust Downloader / Transcoder
 #
-# 国内加速：由 build-multiarch.sh 传入 CN_MIRROR=1 及各 *_IMAGE ARG
+# 所有语言编译器均由 Fedora 42 原生提供（golang / rust cargo / dotnet-sdk-9.0 等）
+#
+# 国内加速：由 build-multiarch.sh 传入 CN_MIRROR=1 及 Fedora 镜像 ARG
 #
 # 用法：
 #   docker build -t splayer-next .                                          # 国际源
 #   docker build --build-arg CN_MIRROR=1 --build-arg FEDORA_IMAGE=... -t splayer-next .  # 国内源
-#
-# 从 Ubuntu 24.04 迁移到 Fedora 42 的包名映射：
-#   build-essential       → gcc-c++ make
-#   libcurl4-openssl-dev  → libcurl-devel
-#   libssl-dev            → openssl-devel
-#   libtag1-dev           → taglib-devel
-#   nlohmann-json3-dev    → nlohmann-json-devel
-#   libtag1v5             → taglib
-#   libstdc++6            → libstdc++
-#   zlib1g                → zlib-ng
 
 ARG BUILD_JOBS=1
 ARG CN_MIRROR=0
 
-# ===== 基础镜像（由构建脚本或用户传入，默认国际源） =====
-ARG GO_IMAGE=golang:1.23-bookworm
+# ===== 基础镜像 =====
 ARG FEDORA_IMAGE=fedora:42
-ARG RUST_IMAGE=rust:1-bookworm
-ARG DOTNET_SDK_IMAGE=mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim
 
 # Go 代理
-ARG GO_PROXY=https://proxy.golang.org,direct
-ARG GO_SUMDB=sum.golang.org
+ARG GOPROXY=https://proxy.golang.org,direct
+ARG GOSUMDB=sum.golang.org
 
 # ===== 通用：Fedora 基础配置 =====
 FROM ${FEDORA_IMAGE} AS fedora-base
@@ -48,24 +38,27 @@ RUN if [ "${CN_MIRROR}" = "1" ]; then \
       sed -i 's|^#baseurl=http://download.example/pub/fedora/linux|baseurl=https://mirrors.aliyun.com/fedora|g' /etc/yum.repos.d/fedora-updates.repo; \
     fi && \
     echo 'max_parallel_downloads=10' >> /etc/dnf/dnf.conf && \
-    echo 'fastestmirror=True' >> /etc/dnf/dnf.conf && \
+    echo 'timeout=120' >> /etc/dnf/dnf.conf && \
+    echo 'retries=5' >> /etc/dnf/dnf.conf && \
+    _RPMFUSION_BASE="https://mirrors.rpmfusion.org" && \
+    if [ "${CN_MIRROR}" = "1" ]; then _RPMFUSION_BASE="https://mirrors.tuna.tsinghua.edu.cn/rpmfusion"; fi && \
     dnf install -y --setopt=install_weak_deps=False \
-      ca-certificates curl wget tzdata git && \
+      ca-certificates curl wget tzdata git \
+      "${_RPMFUSION_BASE}/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" && \
+    if [ "${CN_MIRROR}" = "1" ]; then \
+      sed -i 's|^metalink=|#metalink=|g' /etc/yum.repos.d/rpmfusion*.repo && \
+      sed -i 's|^#baseurl=|baseurl=|g' /etc/yum.repos.d/rpmfusion*.repo && \
+      sed -i 's|https\?://download1.rpmfusion.org/|https://mirrors.tuna.tsinghua.edu.cn/rpmfusion/|g' /etc/yum.repos.d/rpmfusion*.repo; \
+    fi && \
     dnf clean all
 
-# ===== API: Web Builder =====
+# ===== Web Builder =====
 FROM fedora-base AS web-builder
 ARG BUILD_JOBS
 ARG CN_MIRROR
 
-# 安装 Node.js 22（Fedora 42 原生支持）
-RUN dnf install -y --setopt=install_weak_deps=False nodejs npm && \
-    dnf clean all
-
-# 配置 npm 国内源
-RUN if [ "${CN_MIRROR}" = "1" ]; then \
-      npm config set registry https://registry.npmmirror.com; \
-    fi
+RUN dnf install -y --setopt=install_weak_deps=False nodejs npm && dnf clean all
+RUN if [ "${CN_MIRROR}" = "1" ]; then npm config set registry https://registry.npmmirror.com; fi
 
 WORKDIR /app
 COPY web/package.json web/package-lock.json* ./web/
@@ -79,19 +72,14 @@ COPY package.json USER_AGREEMENT.md ./
 COPY tsconfig.json tsconfig.web.json tsconfig.node.json ./
 RUN cd web && npm run build && npm cache clean --force
 
-# ===== API: Server Builder =====
+# ===== Server Builder =====
 FROM fedora-base AS server-builder
 ARG BUILD_JOBS
 ARG CN_MIRROR
 
-# 安装 Node.js 22 + native addon 编译工具
 RUN dnf install -y --setopt=install_weak_deps=False \
-      nodejs npm \
-      gcc-c++ make python3 \
-      pkgconf-pkg-config && \
-    dnf clean all
+      nodejs npm gcc-c++ make python3 pkgconf-pkg-config && dnf clean all
 
-# 配置 npm 国内源 & better-sqlite3 二进制镜像
 RUN if [ "${CN_MIRROR}" = "1" ]; then \
       npm config set registry https://registry.npmmirror.com && \
       echo "better_sqlite3_binary_host_mirror=https://registry.npmmirror.com/-/binary/better-sqlite3" >> /root/.npmrc; \
@@ -105,53 +93,68 @@ COPY shared/ ../shared/
 RUN npm run build && npm prune --production && npm cache clean --force
 
 # ===== Go Monitor Builder =====
-FROM ${GO_IMAGE} AS monitor-builder
+FROM fedora-base AS monitor-builder
 ARG BUILD_JOBS
 ARG CN_MIRROR
-ARG GO_PROXY
-ARG GO_SUMDB
+ARG GOPROXY
+ARG GOSUMDB
 
-# 配置国内源
-RUN if [ "${CN_MIRROR}" = "1" ]; then \
-      sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources; \
-    fi
+RUN dnf install -y --setopt=install_weak_deps=False golang && dnf clean all
+
+ENV GOPROXY=${GOPROXY}
+ENV GOSUMDB=${GOSUMDB}
+ENV CGO_ENABLED=0
 
 WORKDIR /src
 COPY server/monitor/go.mod ./
-ENV GOPROXY=${GO_PROXY}
-ENV GOSUMDB=${GO_SUMDB}
-ENV CGO_ENABLED=0
-RUN go mod download
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      GOPROXY=https://goproxy.cn,direct GOSUMDB=sum.golang.cn go mod download; \
+    else \
+      go mod download; \
+    fi
 COPY server/monitor/ ./
-RUN GOMAXPROCS="${BUILD_JOBS}" go build -p "${BUILD_JOBS}" -ldflags="-s -w" -o /out/splayer-monitor . && \
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      GOPROXY=https://goproxy.cn,direct GOMAXPROCS="${BUILD_JOBS}" go build -p "${BUILD_JOBS}" -ldflags="-s -w" -o /out/splayer-monitor .; \
+    else \
+      GOMAXPROCS="${BUILD_JOBS}" go build -p "${BUILD_JOBS}" -ldflags="-s -w" -o /out/splayer-monitor .; \
+    fi && \
     go clean -modcache
 
 # ===== Go Subsonic Builder =====
-FROM ${GO_IMAGE} AS subsonic-builder
+FROM fedora-base AS subsonic-builder
 ARG BUILD_JOBS
 ARG CN_MIRROR
-ARG GO_PROXY
-ARG GO_SUMDB
+ARG GOPROXY
+ARG GOSUMDB
 
-# 配置国内源
-RUN if [ "${CN_MIRROR}" = "1" ]; then \
-      sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources; \
-    fi
+RUN dnf install -y --setopt=install_weak_deps=False golang && dnf clean all
+
+ENV GOPROXY=${GOPROXY}
+ENV GOSUMDB=${GOSUMDB}
+ENV CGO_ENABLED=0
 
 WORKDIR /src
 COPY server/subsonic/go.mod server/subsonic/go.sum ./
-ENV GOPROXY=${GO_PROXY}
-ENV GOSUMDB=${GO_SUMDB}
-ENV CGO_ENABLED=0
-RUN go mod download
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      GOPROXY=https://goproxy.cn,direct GOSUMDB=sum.golang.cn go mod download; \
+    else \
+      go mod download; \
+    fi
 COPY server/subsonic/ ./
-RUN GOMAXPROCS="${BUILD_JOBS}" go build -p "${BUILD_JOBS}" -ldflags="-s -w" -o /out/subsonic-go . && \
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      GOPROXY=https://goproxy.cn,direct GOMAXPROCS="${BUILD_JOBS}" go build -p "${BUILD_JOBS}" -ldflags="-s -w" -o /out/subsonic-go .; \
+    else \
+      GOMAXPROCS="${BUILD_JOBS}" go build -p "${BUILD_JOBS}" -ldflags="-s -w" -o /out/subsonic-go .; \
+    fi && \
     go clean -modcache
 
 # ===== C# Scanner Builder =====
-FROM ${DOTNET_SDK_IMAGE} AS scanner-builder
+FROM fedora-base AS scanner-builder
 ARG BUILD_JOBS
+ARG CN_MIRROR
 ARG TARGETARCH
+
+RUN dnf install -y --setopt=install_weak_deps=False dotnet-sdk-9.0 && dnf clean all
 
 WORKDIR /src
 COPY server/scanner/scanner.csproj ./scanner/
@@ -178,7 +181,6 @@ FROM fedora-base AS scraper-builder
 ARG BUILD_JOBS
 ARG CN_MIRROR
 
-# 安装 C++ 编译链 + 依赖
 RUN dnf install -y --setopt=install_weak_deps=False \
       gcc-c++ make cmake ninja-build \
       libcurl-devel openssl-devel sqlite-devel \
@@ -197,26 +199,22 @@ RUN cd scraper && \
     cp build/splayer-scraper /out/splayer-scraper && \
     rm -rf build
 
-# ===== Rust Downloader Builder =====
-FROM ${RUST_IMAGE} AS downloader-builder
+# ===== C Audio Engine Builder（FFmpeg 解码 → OGG/Opus 转码） =====
+FROM fedora-base AS audio-engine-builder
 ARG BUILD_JOBS
 ARG CN_MIRROR
 
-# 配置 Debian 国内源
-RUN if [ "${CN_MIRROR}" = "1" ]; then \
-      sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources; \
-    fi && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends git && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# ffmpeg-devel + C/C++ 编译 + cmake + cargo（tempo-rs Rust 库）
+# clang：signalsmith-stretch 的 build script 通过 bindgen 生成 FFI，需要 libclang
+RUN dnf install -y --setopt=install_weak_deps=False \
+      ffmpeg-devel gcc gcc-c++ cmake cargo clang && \
+    dnf clean all
 
-# 配置 GitHub 镜像（国内加速：阿里云镜像）
-RUN if [ "${CN_MIRROR}" = "1" ]; then \
-      git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"; \
-    fi
+ENV CARGO_HOME=/usr/local/cargo
+# bindgen 在 build script 阶段动态加载 libclang，显式指定路径以避免探测失败
+ENV LIBCLANG_PATH=/usr/lib64
 
-# 配置 Cargo 国内源（阿里云，CDN 加速最稳定）
+# 配置 Cargo 国内源（tempo-rs 构建需要）
 RUN if [ "${CN_MIRROR}" = "1" ]; then \
       mkdir -p /usr/local/cargo && \
       echo '[source.crates-io]' >> /usr/local/cargo/config.toml && \
@@ -231,50 +229,58 @@ RUN if [ "${CN_MIRROR}" = "1" ]; then \
 
 WORKDIR /src
 RUN mkdir -p /out
-# 整个 workspace 需要让 Cargo 解析依赖图，因此复制全部 native 子目录与根 Cargo.toml
-COPY Cargo.toml ./
-COPY native/audio-engine/Cargo.toml ./native/audio-engine/Cargo.toml
-COPY native/media-ctrl/Cargo.toml ./native/media-ctrl/Cargo.toml
-COPY native/taskbar-lyric/Cargo.toml ./native/taskbar-lyric/Cargo.toml
-COPY native/taskbar-thumbnail/Cargo.toml ./native/taskbar-thumbnail/Cargo.toml
-COPY native/download-engine/Cargo.toml ./native/download-engine/Cargo.toml
-# stub 源文件：cdylib crate 用 lib.rs，bin crate 用 main.rs
-# 仅满足 Cargo 解析与 fetch，实际编译目标只有 splayer-downloader
-RUN mkdir -p native/audio-engine/src native/media-ctrl/src native/taskbar-lyric/src \
-             native/taskbar-thumbnail/src native/download-engine/src && \
-    for d in audio-engine media-ctrl taskbar-lyric taskbar-thumbnail; do \
-      echo "pub fn _unused() {}" > "native/$d/src/lib.rs"; \
-    done && \
-    echo "fn main() {}" > native/download-engine/src/main.rs
-RUN cargo fetch --manifest-path Cargo.toml
-# 用真实源码覆盖 stub
-COPY native/download-engine/src/ ./native/download-engine/src/
-# 仅构建 download-engine 二进制（其余 native 模块为桌面端 Electron 用，不在服务端编译）
-RUN CARGO_BUILD_JOBS="${BUILD_JOBS}" cargo build --release --manifest-path Cargo.toml \
-      --package splayer-downloader && \
+COPY server/audio-engine/CMakeLists.txt ./
+COPY server/audio-engine/include/ ./include/
+COPY server/audio-engine/src/ ./src/
+COPY server/audio-engine/tempo-rs/ ./tempo-rs/
+RUN cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j"${BUILD_JOBS}" && \
+    cp build/splayer-audio-engine /out/splayer-audio-engine && \
+    rm -rf build tempo-target
+
+# ===== Rust Downloader Builder（独立 CLI，不依赖 workspace） =====
+FROM fedora-base AS downloader-builder
+ARG BUILD_JOBS
+ARG CN_MIRROR
+
+RUN dnf install -y --setopt=install_weak_deps=False rust cargo && dnf clean all
+
+ENV CARGO_HOME=/usr/local/cargo
+
+# 配置 Cargo 国内源
+RUN if [ "${CN_MIRROR}" = "1" ]; then \
+      mkdir -p /usr/local/cargo && \
+      echo '[source.crates-io]' >> /usr/local/cargo/config.toml && \
+      echo 'replace-with = "aliyun"' >> /usr/local/cargo/config.toml && \
+      echo '' >> /usr/local/cargo/config.toml && \
+      echo '[source.aliyun]' >> /usr/local/cargo/config.toml && \
+      echo 'registry = "sparse+https://mirrors.aliyun.com/crates.io-index/"' >> /usr/local/cargo/config.toml && \
+      echo '' >> /usr/local/cargo/config.toml && \
+      echo '[net]' >> /usr/local/cargo/config.toml && \
+      echo 'git-fetch-with-cli = true' >> /usr/local/cargo/config.toml; \
+    fi && \
+    if [ "${CN_MIRROR}" = "1" ]; then \
+      git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"; \
+    fi
+
+WORKDIR /src
+RUN mkdir -p /out
+COPY native/download-engine/ ./
+RUN cargo fetch && \
+    CARGO_BUILD_JOBS="${BUILD_JOBS}" cargo build --release && \
     cp target/release/splayer-downloader /out/splayer-downloader && \
-    cargo clean --manifest-path Cargo.toml && rm -rf /usr/local/cargo/registry
+    cargo clean && rm -rf /usr/local/cargo/registry
 
-# ===== Subsonic Transcoder Builder（服务端专用，独立于桌面端 workspace） =====
-FROM ${RUST_IMAGE} AS transcoder-builder
+# ===== Rust Transcoder Builder =====
+FROM fedora-base AS transcoder-builder
 ARG BUILD_JOBS
 ARG CN_MIRROR
 
-# 配置 Debian 国内源
-RUN if [ "${CN_MIRROR}" = "1" ]; then \
-      sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources; \
-    fi && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends git && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN dnf install -y --setopt=install_weak_deps=False rust cargo && dnf clean all
 
-# 配置 GitHub 镜像（国内加速：阿里云镜像）
-RUN if [ "${CN_MIRROR}" = "1" ]; then \
-      git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"; \
-    fi
+ENV CARGO_HOME=/usr/local/cargo
 
-# 配置 Cargo 国内源（阿里云，CDN 加速最稳定）
+# 配置 Cargo 国内源
 RUN if [ "${CN_MIRROR}" = "1" ]; then \
       mkdir -p /usr/local/cargo && \
       echo '[source.crates-io]' >> /usr/local/cargo/config.toml && \
@@ -289,14 +295,11 @@ RUN if [ "${CN_MIRROR}" = "1" ]; then \
 
 WORKDIR /src
 RUN mkdir -p /out
-# 转码器是 subsonic 服务端的组成部分，源码位于 server/subsonic/subsonic-transcoder
-
-# 第 1 层：仅复制 Cargo.toml + stub → fetch 依赖（层缓存，源码不变时不重编）
+# 第 1 层：仅复制 Cargo.toml + stub → fetch 依赖
 COPY server/subsonic/subsonic-transcoder/Cargo.toml ./Cargo.toml
 RUN mkdir -p src && echo "fn main() {}" > src/main.rs
 RUN cargo fetch
-
-# 第 2 层：用真实源码覆盖 stub → 编译（仅改 src/ 时才重编）
+# 第 2 层：用真实源码覆盖 stub → 编译
 COPY server/subsonic/subsonic-transcoder/src/ ./src/
 RUN CARGO_BUILD_JOBS="${BUILD_JOBS}" cargo build --release --frozen && \
     cp target/release/subsonic-transcoder /out/subsonic-transcoder && \
@@ -306,17 +309,19 @@ RUN CARGO_BUILD_JOBS="${BUILD_JOBS}" cargo build --release --frozen && \
 FROM fedora-base AS runtime
 ARG CN_MIRROR
 
-# 安装 Node.js 22 + C++ libs + taglib
+# 安装运行时依赖：Node.js + C++ libs + taglib + libcurl + ffmpeg-libs
 RUN dnf install -y --setopt=install_weak_deps=False \
       nodejs npm \
       tini \
       openssl sqlite-libs \
       libstdc++ zlib-ng \
-      taglib && \
+      taglib \
+      libcurl \
+      ffmpeg-libs && \
     dnf clean all
 
 WORKDIR /app
-RUN mkdir -p /app/bin /app/scanner /app/music /app/data /app/scrape
+RUN mkdir -p /app/bin /app/music /app/data /app/scrape
 
 COPY --from=web-builder /app/package.json /app/package.json
 COPY --from=server-builder /app/server/package.json ./server/
@@ -329,6 +334,7 @@ COPY --from=scraper-builder /out/splayer-scraper /app/bin/splayer-scraper
 COPY --from=downloader-builder /out/splayer-downloader /app/bin/splayer-downloader
 COPY --from=transcoder-builder /out/subsonic-transcoder /app/bin/subsonic-transcoder
 COPY --from=monitor-builder /out/splayer-monitor /app/bin/splayer-monitor
+COPY --from=audio-engine-builder /out/splayer-audio-engine /app/bin/splayer-audio-engine
 
 RUN cat > /usr/local/bin/splayer-entrypoint <<'EOF' && chmod +x /usr/local/bin/splayer-entrypoint
 #!/bin/bash
@@ -339,17 +345,11 @@ if [ "$#" -gt 0 ]; then
   shift
 fi
 
-# 在 server 目录下运行，以便 package.json 中的 "type": "module" 生效
+# 在 server 目录下运行
 cd /app/server
 
-# Node.js 内存控制参数（纯 V8 自动归还，不依赖手动 GC）：
-#   --max-old-space-size=128       老生代上限（基线~27MB，扫描峰值~80MB），
-#                                  V8 触顶时自动做增量压缩 + munmap 空闲页还给 OS
-#   --max-semi-space-size=4        新生代从默认 16MB 压到 4MB，减少 V8 预分配
-#   --optimize-for-size            启用 V8 大小优化模式，减少预分配、更积极归还内存
+# Node.js 内存控制参数
 NODE_ARGS=""
-
-# 仅 api / run 模式施加内存限制（子进程 scan/scraper 等不适用）
 case "$cmd" in
   run|api)
     NODE_ARGS="--max-old-space-size=${NODE_MAX_OLD_SPACE:-128} --max-semi-space-size=4 --optimize-for-size"
@@ -392,13 +392,13 @@ ENV SPA_DIR=/app/public
 ENV SPLAYER_MUSIC_DIR=/app/music
 ENV SPLAYER_DATA_DIR=/app/data
 ENV SPLAYER_SCRAPE_DIR=/app/scrape
-ENV SUBSONIC_BACKEND_URL=http://127.0.0.1:8081
-ENV SUBSONIC_PORT=8081
+ENV SPLAYER_SUBSONIC_BACKEND_URL=http://127.0.0.1:8081
+ENV SPLAYER_SUBSONIC_PORT=8081
 ENV SPLAYER_MONITOR_ENABLED=true
 ENV SPLAYER_MONITOR_BIN=/app/bin/splayer-monitor
 ENV TZ=Asia/Shanghai
 
-EXPOSE 8080 8081
+EXPOSE 8080
 VOLUME ["/app/music", "/app/data", "/app/scrape"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

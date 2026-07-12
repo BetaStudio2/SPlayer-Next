@@ -2,10 +2,11 @@ import { defineAsyncComponent } from "vue";
 import type { SettingCategory } from "@/types/settings-schema";
 import StreamingServerList from "@/components/settings/custom/StreamingServerList.vue";
 import IconLucideLibrary from "~icons/lucide/library";
+import { isElectron } from "@/utils/config";
 
 /** Web 服务端模式：SPlayer 自身作为 Subsonic 服务器，仅展示服务管理面板；
  *  桌面端：保持原「连接外部流媒体服务器」逻辑（enabled 开关 + 服务器列表）。 */
-const isWeb = typeof window !== "undefined" && !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 const mediaSourceCategory: SettingCategory = {
   id: "mediaSource",

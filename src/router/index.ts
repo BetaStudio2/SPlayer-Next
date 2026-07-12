@@ -95,46 +95,46 @@ const router = createRouter({
           /** Web 服务端模式专属：服务端监控仪表盘 */
           meta: { webOnly: true },
         },
-        ...(isElectron
-          ? [
-              {
-                path: "streaming",
-                component: () => import("@/pages/Streaming/Index.vue"),
-                redirect: "/streaming/songs",
-                children: [
-                  {
-                    path: "songs",
-                    name: "streaming-songs",
-                    component: () => import("@/pages/Streaming/Songs.vue"),
-                  },
-                  {
-                    path: "albums",
-                    name: "streaming-albums",
-                    component: () => import("@/pages/Streaming/Albums.vue"),
-                  },
-                  {
-                    path: "artists",
-                    name: "streaming-artists",
-                    component: () => import("@/pages/Streaming/Artists.vue"),
-                  },
-                  {
-                    path: "playlists",
-                    name: "streaming-playlists",
-                    component: () => import("@/pages/Streaming/Playlists.vue"),
-                  },
-                ],
-              },
-            ]
-          : [
-              {
-                path: "streaming",
-                /** Web 服务端模式：SPlayer 自身即流媒体服务器，浏览本机音乐请用 /library */
-                redirect: "/library",
-              },
-            ]),
+        {
+          path: "streaming",
+          component: () => import("@/pages/Streaming/Index.vue"),
+          redirect: "/streaming/songs",
+          /** Electron 端专属：在线流媒体播放 */
+          meta: { electronOnly: true },
+          children: [
+            {
+              path: "songs",
+              name: "streaming-songs",
+              component: () => import("@/pages/Streaming/Songs.vue"),
+            },
+            {
+              path: "albums",
+              name: "streaming-albums",
+              component: () => import("@/pages/Streaming/Albums.vue"),
+            },
+            {
+              path: "artists",
+              name: "streaming-artists",
+              component: () => import("@/pages/Streaming/Artists.vue"),
+            },
+            {
+              path: "playlists",
+              name: "streaming-playlists",
+              component: () => import("@/pages/Streaming/Playlists.vue"),
+            },
+          ],
+        },
       ],
     },
   ],
+});
+
+/** 导航守卫：Web 模式下阻挡 Electron 专属路由 */
+router.beforeEach((to) => {
+  if (to.meta.electronOnly && !isElectron) {
+    return { path: "/library" };
+  }
+  return undefined;
 });
 
 export default router;

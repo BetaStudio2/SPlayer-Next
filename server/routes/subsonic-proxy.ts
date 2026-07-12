@@ -2,7 +2,7 @@
  * Subsonic 反向代理
  *
  * 所有 /rest/* 请求反向代理到 Go Subsonic 服务。
- * Go 默认不启动，需要通过管理面板手动启动，或设置 SUBSONIC_BACKEND_URL 环境变量。
+ * Go 默认不启动，需要通过管理面板手动启动，或设置 SPLAYER_SUBSONIC_BACKEND_URL 环境变量。
  * 未配置或 Go 不可达时返回 503。
  */
 import { Hono, type Context } from "hono";
@@ -10,7 +10,7 @@ import { serverLog } from "@main/utils/logger";
 
 const app = new Hono();
 
-const BACKEND_URL = process.env.SUBSONIC_BACKEND_URL ?? "http://127.0.0.1:8081";
+const BACKEND_URL = process.env.SPLAYER_SUBSONIC_BACKEND_URL ?? "http://127.0.0.1:8081";
 
 if (BACKEND_URL) {
   serverLog.info(`[subsonic-proxy] → Go backend: ${BACKEND_URL}（默认不自动启动，需管理面板手动启动）`);

@@ -62,7 +62,7 @@ services:
       SPLAYER_ENCRYPTION_KEY: ${SPLAYER_ENCRYPTION_KEY:-}
 
       # Go Subsonic 后端地址（容器内通信，无需修改）
-      SUBSONIC_BACKEND_URL: http://127.0.0.1:8081
+      SPLAYER_SUBSONIC_BACKEND_URL: http://127.0.0.1:8081
 
       # 时区
       TZ: ${TZ:-Asia/Shanghai}

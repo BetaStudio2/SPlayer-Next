@@ -12,6 +12,7 @@ import type {
 import * as client from "@/services/streaming";
 import * as session from "@/services/streaming/session";
 import { StreamingAuthError, classifyError } from "@/services/streaming/errors";
+import { isElectron } from "@/utils/config";
 
 const NEEDS_AUTH: StreamingServerType[] = ["jellyfin", "emby"];
 const needsAccessToken = (type: StreamingServerType): boolean => NEEDS_AUTH.includes(type);
@@ -46,7 +47,7 @@ export const useStreamingStore = defineStore("streaming", () => {
   const SONGS_PAGE_SIZE = 500;
 
   /** Web 服务端模式：通过 /api/streaming/probe 代理 ping + 登录，避免浏览器直连 CORS */
-  const isWebMode = (): boolean => !window.navigator.userAgent.includes("Electron");
+  const isWebMode = (): boolean => !isElectron;
   const probeViaServer = async (
     cfg: StreamingServerConfig,
   ): Promise<{ ping: StreamingPingResult; accessToken?: string; userId?: string }> => {
@@ -137,7 +138,7 @@ export const useStreamingStore = defineStore("streaming", () => {
   const refreshCoverUrlsForActive = (): void => {
     const cfg = activeServer.value;
     if (!cfg) return;
-    const isWeb = !window.navigator.userAgent.includes("Electron");
+    const isWeb = !isElectron;
     const rewrite = (url: string | undefined): string | undefined => {
       if (!url) return url;
       if (!isWeb) return client.refreshCoverAuth(url, cfg);
@@ -623,7 +624,7 @@ export const useStreamingStore = defineStore("streaming", () => {
     const fresh = servers.value.find((s) => s.id === cfg.id) ?? cfg;
     const sessionId = opts?.playSessionId ?? session.sessionIdForTrack(track.id);
     // Web 服务端模式（非 Electron）：音频流走服务端代理，凭据不暴露给浏览器
-    if (!window.navigator.userAgent.includes("Electron")) {
+    if (!isElectron) {
       return `/api/streaming/stream/${fresh.id}?id=${encodeURIComponent(track.originalId!)}&playSessionId=${encodeURIComponent(sessionId)}`;
     }
     return withAutoReauthFor(fresh, (c) => client.getStreamUrl(c, track.originalId!, sessionId));

@@ -2,9 +2,10 @@ import type { SettingCategory } from "@/types/settings-schema";
 import { useSettingsStore } from "@/stores/settings";
 import DeviceSelector from "@/components/settings/custom/DeviceSelector.vue";
 import IconLucidePlay from "~icons/lucide/play";
+import { isElectron } from "@/utils/config";
 
 /** 是否为 Web 服务端模式 */
-const isWeb = !navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 /** 当前是否为流体背景 */
 const isAnimationBg = () => useSettingsStore().player.playerBgType === "animation";

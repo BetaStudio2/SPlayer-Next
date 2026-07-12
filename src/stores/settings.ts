@@ -14,6 +14,7 @@ import type { SystemConfig, LocaleCode } from "@shared/types/settings";
 import { ALL_PLATFORMS } from "@shared/types/platform";
 import { defaultSystemConfig } from "@shared/defaults/settings";
 import { setByPath } from "@shared/utils/path";
+import { isElectron } from "@/utils/config";
 
 /**
  * 对账有序集合：保留存档中仍有效的项（顺序不变），
@@ -30,7 +31,7 @@ const reconcileOrder = <T>(stored: T[], all: readonly T[]): T[] => {
 };
 
 /** 是否运行在 Web（服务端）模式 */
-const isWeb = typeof window !== "undefined" && !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 /**
  * 服务端配置 API 路径前缀（Web 模式使用）
@@ -237,6 +238,15 @@ export const useSettingsStore = defineStore(
         isTaskbarLyricOpen.value = open;
       }),
     ];
+
+    // 监听服务端转码开关变化并同步到播放器
+    const serverTranscodeStop = watch(
+      () => player.serverTranscode,
+      (enabled) => {
+        window.api.player.setServerTranscode(enabled);
+      },
+    );
+    unsubscribers.push(serverTranscodeStop);
 
     onScopeDispose(() => {
       for (const off of unsubscribers) off();

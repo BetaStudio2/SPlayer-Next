@@ -20,6 +20,7 @@ import IconLucideRotateCcw from "~icons/lucide/rotate-ccw";
 import IconLucideTrash2 from "~icons/lucide/trash-2";
 import IconLucideTriangleAlert from "~icons/lucide/triangle-alert";
 import IconLucideFolderOpen from "~icons/lucide/folder-open";
+import { isElectron } from "@/utils/config";
 
 const props = defineProps<{
   /** 当前 tab 已过滤好的下载任务 */
@@ -97,7 +98,7 @@ const rowClass = (task: DownloadTask): string => {
 };
 
 /** web 服务端模式：浏览器原生下载到本地（替代桌面端"打开文件夹"） */
-const isWeb = !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 /** 在文件管理器中定位下载的文件（web 模式下改为触发浏览器下载到本地） */
 const openFolder = (task: DownloadTask): void => {

@@ -61,3 +61,4 @@ PKGBUILD
 
 # 自动生成的配置文件
 auto-eslint.mjs
+key.key

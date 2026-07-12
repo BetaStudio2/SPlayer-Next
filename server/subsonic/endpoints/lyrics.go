@@ -15,7 +15,7 @@ import (
 
 /** TS 后端地址（Node.js，提供在线歌词注入） */
 func tsBackendURL() string {
-	if v := os.Getenv("SUBSONIC_TS_URL"); v != "" {
+	if v := os.Getenv("SPLAYER_SUBSONIC_TS_URL"); v != "" {
 		return strings.TrimRight(v, "/")
 	}
 	return "http://127.0.0.1:8080"

@@ -2,7 +2,7 @@
 import { getContributors, type Contributor } from "@/apis/github";
 import { useUpdateStore } from "@/stores/update";
 import { openExternal } from "@/utils/url";
-import { APP_VERSION, REPO_URL, REPO_NAME, HOMEPAGE_URL, COPYRIGHT_HOLDER } from "@/utils/config";
+import { APP_VERSION, REPO_URL, REPO_NAME, HOMEPAGE_URL, COPYRIGHT_HOLDER, isElectron } from "@/utils/config";
 import IconLucideRefreshCw from "~icons/lucide/refresh-cw";
 import IconLucideGithub from "~icons/lucide/github";
 import IconLucideRss from "~icons/lucide/rss";
@@ -11,7 +11,7 @@ import IconLucideChevronDown from "~icons/lucide/chevron-down";
 
 const { t } = useI18n();
 const update = useUpdateStore();
-const isWeb = !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 /** 检查更新中 */
 const checking = computed(() => update.phase === "checking");

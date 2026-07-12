@@ -26,6 +26,7 @@ import IconSearch from "~icons/lucide/search";
 import IconMessageCircle from "~icons/lucide/message-circle";
 import IconMoreHorizontal from "~icons/lucide/more-horizontal";
 import IconPuzzle from "~icons/lucide/puzzle";
+import { isElectron } from "@/utils/config";
 
 export interface TrackMenuOptions {
   /** 集合类型 */
@@ -63,7 +64,7 @@ export const useTrackMenu = (
   const settings = useSettingsStore();
   const plugins = usePluginsStore();
   const { copy } = useCopyText();
-  const isWeb = !window.navigator.userAgent.includes("Electron");
+  const isWeb = !isElectron;
   const isPlaylist = options.collectionType === "playlist";
   const isCloudView = options.collectionType === "cloud";
   const showPlay = !options.hidePlayActions;

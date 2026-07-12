@@ -25,6 +25,7 @@ export default defineConfig({
     __APP_AUTHOR__: JSON.stringify("imsyy"),
     __APP_HOMEPAGE__: JSON.stringify("https://splayer.imsyy.top"),
     __APP_AUTHOR_URL__: JSON.stringify("https://imsyy.top"),
+    __IS_ELECTRON__: JSON.stringify(false),
   },
   server: {
     port: 14558,

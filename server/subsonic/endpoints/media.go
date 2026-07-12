@@ -27,11 +27,11 @@ import (
 )
 
 // transcoderBin 转码器二进制路径，按以下优先级查找：
-//  1. 环境变量 SUBSONIC_TRANSCODER_BIN
+//  1. 环境变量 SPLAYER_SUBSONIC_TRANSCODER_BIN
 //  2. 与 subsonic-go 可执行文件同目录的 subsonic-transcoder
 //  3. PATH 中的 subsonic-transcoder
 func transcoderBin() string {
-	if p := os.Getenv("SUBSONIC_TRANSCODER_BIN"); p != "" {
+	if p := os.Getenv("SPLAYER_SUBSONIC_TRANSCODER_BIN"); p != "" {
 		return p
 	}
 	if exe, err := os.Executable(); err == nil {

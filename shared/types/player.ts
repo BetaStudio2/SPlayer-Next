@@ -249,6 +249,8 @@ export interface PlayerApi {
   setOutputDevice: (deviceName: string | null) => Promise<IpcResponse>;
   /** 获取当前选择的输出设备名称 */
   getSelectedDeviceName: () => Promise<IpcResponse<string | null>>;
+  /** 切换服务端转码模式（web 端：/api/audio/stream 替代 /api/music/stream） */
+  setServerTranscode: (enabled: boolean) => Promise<IpcResponse>;
   /** 同步播放模式到托盘 */
   syncPlayMode: (repeatMode: string, shuffleMode: string) => void;
   /** 同步当前歌曲喜欢状态到托盘 */

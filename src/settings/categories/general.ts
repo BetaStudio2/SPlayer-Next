@@ -3,8 +3,9 @@ import { LOCALES } from "@shared/types/settings";
 import StorageManager from "@/components/settings/custom/StorageManager.vue";
 import { useUpdateStore } from "@/stores/update";
 import IconLucideCog from "~icons/lucide/cog";
+import { isElectron } from "@/utils/config";
 
-const isWeb = !navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 const generalCategory: SettingCategory = {
   id: "general",

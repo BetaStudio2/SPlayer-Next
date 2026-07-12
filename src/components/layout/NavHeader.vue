@@ -11,13 +11,14 @@ import IconRefreshCw from "~icons/lucide/refresh-cw";
 import IconTerminal from "~icons/lucide/terminal";
 import IconSettings from "~icons/lucide/settings";
 import IconScaling from "~icons/lucide/scaling";
+import { isElectron } from "@/utils/config";
 
 const router = useRouter();
 const { t } = useI18n();
 const { show: showSettings } = useSettingsDialog();
 const theme = useThemeStore();
 const update = useUpdateStore();
-const isWeb = !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 const { isBorderless } = useWindowControls();
 
 /** 界面缩放弹窗开关 */

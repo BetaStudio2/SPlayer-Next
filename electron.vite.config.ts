@@ -51,6 +51,7 @@ export default defineConfig({
       __APP_AUTHOR__: JSON.stringify(pkg.author.name),
       __APP_HOMEPAGE__: JSON.stringify(pkg.homepage),
       __APP_AUTHOR_URL__: JSON.stringify(pkg.author.url),
+      __IS_ELECTRON__: JSON.stringify(true),
     },
     server: {
       port: 14558,

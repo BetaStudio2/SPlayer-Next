@@ -8,6 +8,7 @@ declare const __APP_REPO_NAME__: string;
 declare const __APP_AUTHOR__: string;
 declare const __APP_HOMEPAGE__: string;
 declare const __APP_AUTHOR_URL__: string;
+declare const __IS_ELECTRON__: boolean;
 
 interface Window {
   __splashStart?: number;

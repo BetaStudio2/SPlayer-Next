@@ -8,6 +8,7 @@ import IconLucideGauge from "~icons/lucide/gauge";
 import IconLucideMoreVertical from "~icons/lucide/more-vertical";
 import IconLucideClock from "~icons/lucide/clock";
 import IconLucideRepeat2 from "~icons/lucide/repeat-2";
+import { isElectron } from "@/utils/config";
 
 const props = withDefaults(
   defineProps<{
@@ -21,7 +22,7 @@ const { t } = useI18n();
 const status = useStatusStore();
 const settings = useSettingsStore();
 const { isDesktopLyricOpen } = storeToRefs(settings);
-const isWeb = !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 const buttonType = computed<"default" | "cover">(() => (props.cover ? "cover" : "default"));
 const mutedClass = computed(() => (props.cover ? "text-cover/50" : "text-on-surface-variant"));

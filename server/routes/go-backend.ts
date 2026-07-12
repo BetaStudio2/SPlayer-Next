@@ -10,13 +10,13 @@ import { serverLog } from "@main/utils/logger";
 import { databaseDir } from "@main/utils/paths";
 
 /** Go 后端二进制路径，可通过环境变量覆盖 */
-const GO_BACKEND_BIN = process.env.SUBSONIC_GO_BIN ?? "/app/bin/subsonic-go";
+const GO_BACKEND_BIN = process.env.SPLAYER_SUBSONIC_GO_BIN ?? "/app/bin/subsonic-go";
 
 /** 监听端口 */
-const GO_PORT = process.env.SUBSONIC_GO_PORT ?? "8081";
+const GO_PORT = process.env.SPLAYER_SUBSONIC_GO_PORT ?? "8081";
 
 /** TS 服务端自身地址（Go 回调在线歌词注入需要） */
-const TS_BASE = process.env.SUBSONIC_TS_URL ?? "http://127.0.0.1:8080";
+const TS_BASE = process.env.SPLAYER_SUBSONIC_TS_URL ?? "http://127.0.0.1:8080";
 
 let child: ChildProcess | null = null;
 let startTime = 0;
@@ -75,8 +75,8 @@ export const start = async (): Promise<void> => {
       env: {
         ...process.env,
         SPLAYER_DB_PATH: dbPath,
-        SUBSONIC_PORT: GO_PORT,
-        SUBSONIC_TS_URL: TS_BASE,
+        SPLAYER_SUBSONIC_PORT: GO_PORT,
+        SPLAYER_SUBSONIC_TS_URL: TS_BASE,
       },
     });
 

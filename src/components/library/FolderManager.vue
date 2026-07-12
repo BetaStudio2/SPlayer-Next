@@ -4,13 +4,14 @@ import { toast } from "@/composables/useToast";
 import IconLucideFolder from "~icons/lucide/folder";
 import IconLucideFolderPlus from "~icons/lucide/folder-plus";
 import IconLucideTrash2 from "~icons/lucide/trash-2";
+import { isElectron } from "@/utils/config";
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const { scanDirs } = storeToRefs(libraryStore);
 
 /** Web 服务端模式：内联输入框（替代原生目录选择器） */
-const isWeb = !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 const newDirInput = ref("");
 const adding = ref(false);
 

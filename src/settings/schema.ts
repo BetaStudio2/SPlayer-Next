@@ -14,8 +14,9 @@ import scraperCategory from "./categories/scraper";
 import otherCategory from "./categories/other";
 import AboutSettings from "@/components/settings/custom/AboutSettings.vue";
 import IconLucideInfo from "~icons/lucide/info";
+import { isElectron } from "@/utils/config";
 
-const isWeb = !navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 export const settingsSchema: SettingCategory[] = [
   generalCategory,

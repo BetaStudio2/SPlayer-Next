@@ -14,12 +14,14 @@ import IconLucideMusic from "~icons/lucide/music";
 import IconLucideDatabase from "~icons/lucide/database";
 import { useCacheStats } from "@/composables/useCacheStats";
 
+import { isElectron } from "@/utils/config";
+
 defineOptions({ inheritAttrs: false });
 
 const { t } = useI18n();
 const { stats, cacheDir, loading, clearingId, clearingKind, refresh, setCacheDir } =
   useCacheStats();
-const isWeb = !window.navigator.userAgent.includes("Electron");
+const isWeb = !isElectron;
 
 const iconMap: Record<string, Component> = {
   covers: IconLucideImage,

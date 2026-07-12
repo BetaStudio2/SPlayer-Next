@@ -21,8 +21,14 @@ import { registerLoudnessWorklet } from "./loudnessWorklet";
 const ok = <T>(data?: T): IpcResponse<T> => ({ success: true, data });
 const fail = (error: string): IpcResponse<never> => ({ success: false, error });
 
+/** 服务端转码模式：启用后用 /api/audio/stream 替代 /api/music/stream */
+let serverTranscodeMode = false;
+
 /** 本地路径 → 流媒体 URL（依赖 load 时下发的 meta.id） */
-const toStreamUrl = (id: string): string => `/api/music/stream/${encodeURIComponent(id)}`;
+const toStreamUrl = (id: string): string =>
+  serverTranscodeMode
+    ? `/api/audio/stream/${encodeURIComponent(id)}`
+    : `/api/music/stream/${encodeURIComponent(id)}`;
 
 /** cache:// 协议 → HTTP 静态路径 */
 const normalizeSource = (source: string, meta?: { source?: string; id?: string }): string => {
@@ -241,6 +247,8 @@ class WebAudioPlayer implements PlayerApi {
 
   async load(source: string, options?: LoadOptions): Promise<IpcResponse<LoadResult>> {
     try {
+      // 卸载上一首的解码缓存
+      this.unloadSource();
       const url = normalizeSource(source, options?.meta);
       this.ensureGraph();
       if (this.ctx?.state === "suspended") void this.ctx.resume();
@@ -328,13 +336,23 @@ class WebAudioPlayer implements PlayerApi {
       this.fadeTimer = window.setTimeout(() => {
         this.audio.pause();
         this.audio.currentTime = 0;
+        this.unloadSource();
         this.fadeTimer = 0;
       }, this.fadeMs);
       return ok();
     }
     this.audio.pause();
     this.audio.currentTime = 0;
+    this.unloadSource();
     return ok();
+  }
+
+  /** 卸载音频源以释放浏览器端解码缓存 */
+  private unloadSource(): void {
+    if (this.audio.src) {
+      this.audio.removeAttribute("src");
+      this.audio.load();
+    }
   }
 
   async seek(positionMs: number): Promise<IpcResponse> {
@@ -460,6 +478,12 @@ class WebAudioPlayer implements PlayerApi {
       }
     }
     this.applyProcessingChain();
+    return ok();
+  }
+
+  async setServerTranscode(enabled: boolean): Promise<IpcResponse> {
+    serverTranscodeMode = enabled;
+    console.log(`[WebAudioPlayer] 服务端转码 ${enabled ? "启用" : "禁用"}`);
     return ok();
   }
 

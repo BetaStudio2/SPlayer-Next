@@ -23,6 +23,7 @@ import dbProxy from "./routes/db";
 import scraper from "./routes/scraper";
 import comments from "./routes/comments";
 import admin from "./routes/admin";
+import audio from "./routes/audio";
 import { attachWebSocket } from "./routes/ws";
 
 initLogger();
@@ -59,6 +60,8 @@ app.route("/api/scraper", scraper);
 app.route("/api/comments", comments);
 /** 服务端监控仪表盘（/api/admin/*，代理 Go sidecar） */
 app.route("/api/admin", admin);
+/** 音频转码流（/api/audio/stream/:id，C 引擎 OGG/Opus 转码） */
+app.route("/api/audio", audio);
 
 /** /api/cache/* 静态：服务 musicbrainz 歌手头像等缓存文件 */
 const CACHE_MIME: Record<string, string> = {
