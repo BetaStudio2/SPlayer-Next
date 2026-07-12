@@ -161,9 +161,10 @@ const draw = (): void => {
       for (let j = lo; j < hi; j++) {
         const w = Math.min(end, j + 1) - Math.max(start, j);
         if (w > 0) {
-          sumL += displayL[SKIP_LOW + j] * w;
-          sumR += displayR[SKIP_LOW + j] * w;
-          weight += w;
+          const sw = w * w;
+          sumL += displayL[SKIP_LOW + j] * sw;
+          sumR += displayR[SKIP_LOW + j] * sw;
+          weight += sw;
         }
       }
       if (weight > 0) {
