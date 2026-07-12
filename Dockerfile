@@ -7,7 +7,7 @@
 #   - C Audio Engine（FFmpeg 解码 → OGG/Opus 转码）
 #   - Rust Downloader / Transcoder
 #
-# 所有语言编译器均由 Fedora 42 原生提供（golang / rust cargo / dotnet-sdk-9.0 等）
+# 所有语言编译器均由 Fedora 43 原生提供（golang / rust cargo / dotnet-sdk-9.0 等）
 #
 # 国内加速：由 build-multiarch.sh 传入 CN_MIRROR=1 及 Fedora 镜像 ARG
 #
@@ -19,7 +19,8 @@ ARG BUILD_JOBS=1
 ARG CN_MIRROR=0
 
 # ===== 基础镜像 =====
-ARG FEDORA_IMAGE=fedora:42
+# Fedora 43 提供 FFmpeg 8.x（Fedora 42 为 7.x），改善 FLAC 帧头容错
+ARG FEDORA_IMAGE=fedora:43
 
 # Go 代理
 ARG GOPROXY=https://proxy.golang.org,direct

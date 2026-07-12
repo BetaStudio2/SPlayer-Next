@@ -68,6 +68,9 @@ class WebAudioPlayer implements PlayerApi {
   private lastPosEmit = 0;
   private fadeTimer = 0;
 
+  /** 当前曲目已知时长（ms），从 load 元数据获取，用于流式播放时 audio.duration=Infinity 的降级 */
+  private trackDurationMs = 0;
+
   constructor() {
     this.audio = new Audio();
     this.audio.preload = "auto";
@@ -224,7 +227,7 @@ class WebAudioPlayer implements PlayerApi {
       if (!a.paused && !a.ended) {
         this.emit({
           type: "position",
-          data: { position: a.currentTime * 1000, duration: (a.duration || 0) * 1000 },
+          data: { position: this.safePosition(), duration: this.safeDuration() },
         });
       }
     };
@@ -238,11 +241,23 @@ class WebAudioPlayer implements PlayerApi {
           ? "stopped"
           : "idle"
         : "playing",
-      position: this.audio.currentTime * 1000,
-      duration: (this.audio.duration || 0) * 1000,
+      position: this.safePosition(),
+      duration: this.safeDuration(),
       volume: this.volume,
       isFinished: this.audio.ended,
     };
+  }
+
+  /** 安全获取当前进度（ms），流式场景下 currentTime 可能为 NaN */
+  private safePosition(): number {
+    const t = this.audio.currentTime;
+    return Number.isFinite(t) && t >= 0 ? t * 1000 : this.audio.ended ? this.trackDurationMs : 0;
+  }
+
+  /** 安全获取时长（ms），流式场景下 duration 可能为 Infinity/NaN */
+  private safeDuration(): number {
+    const d = this.audio.duration;
+    return Number.isFinite(d) && d > 0 ? d * 1000 : this.trackDurationMs;
   }
 
   async load(source: string, options?: LoadOptions): Promise<IpcResponse<LoadResult>> {
@@ -259,6 +274,8 @@ class WebAudioPlayer implements PlayerApi {
       this.audio.src = url;
       this.audio.dataset.coverUrl = options?.meta?.cover ?? "";
       this.audio.load();
+      // 从元数据获取已知时长（OGG/Opus 流式场景下 audio.duration=Infinity）
+      this.trackDurationMs = options?.meta?.duration ?? 0;
       // 等待 metadata 就绪
       await new Promise<void>((resolve, reject) => {
         const onMeta = (): void => {

@@ -18,13 +18,13 @@
 /* FFmpeg 日志过滤：抑制已知的无害警告 */
 static void decoder_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 {
-    if (level == AV_LOG_WARNING) {
-        /* mp3float: 品质 >= 源品质时的时间戳跟踪警告，完全无害 */
-        if (strstr(fmt, "Could not update timestamps") != NULL) return;
-        /* flac: 帧级同步码错误，解码器会跳过 */
-        if (strstr(fmt, "invalid sync code") != NULL) return;
-        if (strstr(fmt, "invalid frame header") != NULL) return;
-    }
+    /* flac: 帧级同步码错误，解码器会跳过该帧继续解码下一帧 */
+    if (strstr(fmt, "invalid sync code") != NULL) return;
+    if (strstr(fmt, "invalid frame header") != NULL) return;
+    if (strstr(fmt, "decode_frame() failed") != NULL) return;
+    if (strstr(fmt, "dropping low score") != NULL) return;
+    /* mp3float: 品质 >= 源品质时的时间戳跟踪警告，完全无害 */
+    if (strstr(fmt, "Could not update timestamps") != NULL) return;
     av_log_default_callback(ptr, level, fmt, vl);
 }
 
@@ -54,8 +54,14 @@ Decoder* decoder_open(const char *url)
     /* 安装 FFmpeg 日志过滤，抑制已知无害警告 */
     av_log_set_callback(decoder_log_callback);
 
-    /* 1. 打开输入 */
-    int ret = avformat_open_input(&d->fmt_ctx, url, NULL, NULL);
+    /* 1. 打开输入 — 限制探测大小以加速首帧产出（对 192kHz 大 FLAC 尤为重要） */
+    AVDictionary *fmt_opts = NULL;
+    /* 探测 1MB 足够识别格式和流信息（默认 ~5MB，对大文件浪费） */
+    av_dict_set(&fmt_opts, "probesize", "1048576", 0);
+    /* 分析时长 0.5 秒足够（默认 5 秒，对大文件导致首帧延迟数秒） */
+    av_dict_set(&fmt_opts, "analyzeduration", "500000", 0);
+    int ret = avformat_open_input(&d->fmt_ctx, url, NULL, &fmt_opts);
+    av_dict_free(&fmt_opts);
     if (ret < 0) {
         fprintf(stderr, "%s avformat_open_input 失败: %s\n", LOG_TAG, av_err2str(ret));
         goto fail;
@@ -94,7 +100,12 @@ Decoder* decoder_open(const char *url)
         goto fail;
     }
 
-    ret = avcodec_open2(d->dec_ctx, codec, NULL);
+    /* 宽松模式：部分 FLAC 编码器产生的帧头/CRC 不完全符合严格规范，
+     * 设置 strict_std_compliance=-2 让解码器接受它们 */
+    AVDictionary *opts = NULL;
+    av_dict_set(&opts, "strict_std_compliance", "-2", 0);
+    ret = avcodec_open2(d->dec_ctx, codec, &opts);
+    av_dict_free(&opts);
     if (ret < 0) {
         fprintf(stderr, "%s avcodec_open2 失败: %s\n", LOG_TAG, av_err2str(ret));
         goto fail;
@@ -120,11 +131,16 @@ int decoder_read_frame(Decoder *d, AVFrame **out_frame)
 {
     if (!d || !out_frame) return -1;
 
+    /* 连续解码错误计数器：防止坏文件导致无限循环（无任何帧输出） */
+    int consecutive_errors = 0;
+    const int MAX_CONSECUTIVE_ERRORS = 256;
+
     for (;;) {
         /* 先尝试从解码器取出已缓存的帧 */
         int ret = avcodec_receive_frame(d->dec_ctx, d->frame);
         if (ret == 0) {
             *out_frame = d->frame;
+            consecutive_errors = 0;  /* 成功解码，重置计数器 */
             return 1;
         }
         if (ret == AVERROR(EAGAIN)) {
@@ -134,10 +150,21 @@ int decoder_read_frame(Decoder *d, AVFrame **out_frame)
             /* 解码器已 flush，无更多帧 */
             return 0;
         } else {
-            /* 坏帧/数据错误 — 跳过并重试（并发写入或在线文件断点场景） */
-            fprintf(stderr, "%s avcodec_receive_frame 错误: %s — 跳过\n", LOG_TAG, av_err2str(ret));
+            /* 坏帧/数据错误 — 标记需要新 packet，fall through 到读取逻辑
+             * 注意：不能 continue，否则会无限循环调用 avcodec_receive_frame
+             * （解码器内部状态未改变，仍返回相同错误） */
+            if (consecutive_errors == 0) {
+                fprintf(stderr, "%s avcodec_receive_frame 错误: %s — 跳过\n",
+                        LOG_TAG, av_err2str(ret));
+            }
+            consecutive_errors++;
+            if (consecutive_errors >= MAX_CONSECUTIVE_ERRORS) {
+                fprintf(stderr, "%s 连续 %d 次解码失败，放弃\n",
+                        LOG_TAG, consecutive_errors);
+                return ret;
+            }
             d->packet_sent = false;
-            continue;
+            /* 不 continue，fall through 到读取新 packet */
         }
 
         /* 读取下一个 packet */
