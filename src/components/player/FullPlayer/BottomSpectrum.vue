@@ -138,14 +138,13 @@ const draw = (): void => {
   ctx.fillStyle = getComputedStyle(canvas).color;
 
   const isSplit = settings.player.spectrumDisplayMode === "split";
+  // Electron 端无立体声 FFT 数据，split 模式退化为 mirror
+  const effectiveSplit = isSplit && hasStereo;
   const halfWidth = cssWidth / 2;
 
   ctx.beginPath();
-  if (isSplit) {
+  if (effectiveSplit) {
     // 立体声模式：高频在中心、低频在边缘
-    // 有立体声数据时左侧用 L 声道、右侧用 R 声道；无立体声时两侧共用 mono
-    const leftData = hasStereo ? displayL : display;
-    const rightData = hasStereo ? displayR : display;
     for (let i = 0; i < numBars; i++) {
       const xRight = halfWidth + i * slotWidth;
       const xLeft = halfWidth - (i + 1) * slotWidth;
@@ -162,8 +161,8 @@ const draw = (): void => {
       for (let j = lo; j < hi; j++) {
         const w = Math.min(end, j + 1) - Math.max(start, j);
         if (w > 0) {
-          sumL += leftData[SKIP_LOW + j] * w;
-          sumR += rightData[SKIP_LOW + j] * w;
+          sumL += displayL[SKIP_LOW + j] * w;
+          sumR += displayR[SKIP_LOW + j] * w;
           weight += w;
         }
       }

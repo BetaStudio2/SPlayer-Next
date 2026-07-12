@@ -28,12 +28,16 @@ const emit = defineEmits<{
   "update:modelValue": [value: string | number | boolean];
 }>();
 
+const safeOptions = computed(() =>
+  props.options.filter((o) => String(o.value) !== ""),
+);
+
 const selectedLabel = computed(
-  () => props.options.find((o) => o.value === props.modelValue)?.label ?? props.placeholder,
+  () => safeOptions.value.find((o) => o.value === props.modelValue)?.label ?? props.placeholder,
 );
 
 const handleChange = (val: string) => {
-  const opt = props.options.find((o) => String(o.value) === val);
+  const opt = safeOptions.value.find((o) => String(o.value) === val);
   emit("update:modelValue", opt?.value ?? val);
 };
 </script>
@@ -67,7 +71,7 @@ const handleChange = (val: string) => {
       >
         <SelectViewport class="p-1">
           <SelectItem
-            v-for="opt in options"
+            v-for="opt in safeOptions"
             :key="String(opt.value)"
             :value="String(opt.value)"
             :title="opt.label"
