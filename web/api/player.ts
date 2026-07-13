@@ -81,6 +81,8 @@ class WebAudioPlayer implements PlayerApi {
   /** 懒创建 AudioContext + 节点图（首次 load/play 时） */
   private ensureGraph(): void {
     if (this.ctx) return;
+    // 服务端转码模式下不做任何浏览器端 DSP：纯 <audio> 播放，O(1) 开销
+    if (serverTranscodeMode) return;
     const Ctor =
       window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
@@ -503,6 +505,22 @@ class WebAudioPlayer implements PlayerApi {
   async setServerTranscode(enabled: boolean): Promise<IpcResponse> {
     serverTranscodeMode = enabled;
     console.log(`[WebAudioPlayer] 服务端转码 ${enabled ? "启用" : "禁用"}`);
+    // 切换到纯音频播放模式时，释放已有的 Web Audio 图
+    // 下次播放时将自动重建（enabled=false）或跳过（enabled=true）
+    if (enabled && this.ctx) {
+      try { await this.ctx.close(); } catch { /* 忽略 */ }
+      this.ctx = null;
+      this.sourceNode = null;
+      this.analyserL = null;
+      this.analyserR = null;
+      this.splitter = null;
+      this.merger = null;
+      this.preamp = null;
+      this.volumeGain = null;
+      this.eqNodes = [];
+      this.normalizerNode = null;
+      this.normalizerReady = false;
+    }
     return ok();
   }
 
