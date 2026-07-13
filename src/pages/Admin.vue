@@ -438,7 +438,7 @@ function totalProcessRssMB(stats: Stats): number {
                 <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
                   <div
                     v-if="p.cpuUserPct + p.cpuSysPct > 0"
-                    class="h-full transition-all duration-600"
+                    class="h-full transition-all duration-500"
                     :style="{
                       width: ((p.cpuUserPct + p.cpuSysPct) / totalProcessCpuPct(stats) * 100).toFixed(2) + '%',
                       backgroundColor: getProcColor(p.name).bg,
@@ -460,7 +460,7 @@ function totalProcessRssMB(stats: Stats): number {
                 <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
                   <div
                     v-if="p.rssMB > 0"
-                    class="h-full transition-all duration-600"
+                    class="h-full transition-all duration-500"
                     :style="{
                       width: (p.rssMB / totalProcessRssMB(stats) * 100).toFixed(2) + '%',
                       backgroundColor: getProcColor(p.name).bg,
