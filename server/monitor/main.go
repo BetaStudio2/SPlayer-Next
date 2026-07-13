@@ -376,7 +376,11 @@ func resolveCgroupPath(prefix string) string {
 			// v2: "0::/path" → fields = ["0","","/path"]
 			// v1: "12:memory:/path" → fields = ["12","memory","/path"]
 			fields := strings.SplitN(line, ":", 3)
-			if len(fields) == 3 && fields[2] != "" && fields[2] != "/" {
+			if len(fields) == 3 && fields[2] != "" {
+				// 根 cgroup ("/") → 直接用空字符串（cgPath 有 fallback）
+				if fields[2] == "/" {
+					return ""
+				}
 				return fields[2]
 			}
 		}
@@ -566,6 +570,11 @@ func (c *Collector) Collect() Stats {
 			stats.CPU.System = ds / dt * 100
 			stats.CPU.Idle = di / dt * 100
 		}
+		// 每 30 次采集输出 host CPU 诊断
+		if c.collected%30 == 0 {
+			fmt.Fprintf(os.Stderr, "[monitor] host cpu: user=%.1f%% sys=%.1f%% idle=%.1f%% (du=%.0f ds=%.0f di=%.0f dt=%.0f)\n",
+				stats.CPU.User, stats.CPU.System, stats.CPU.Idle, du, ds, di, dt)
+		}
 	}
 	c.lastUser, c.lastSystem, c.lastIdle, c.lastTotal = u, s, id, tot
 
@@ -610,7 +619,8 @@ func (c *Collector) Collect() Stats {
 	stats.Container.MemoryLimitMB = memLimit / 1024 / 1024
 
 	// 容器 CPU%：相对于容器总 CPU 容量（cpuCores 个核心 = cpuCores * 100%）
-	if c.lastCgroupCPUTotal() > 0 {
+	// 首次采集只建立基线，避免启动瞬间的微秒级时间窗口造成虚高读数。
+	if c.collected > 0 && c.lastCgroupCPUTotal() > 0 {
 		du := cgu - c.lastCgroupCPUUser
 		ds := cgs - c.lastCgroupCPUSystem
 		dtNs := uint64(now.Sub(c.lastCgroupCPUTime).Nanoseconds())
@@ -623,6 +633,12 @@ func (c *Collector) Collect() Stats {
 				// 无 CPU 限制时：CPU% 相对于单核（可能 >100%）
 				stats.Container.CPUUserPct = float64(du) / float64(dtUs) * 100
 				stats.Container.CPUSystemPct = float64(ds) / float64(dtUs) * 100
+			}
+			// 每 30 次采集输出一次运行时诊断
+			if c.collected%30 == 0 {
+				fmt.Fprintf(os.Stderr, "[monitor] cpu delta: du=%d ds=%d dtUs=%d cores=%.1f → user=%.1f%% sys=%.1f%%\n",
+					du, ds, dtUs, cpuCores,
+					stats.Container.CPUUserPct, stats.Container.CPUSystemPct)
 			}
 		}
 	}
@@ -678,6 +694,16 @@ func (c *Collector) Collect() Stats {
 		if _, ok := procs[pid]; !ok {
 			delete(c.lastProcStats, pid)
 		}
+	}
+
+	// 每 30 次采集输出进程诊断
+	if c.collected%30 == 0 {
+		var pcpu float64
+		for _, p := range procList {
+			pcpu += p.CPUUserPct + p.CPUSysPct
+		}
+		fmt.Fprintf(os.Stderr, "[monitor] procs: %d found, total cpu=%.1f%%, dt=%.1fs\n",
+			len(procList), pcpu, dtSec)
 	}
 
 	stats.Processes = procList
