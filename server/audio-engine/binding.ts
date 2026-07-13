@@ -22,7 +22,6 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { EventEmitter } from "node:events";
-import { createInterface } from "node:readline";
 import { serverLog } from "@main/utils/logger";
 
 /** 引擎配置 */
@@ -155,21 +154,6 @@ export const spawnAudioEngine = (
   });
 
   child.on("error", (err) => serverLog.error(`[audio-engine] 子进程错误: ${err.message}`));
-  child.on("exit", (code, signal) => {
-    // C 引擎已自行清理，TS 只需释放引用以便 V8 GC
-    child.stdout?.removeAllListeners();
-    child.stderr?.removeAllListeners();
-    child.removeAllListeners();
-  });
-
-  child.on("close", () => {
-    // pipe 全关闭后主动释放 stdin/stdout/stderr 引用链
-    // Readable.toWeb(child.stdout) 在 Response 端会锚住 Readable，
-    // 但主动 destroy 能加速 V8 发现不可达路径
-    child.stdout?.destroy();
-    child.stderr?.destroy();
-    child.stdin?.destroy();
-  });
 
   return child;
 };
@@ -209,9 +193,8 @@ export interface EngineControlEvent {
 export class InteractiveAudioEngine extends EventEmitter {
   private child: ChildProcessWithoutNullStreams | null = null;
   private controlActive = false;
-  private controlRl: ReturnType<typeof createInterface> | null = null;
-  private fftRl: ReturnType<typeof createInterface> | null = null;
-  private exitTimeout: ReturnType<typeof setTimeout> | null = null;
+  private controlBuf = "";
+  private fftBuf = "";
 
   /**
    * 启动交互式引擎
@@ -240,32 +223,47 @@ export class InteractiveAudioEngine extends EventEmitter {
       }
     });
 
-    // fd 3: control protocol
+    // fd 3: control protocol（手动行分割，无 readline 轮询）
     if (this.child.stdio[3]) {
-      this.controlRl = createInterface({ input: this.child.stdio[3] as NodeJS.ReadableStream });
       this.controlActive = true;
-      this.controlRl.on("line", (line: string) => {
+      (this.child.stdio[3] as NodeJS.ReadableStream).on("data", (chunk: Buffer) => {
         this.controlActive = true;
-        try {
-          const msg = JSON.parse(line) as EngineControlEvent;
-          this.emit(msg.type, msg);
-        } catch {
-          serverLog.warn(`[audio-engine:interactive] 无效控制响应: ${line}`);
+        this.controlBuf += chunk.toString();
+        let idx: number;
+        while ((idx = this.controlBuf.indexOf("\n")) !== -1) {
+          const line = this.controlBuf.slice(0, idx);
+          this.controlBuf = this.controlBuf.slice(idx + 1);
+          try {
+            const msg = JSON.parse(line) as EngineControlEvent;
+            this.emit(msg.type, msg);
+          } catch {
+            serverLog.warn(`[audio-engine:interactive] 无效控制响应: ${line}`);
+          }
         }
       });
-      this.controlRl.on("close", () => { this.controlActive = false; this.controlRl = null; });
+      (this.child.stdio[3] as NodeJS.ReadableStream).on("end", () => {
+        this.controlActive = false;
+        this.controlBuf = "";
+      });
     }
 
-    // fd 4: FFT data
+    // fd 4: FFT data（手动行分割，无 readline 轮询）
     if (this.child.stdio[4]) {
-      this.fftRl = createInterface({ input: this.child.stdio[4] as NodeJS.ReadableStream });
-      this.fftRl.on("line", (line: string) => {
-        try {
-          const msg = JSON.parse(line) as EngineControlEvent;
-          this.emit("fft", msg);
-        } catch {
-          /* 忽略无效的 FFT 行 */
+      (this.child.stdio[4] as NodeJS.ReadableStream).on("data", (chunk: Buffer) => {
+        this.fftBuf += chunk.toString();
+        let idx: number;
+        while ((idx = this.fftBuf.indexOf("\n")) !== -1) {
+          const line = this.fftBuf.slice(0, idx);
+          this.fftBuf = this.fftBuf.slice(idx + 1);
+          try {
+            this.emit("fft", JSON.parse(line) as EngineControlEvent);
+          } catch {
+            /* 忽略无效 FFT 行 */
+          }
         }
+      });
+      (this.child.stdio[4] as NodeJS.ReadableStream).on("end", () => {
+        this.fftBuf = "";
       });
     }
 
@@ -277,12 +275,8 @@ export class InteractiveAudioEngine extends EventEmitter {
     this.child.on("exit", (code, signal) => {
       if (stderrBuffer.trim()) serverLog.debug(`[audio-engine:interactive:stderr] ${stderrBuffer.trim()}`);
       this.controlActive = false;
-      // 关闭 readline 接口：防止 readline 内部定时器在已关闭的 fd 上轮询
-      this.controlRl?.close();
-      this.controlRl = null;
-      this.fftRl?.close();
-      this.fftRl = null;
-      this.clearExitTimeout();
+      this.controlBuf = "";
+      this.fftBuf = "";
       this.emit("exit", { code, signal });
       // C 引擎已自行清理，TS 只需释放引用以便 V8 GC
       if (this.child) {
@@ -314,16 +308,6 @@ export class InteractiveAudioEngine extends EventEmitter {
   kill(signal: NodeJS.Signals = "SIGTERM"): void {
     if (this.child && !this.child.killed) {
       this.child.kill(signal);
-      if (signal === "SIGTERM") {
-        // SIGTERM 后 3 秒内未退出 → SIGKILL 强制 kill
-        // FFmpeg 解码器阻塞在 av_read_frame() 磁盘 I/O 时
-        // SIGTERM 信号可能被子进程忽略，只有 SIGKILL 能终止
-        this.exitTimeout = setTimeout(() => {
-          if (this.child && !this.child.killed) {
-            this.child.kill("SIGKILL");
-          }
-        }, 3000);
-      }
     }
     this.controlActive = false;
   }
@@ -331,13 +315,6 @@ export class InteractiveAudioEngine extends EventEmitter {
   /** 引擎是否活跃 */
   get isActive(): boolean {
     return this.controlActive;
-  }
-
-  private clearExitTimeout(): void {
-    if (this.exitTimeout) {
-      clearTimeout(this.exitTimeout);
-      this.exitTimeout = null;
-    }
   }
 
   /** 子进程 stdout（OGG/Opus 流） */
