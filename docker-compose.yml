@@ -67,6 +67,11 @@ services:
       # 时区
       TZ: ${TZ:-Asia/Shanghai}
 
+      # 监控面板（/admin）
+      SPLAYER_MONITOR_ENABLED: "true"
+      # SSE 推送间隔（200-3000ms，默认 2000。值越小刷新越快）
+      MONITOR_INTERVAL_MS: ${MONITOR_INTERVAL_MS:-2000}
+
     # 资源限制（按需调整）
     deploy:
       resources:

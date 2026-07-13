@@ -265,6 +265,13 @@ function logLevelClass(level: string): string {
 function goBack(): void {
   router.back();
 }
+
+/** 容器内存基线：cgroup 有读数时用容器值，否则降级为进程 RSS 总和 */
+function containerMemoryBaseline(stats: Stats): number {
+  if (stats.container.memoryUsedMB > 0) return stats.container.memoryUsedMB;
+  const sum = stats.processes.reduce((s, p) => s + p.rssMB, 0);
+  return sum > 0 ? sum : 0.01;
+}
 </script>
 
 <template>
@@ -447,10 +454,10 @@ function goBack(): void {
               <div class="h-3 rounded-full bg-on-surface/8 overflow-hidden flex">
                 <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
                   <div
-                    v-if="p.rssMB > 0 && stats.container.memoryUsedMB > 0"
+                    v-if="p.rssMB > 0"
                     class="h-full transition-all duration-600"
                     :style="{
-                      width: (p.rssMB / Math.max(stats.container.memoryUsedMB, 0.01) * 100).toFixed(2) + '%',
+                      width: (p.rssMB / containerMemoryBaseline(stats) * 100).toFixed(2) + '%',
                       backgroundColor: getProcColor(p.name).bg,
                     }"
                     :title="`${p.name}: ${formatBytes(p.rssMB)}`"
