@@ -268,9 +268,6 @@ ssize_t pipeline_process(AudioPipeline *p)
     const int MAX_FRAMES_PER_CALL = 64;
 
     while (frames_this_call < MAX_FRAMES_PER_CALL) {
-        /* 每帧循环检查 eof：外部 shutdown 信号能尽快退出 */
-        if (p->eof) break;
-
         AVFrame *frame = NULL;
         int ret = decoder_read_frame(p->dec, &frame);
         if (ret <= 0) {
