@@ -92,9 +92,22 @@ app.get("/stream/:id", (c) => {
     }
 
     // 客户端断开或 C 引擎退出时清理
+    let killed = false;
     const onAbort = (): void => {
+      if (killed) return;
+      killed = true;
       serverLog.debug(`[audio] 客户端断开，终止转码: id=${id}`);
-      if (!child.killed) child.kill("SIGTERM");
+      child.kill("SIGTERM");
+      // SIGTERM 后 3 秒内未退出 → SIGKILL 强制 kill
+      // FFmpeg 解码器阻塞在 av_read_frame() 磁盘 I/O 时
+      // SIGTERM 信号可能被子进程忽略，只有 SIGKILL 能终止
+      const timeout = setTimeout(() => {
+        if (!child.killed) {
+          serverLog.warn(`[audio] SIGTERM 未退出，强制 SIGKILL: id=${id}`);
+          child.kill("SIGKILL");
+        }
+      }, 3000);
+      child.once("exit", () => clearTimeout(timeout));
     };
     c.req.raw.signal?.addEventListener("abort", onAbort);
 
