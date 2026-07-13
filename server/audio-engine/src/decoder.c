@@ -11,9 +11,29 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #define LOG_TAG "[audio-engine:decoder]"
 #include <stdio.h>
+
+/* SIGTERM 中断标志：volatile sig_atomic_t 保证信号处理器写入可见性。
+ * handle_sigterm → decoder_interrupt() 置 1 → FFmpeg 的
+ * AVIOInterruptCB 回调在阻塞 I/O 期间周期性检查此标志，
+ * 一旦为 1 则 av_read_frame() 立即返回 AVERROR_EXIT。 */
+static volatile sig_atomic_t g_decoder_interrupted = 0;
+
+void decoder_interrupt(void)
+{
+    g_decoder_interrupted = 1;
+}
+
+/* AVIOInterruptCB 回调：FFmpeg 在阻塞 I/O 期间周期性调用。
+ * 返回 1 表示中断请求，FFmpeg 中止当前操作。 */
+static int interrupt_callback(void *opaque)
+{
+    (void)opaque;
+    return g_decoder_interrupted;
+}
 
 /* FFmpeg 日志过滤：抑制已知的无害警告 */
 static void decoder_log_callback(void *ptr, int level, const char *fmt, va_list vl)
@@ -66,6 +86,10 @@ Decoder* decoder_open(const char *url)
         fprintf(stderr, "%s avformat_open_input 失败: %s\n", LOG_TAG, av_err2str(ret));
         goto fail;
     }
+
+    /* 注册中断回调：SIGTERM 后 FFmpeg 在阻塞 I/O 中检查此标志并立即返回 */
+    d->fmt_ctx->interrupt_callback.callback = interrupt_callback;
+    d->fmt_ctx->interrupt_callback.opaque = NULL;
 
     /* 2. 获取流信息 */
     ret = avformat_find_stream_info(d->fmt_ctx, NULL);
@@ -176,6 +200,10 @@ int decoder_read_frame(Decoder *d, AVFrame **out_frame)
                     avcodec_send_packet(d->dec_ctx, NULL);
                     d->packet_sent = true;
                     continue;
+                }
+                /* SIGTERM → AVIOInterruptCB 返回 1 → FFmpeg 返回 AVERROR_EXIT */
+                if (ret == AVERROR_EXIT) {
+                    return 0;
                 }
                 fprintf(stderr, "%s av_read_frame 错误: %s\n", LOG_TAG, av_err2str(ret));
                 return ret;

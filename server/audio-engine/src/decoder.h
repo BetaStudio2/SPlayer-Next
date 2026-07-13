@@ -46,6 +46,14 @@ const char* decoder_codec_name(const Decoder *d);
 /** 关闭并释放 */
 void decoder_close(Decoder *d);
 
+/**
+ * SIGTERM 安全中断：设置全局标志 → FFmpeg 的 AVIOInterruptCB 回调
+ * 在阻塞 I/O 期间检测到标志 → av_read_frame() 立即返回 AVERROR_EXIT。
+ *
+ * 在信号处理器（handle_sigterm）中调用，无锁、无系统调用、纯写入。
+ */
+void decoder_interrupt(void);
+
 #ifdef __cplusplus
 }
 #endif

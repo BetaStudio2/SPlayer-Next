@@ -31,6 +31,7 @@
 #define _POSIX_C_SOURCE 200809L
 #define _GNU_SOURCE
 #include "../include/audio_engine.h"
+#include "decoder.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,21 +43,18 @@
 #include <time.h>
 
 /* 全局管线指针，供 SIGTERM 处理器优雅关闭 */
-static volatile sig_atomic_t g_shutdown = 0;
+static AudioPipeline *g_pipeline = NULL;
 
-/* SIGTERM 处理器：立即退出以避免 av_read_frame 阻塞导致进程残留
- *
- * 旧实现只设置 eof 标志，但 pipeline_run 可能正阻塞在 av_read_frame
- * 读取大文件（192kHz FLAC 可达数百 MB），eof 检查要等当前 read 返回后才生效，
- * 导致旧引擎进程残留数秒，与新引擎并存造成内存堆积。
- *
- * SIGTERM 是异步信号，不能调用 free/malloc/stdio 等非可重入函数。
- * C 标准库资源（FFmpeg 上下文等）由 OS 在 _exit 时统一回收。
- * OGG/Opus 编码器可能丢失最后几个帧的封装，但客户端已断开，无影响。 */
+/* SIGTERM 处理器：优雅关闭管线而非被终止。
+ * 1. decoder_interrupt() 设置 AVIOInterruptCB 标志 — 若 av_read_frame()
+ *    正阻塞在磁盘 I/O，FFmpeg 下次检查时立即返回 AVERROR_EXIT。
+ * 2. pipeline_signal_shutdown() 设置管线退出标志 — 主循环检测后退出。 */
 static void handle_sigterm(int sig) {
     (void)sig;
-    g_shutdown = 1;
-    _exit(0);
+    decoder_interrupt();
+    if (g_pipeline) {
+        pipeline_signal_shutdown(g_pipeline);
+    }
 }
 
 /* ── 简单 JSON 解析辅助（仅处理我们的控制协议格式） ───────────────── */
@@ -509,6 +507,9 @@ int main(int argc, char *argv[])
         fprintf(stderr, "[audio-engine] 管线创建失败\n");
         return 2;
     }
+
+    /* 注册全局指针，供 SIGTERM 处理器访问 */
+    g_pipeline = p;
 
     fprintf(stderr, "[audio-engine] 源: %dHz / %dch / 时长 %.1fs\n",
             pipeline_get_source_sample_rate(p),
