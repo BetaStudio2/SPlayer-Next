@@ -265,18 +265,6 @@ function logLevelClass(level: string): string {
 function goBack(): void {
   router.back();
 }
-
-/** 进程 CPU% 总和（堆叠条 100% 填充基线） */
-function totalProcessCpuPct(stats: Stats): number {
-  const sum = stats.processes.reduce((s, p) => s + p.cpuUserPct + p.cpuSysPct, 0);
-  return sum > 0 ? sum : 0.01;
-}
-
-/** 进程 RSS 总和（堆叠条 100% 填充基线） */
-function totalProcessRssMB(stats: Stats): number {
-  const sum = stats.processes.reduce((s, p) => s + p.rssMB, 0);
-  return sum > 0 ? sum : 0.01;
-}
 </script>
 
 <template>
@@ -417,7 +405,7 @@ function totalProcessRssMB(stats: Stats): number {
           </div>
         </div>
 
-        <!-- 第二行：Container 总览 + 组件堆叠条 -->
+        <!-- 第二行：Container 总览 -->
         <div class="rounded-xl bg-on-surface/4 p-4">
           <div class="flex items-center gap-2 mb-3">
             <IconLucideBox class="size-4 text-primary" />
@@ -428,29 +416,21 @@ function totalProcessRssMB(stats: Stats): number {
             </span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- 容器 CPU — 堆叠条（100% 填充，组件按比例着色） -->
+            <!-- 容器 CPU -->
             <div>
               <div class="flex items-center justify-between text-xs mb-1">
                 <span class="text-on-surface-variant/60">CPU</span>
                 <span class="font-mono text-on-surface">{{ (stats.container.cpuUserPct + stats.container.cpuSystemPct).toFixed(1) }}%</span>
               </div>
-              <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden flex">
-                <TransitionGroup name="stack">
-                  <div
-                    v-for="p in sortedProcesses(stats.processes)"
-                    v-show="p.cpuUserPct + p.cpuSysPct > 0"
-                    :key="p.pid"
-                    class="h-full transition-all duration-500"
-                    :style="{
-                      width: ((p.cpuUserPct + p.cpuSysPct) / totalProcessCpuPct(stats) * 100).toFixed(2) + '%',
-                      backgroundColor: getProcColor(p.name).bg,
-                    }"
-                    :title="`${p.name}: ${(p.cpuUserPct + p.cpuSysPct).toFixed(1)}%`"
-                  />
-                </TransitionGroup>
+              <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden">
+                <div
+                  class="h-full rounded-full transition-all duration-500"
+                  :style="{ width: Math.min(stats.container.cpuUserPct + stats.container.cpuSystemPct, 100).toFixed(1) + '%' }"
+                  :class="stats.container.cpuUserPct + stats.container.cpuSystemPct > 80 ? 'bg-error' : 'bg-primary'"
+                />
               </div>
             </div>
-            <!-- 容器内存 — 堆叠条（100% 填充，组件 RSS 按比例着色） -->
+            <!-- 容器内存 -->
             <div>
               <div class="flex items-center justify-between text-xs mb-1">
                 <span class="text-on-surface-variant/60">Memory</span>
@@ -458,20 +438,12 @@ function totalProcessRssMB(stats: Stats): number {
                   <template v-if="stats.container.memoryLimitMB > 0"> / {{ formatBytes(stats.container.memoryLimitMB) }}</template>
                 </span>
               </div>
-              <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden flex">
-                <TransitionGroup name="stack">
-                  <div
-                    v-for="p in sortedProcesses(stats.processes)"
-                    v-show="p.rssMB > 0"
-                    :key="p.pid"
-                    class="h-full transition-all duration-500"
-                    :style="{
-                      width: (p.rssMB / totalProcessRssMB(stats) * 100).toFixed(2) + '%',
-                      backgroundColor: getProcColor(p.name).bg,
-                    }"
-                    :title="`${p.name}: ${formatBytes(p.rssMB)}`"
-                  />
-                </TransitionGroup>
+              <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden">
+                <div
+                  class="h-full rounded-full transition-all duration-500"
+                  :style="{ width: stats.container.memoryUsedPct.toFixed(1) + '%' }"
+                  :class="stats.container.memoryUsedPct > 80 ? 'bg-error' : 'bg-primary'"
+                />
               </div>
             </div>
           </div>
@@ -513,8 +485,8 @@ function totalProcessRssMB(stats: Stats): number {
                     <div class="flex items-center gap-2">
                       <div class="flex-1 h-1 rounded-full bg-on-surface/8 overflow-hidden">
                         <div
-                          class="h-full rounded-full"
-                          :style="{ width: Math.min(p.cpuUserPct + p.cpuSysPct, 100).toFixed(1) + '%', backgroundColor: getProcColor(p.name).bg, transition: 'width 0.6s ease-out' }"
+                          class="h-full rounded-full transition-all duration-500"
+                          :style="{ width: Math.min(p.cpuUserPct + p.cpuSysPct, 100).toFixed(1) + '%', backgroundColor: getProcColor(p.name).bg }"
                         />
                       </div>
                       <span :class="p.cpuUserPct + p.cpuSysPct > 50 ? 'text-warning' : 'text-on-surface'" class="w-12 text-right tabular-nums">
@@ -526,8 +498,8 @@ function totalProcessRssMB(stats: Stats): number {
                     <div class="flex items-center gap-2">
                       <div class="flex-1 h-1 rounded-full bg-on-surface/8 overflow-hidden">
                         <div
-                          class="h-full rounded-full"
-                          :style="{ width: (stats.container.memoryLimitMB > 0 ? (p.rssMB / stats.container.memoryLimitMB * 100) : 0).toFixed(1) + '%', backgroundColor: getProcColor(p.name).bg, transition: 'width 0.6s ease-out' }"
+                          class="h-full rounded-full transition-all duration-500"
+                          :style="{ width: (stats.container.memoryLimitMB > 0 ? (p.rssMB / stats.container.memoryLimitMB * 100) : 0).toFixed(1) + '%', backgroundColor: getProcColor(p.name).bg }"
                         />
                       </div>
                       <span class="text-on-surface w-14 text-right tabular-nums">{{ formatBytes(p.rssMB) }}</span>
@@ -570,22 +542,3 @@ function totalProcessRssMB(stats: Stats): number {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* TransitionGroup: 堆叠条色段进场/离场/位移动效 */
-.stack-enter-active {
-  transition: all 0.5s ease-out;
-}
-.stack-leave-active {
-  transition: all 0.3s ease-in;
-  position: absolute;
-}
-.stack-enter-from,
-.stack-leave-to {
-  width: 0 !important;
-  opacity: 0;
-}
-.stack-move {
-  transition: all 0.5s ease-out;
-}
-</style>
