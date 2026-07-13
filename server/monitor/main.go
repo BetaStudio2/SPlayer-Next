@@ -341,8 +341,8 @@ func scanSplayerProcesses() map[int]procSnapshot {
 const cgroupRoot = "/sys/fs/cgroup"
 
 var (
-	cgroupV2      bool
-	cgroupV2Base  string // v2 子路径，如 /system.slice/docker-xxx.scope
+	cgroupV2        bool
+	cgroupV2Base    string // v2 子路径，如 /system.slice/docker-xxx.scope
 	cgroupV1MemBase string // v1 memory 子系统子路径
 )
 
@@ -515,6 +515,8 @@ type Collector struct {
 
 	// 进程级 CPU 跟踪
 	lastProcStats map[int]procJiffies
+	lastProcTime  time.Time
+	collected     int // 采集次数计数器
 }
 
 func NewCollector() *Collector {
@@ -538,6 +540,7 @@ func NewCollector() *Collector {
 	c.lastCgroupCPUUser = cgu
 	c.lastCgroupCPUSystem = cgs
 	c.lastCgroupCPUTime = time.Now()
+	c.lastProcTime = time.Now()
 
 	return c
 }
@@ -551,13 +554,11 @@ func (c *Collector) Collect() Stats {
 
 	// ── 系统 CPU（host 级别） ──
 	u, s, id, tot, err := readCPUJiffies()
-	var totalDelta float64
 	if err == nil && c.lastTotal > 0 {
 		du := u - c.lastUser
 		ds := s - c.lastSystem
 		di := id - c.lastIdle
 		dt := tot - c.lastTotal
-		totalDelta = dt
 		if dt > 0 {
 			stats.CPU.User = du / dt * 100
 			stats.CPU.System = ds / dt * 100
@@ -636,19 +637,15 @@ func (c *Collector) Collect() Stats {
 
 	// ── 进程级扫描 ──
 	procs := scanSplayerProcesses()
-	// 计算进程 CPU 基准
-	var procCPUBaseline float64
-	if cpuCores > 0 {
-		// 容器环境：使用容器 CPU 限制 * CLK_TCK * 时间间隔
-		dtSec := float64(now.Sub(c.lastCPUTime).Seconds())
-		if dtSec > 0 {
-			procCPUBaseline = cpuCores * c.clkTck * dtSec
-		}
-	} else {
-		// 非容器环境：使用系统总 jiffies delta
-		procCPUBaseline = totalDelta
-	}
-	c.lastCPUTime = now
+	c.collected++
+
+	// 进程 CPU% 基准：per-core 的预期 jiffies 数
+	// /proc/[pid]/stat 的 utime/stime 是每核累计的 jiffies，
+	// 进程 CPU% = (delta_jiffies / CLK_TCK) / dt_seconds * 100
+	// 这与 top/ps 的计算方式一致（per-core 百分比）
+	dtSec := float64(now.Sub(c.lastProcTime).Seconds())
+	procCPUBaseline := c.clkTck * dtSec
+	c.lastProcTime = now
 
 	var procList []ProcessInfo
 	for pid, snap := range procs {
@@ -701,15 +698,17 @@ type Server struct {
 	broadcast chan []byte          // SSE 广播通道
 	subs      map[chan []byte]bool // SSE 订阅者
 	subsMu    sync.Mutex
+	interval  time.Duration // 采集间隔
 }
 
-func NewServer(collector *Collector, logBuf *LogBuffer) *Server {
+func NewServer(collector *Collector, logBuf *LogBuffer, interval time.Duration) *Server {
 	return &Server{
 		collector: collector,
 		logBuf:    logBuf,
 		stats:     collector.Collect(),
 		broadcast: make(chan []byte, 8),
 		subs:      make(map[chan []byte]bool),
+		interval:  interval,
 	}
 }
 
@@ -739,7 +738,7 @@ func (s *Server) updateStatsLoop() {
 			s.broadcast <- logData
 		}
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(s.interval)
 	}
 }
 
@@ -845,6 +844,15 @@ func main() {
 		port = p
 	}
 
+	// MONITOR_INTERVAL_MS: SSE 推送间隔（200-3000ms，默认 2000）
+	intervalMs := 2000
+	if v := os.Getenv("MONITOR_INTERVAL_MS"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 200 && n <= 3000 {
+			intervalMs = n
+		}
+	}
+	interval := time.Duration(intervalMs) * time.Millisecond
+
 	// 必须在任何 cgroup 读取之前调用，动态检测容器 cgroup 路径
 	initCgroupPaths()
 
@@ -864,7 +872,7 @@ func main() {
 		}
 	}()
 
-	srv := NewServer(collector, logBuf)
+	srv := NewServer(collector, logBuf, interval)
 
 	// 启动定时采集 + SSE 广播
 	go srv.updateStatsLoop()
