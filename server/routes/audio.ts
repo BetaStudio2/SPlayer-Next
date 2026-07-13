@@ -16,7 +16,7 @@ import { Hono } from "hono";
 import { Readable } from "node:stream";
 import { existsSync } from "node:fs";
 import { getTracksByIds } from "@main/database";
-import { spawnAudioEngine, getOrCreateInteractiveEngine, isAudioEngineAvailable } from "@main/audio-engine/binding";
+import { spawnAudioEngine, getOrCreateInteractiveEngine, isAudioEngineAvailable, killAllInteractiveEngines } from "@main/audio-engine/binding";
 import { getWebSocketServer, broadcastToStream } from "@main/routes/ws";
 import { serverLog } from "@main/utils/logger";
 
@@ -91,10 +91,19 @@ app.get("/stream/:id", (c) => {
       child = spawnAudioEngine(audioPath, engineOptions);
     }
 
-    // 客户端断开时通知 C 引擎优雅关闭（C 注册了 SIGTERM handler，自行清理后退出）
+    // 客户端断开时通知 C 引擎立即退出
+    // C 引擎 SIGTERM handler 调用 _exit(0)，应立即退出
+    // 但加 SIGKILL 兜底防止异常残留（2 秒未退出则强杀）
     c.req.raw.signal?.addEventListener("abort", () => {
       serverLog.debug(`[audio] 客户端断开，终止转码: id=${id}`);
       child.kill("SIGTERM");
+      const killTimer = setTimeout(() => {
+        if (!child.killed) {
+          serverLog.warn(`[audio] SIGTERM 后 2s 未退出，SIGKILL 强杀: id=${id}`);
+          try { child.kill("SIGKILL"); } catch { /* 已退出 */ }
+        }
+      }, 2000);
+      child.once("exit", () => clearTimeout(killTimer));
     });
 
     const stream = Readable.toWeb(child.stdout) as ReadableStream;
@@ -123,6 +132,17 @@ app.get("/status", (c) => {
     format: "ogg/opus",
     defaultBitrate: 128000,
   });
+});
+
+/**
+ * POST /kill-all — 终止所有活跃的 C 音频引擎
+ *
+ * 切换到在线播放/原始流模式时调用，防止旧引擎进程残留导致内存堆积。
+ * 返回被终止的引擎数量（统计在 binding.ts 内，这里仅返回 200）。
+ */
+app.post("/kill-all", (c) => {
+  killAllInteractiveEngines();
+  return c.json({ ok: true });
 });
 
 /**

@@ -364,12 +364,14 @@ class WebAudioPlayer implements PlayerApi {
     return ok();
   }
 
-  /** 卸载音频源以释放浏览器端解码缓存 */
+  /** 卸载音频源以释放浏览器端解码缓存并取消 HTTP 请求 */
   private unloadSource(): void {
-    if (this.audio.src) {
-      this.audio.removeAttribute("src");
-      this.audio.load();
-    }
+    // 必须设置 src="" 而非 removeAttribute("src")：
+    // HTMLMediaElement.src IDL 属性 setter 会触发资源选择算法
+    // 中的"资源加载步骤"，这会取消正在进行的网络请求。
+    // removeAttribute 仅移除 DOM 属性，不触发取消。
+    this.audio.src = "";
+    this.audio.load();
   }
 
   async seek(positionMs: number): Promise<IpcResponse> {

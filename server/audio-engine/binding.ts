@@ -337,3 +337,15 @@ export const getOrCreateInteractiveEngine = (key: string, filePath: string, opti
 
   return engine;
 };
+
+/**
+ * 终止所有活跃的交互式引擎（切换到在线播放/原始流模式时调用）
+ * 防止 C 引擎进程残留导致内存堆积
+ */
+export const killAllInteractiveEngines = (): void => {
+  for (const [key, engine] of activeEngines) {
+    serverLog.debug(`[audio-engine] 终止活跃引擎: id=${key}`);
+    engine.kill();
+    activeEngines.delete(key);
+  }
+};
