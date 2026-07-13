@@ -275,6 +275,10 @@ class WebAudioPlayer implements PlayerApi {
       }
       this.audio.src = url;
       this.audio.dataset.coverUrl = options?.meta?.cover ?? "";
+      // unloadSource() 断开了 sourceNode；重新连接以构建 source → preamp → ... → destination 链
+      if (this.sourceNode && this.preamp) {
+        this.sourceNode.connect(this.preamp);
+      }
       this.audio.load();
       // 从元数据获取已知时长（OGG/Opus 流式场景下 audio.duration=Infinity）
       this.trackDurationMs = options?.meta?.duration ?? 0;
@@ -368,10 +372,11 @@ class WebAudioPlayer implements PlayerApi {
 
   /** 卸载音频源以释放浏览器端解码缓存并取消 HTTP 请求 */
   private unloadSource(): void {
-    // 必须设置 src="" 而非 removeAttribute("src")：
-    // HTMLMediaElement.src IDL 属性 setter 会触发资源选择算法
-    // 中的"资源加载步骤"，这会取消正在进行的网络请求。
-    // removeAttribute 仅移除 DOM 属性，不触发取消。
+    // 断开 Web Audio 图中 MediaElementSourceNode 的输出连接。
+    // 仅 src="" 不够：sourceNode 通过内部连接锚住了 <audio>
+    // 的解码缓冲，disconnect() 才能让 V8 回收这部分内存。
+    this.sourceNode?.disconnect();
+    // 设置 src="" 取消正在进行的网络请求（触发服务端 abort → SIGTERM）
     this.audio.src = "";
     this.audio.load();
   }
