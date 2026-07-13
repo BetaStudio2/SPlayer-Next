@@ -71,6 +71,10 @@ class WebAudioPlayer implements PlayerApi {
   /** 当前曲目已知时长（ms），从 load 元数据获取，用于流式播放时 audio.duration=Infinity 的降级 */
   private trackDurationMs = 0;
 
+  /** 最近一次 load 的 source + options，用于热切换 serverTranscode 模式 */
+  private lastSource = "";
+  private lastOptions: LoadOptions | null = null;
+
   constructor() {
     this.audio = new Audio();
     this.audio.preload = "auto";
@@ -264,6 +268,8 @@ class WebAudioPlayer implements PlayerApi {
 
   async load(source: string, options?: LoadOptions): Promise<IpcResponse<LoadResult>> {
     try {
+      this.lastSource = source;
+      this.lastOptions = options ?? null;
       // 卸载上一首的解码缓存
       this.unloadSource();
       const url = normalizeSource(source, options?.meta);
@@ -275,8 +281,9 @@ class WebAudioPlayer implements PlayerApi {
       }
       this.audio.src = url;
       this.audio.dataset.coverUrl = options?.meta?.cover ?? "";
-      // unloadSource() 断开了 sourceNode；重新连接以构建 source → preamp → ... → destination 链
+      // unloadSource() 断开了 sourceNode；先断开再重连保证幂等
       if (this.sourceNode && this.preamp) {
+        this.sourceNode.disconnect();
         this.sourceNode.connect(this.preamp);
       }
       this.audio.load();
@@ -508,6 +515,7 @@ class WebAudioPlayer implements PlayerApi {
   }
 
   async setServerTranscode(enabled: boolean): Promise<IpcResponse> {
+    const changed = serverTranscodeMode !== enabled;
     serverTranscodeMode = enabled;
     console.log(`[WebAudioPlayer] 服务端转码 ${enabled ? "启用" : "禁用"}`);
     // 切换到纯音频播放模式时，释放已有的 Web Audio 图
@@ -525,6 +533,20 @@ class WebAudioPlayer implements PlayerApi {
       this.eqNodes = [];
       this.normalizerNode = null;
       this.normalizerReady = false;
+    }
+    // 热切换：如果有正在播放的曲目，用新模式重新加载
+    if (changed && this.lastSource) {
+      const wasPlaying = !this.audio.paused;
+      const pos = this.audio.currentTime;
+      try {
+        await this.load(this.lastSource, this.lastOptions ?? undefined);
+        if (wasPlaying && Number.isFinite(pos) && pos > 0) {
+          this.audio.currentTime = pos;
+          void this.play();
+        }
+      } catch (err) {
+        console.warn("[WebAudioPlayer] 切换转码模式重载失败:", err);
+      }
     }
     return ok();
   }

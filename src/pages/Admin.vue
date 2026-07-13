@@ -405,43 +405,57 @@ function goBack(): void {
           </div>
         </div>
 
-        <!-- 第二行：容器级资源占用（cgroup）+ 进程级堆叠图 -->
-        <!-- 第二行：Container 总览 -->
+        <!-- 第二行：Container 总览 + 组件堆叠条 -->
         <div class="rounded-xl bg-on-surface/4 p-4">
           <div class="flex items-center gap-2 mb-3">
             <IconLucideBox class="size-4 text-primary" />
             <span class="text-sm font-medium">Container</span>
             <span v-if="stats.container.cpuCores > 0" class="ml-auto text-xs text-on-surface-variant/50">
-              {{ stats.container.cpuCores.toFixed(1) }} CPU •
+              {{ stats.container.cpuCores.toFixed(1) }} CPU ·
               {{ formatBytes(stats.container.memoryLimitMB) }} limit
             </span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- 容器 CPU -->
+            <!-- 容器 CPU — 堆叠条（各组件按比例着色） -->
             <div>
               <div class="flex items-center justify-between text-xs mb-1">
-                <span class="text-on-surface-variant/60">CPU {{ (stats.container.cpuUserPct + stats.container.cpuSystemPct).toFixed(1) }}%</span>
+                <span class="text-on-surface-variant/60">CPU</span>
+                <span class="font-mono text-on-surface">{{ (stats.container.cpuUserPct + stats.container.cpuSystemPct).toFixed(1) }}%</span>
               </div>
-              <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden">
-                <div
-                  class="h-full rounded-full bg-primary"
-                  :style="{ width: Math.min(stats.container.cpuUserPct + stats.container.cpuSystemPct, 100).toFixed(1) + '%', transition: 'width 0.6s ease-out' }"
-                />
+              <div class="h-3 rounded-full bg-on-surface/8 overflow-hidden flex">
+                <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
+                  <div
+                    v-if="p.cpuUserPct + p.cpuSysPct > 0"
+                    class="h-full transition-all duration-600"
+                    :style="{
+                      width: ((p.cpuUserPct + p.cpuSysPct) / Math.max(stats.container.cpuUserPct + stats.container.cpuSystemPct, 0.01) * 100).toFixed(2) + '%',
+                      backgroundColor: getProcColor(p.name).bg,
+                    }"
+                    :title="`${p.name}: ${(p.cpuUserPct + p.cpuSysPct).toFixed(1)}%`"
+                  />
+                </template>
               </div>
             </div>
-            <!-- 容器内存 -->
+            <!-- 容器内存 — 堆叠条（各组件 RSS 按比例着色） -->
             <div>
               <div class="flex items-center justify-between text-xs mb-1">
-                <span class="text-on-surface-variant/60">Memory {{ formatBytes(stats.container.memoryUsedMB) }}
+                <span class="text-on-surface-variant/60">Memory</span>
+                <span class="font-mono text-on-surface">{{ formatBytes(stats.container.memoryUsedMB) }}
                   <template v-if="stats.container.memoryLimitMB > 0"> / {{ formatBytes(stats.container.memoryLimitMB) }}</template>
                 </span>
               </div>
-              <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden">
-                <div
-                  class="h-full rounded-full"
-                  :style="{ width: stats.container.memoryUsedPct.toFixed(1) + '%', transition: 'width 0.6s ease-out' }"
-                  :class="stats.container.memoryUsedPct > 80 ? 'bg-error' : 'bg-primary'"
-                />
+              <div class="h-3 rounded-full bg-on-surface/8 overflow-hidden flex">
+                <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
+                  <div
+                    v-if="p.rssMB > 0 && stats.container.memoryUsedMB > 0"
+                    class="h-full transition-all duration-600"
+                    :style="{
+                      width: (p.rssMB / Math.max(stats.container.memoryUsedMB, 0.01) * 100).toFixed(2) + '%',
+                      backgroundColor: getProcColor(p.name).bg,
+                    }"
+                    :title="`${p.name}: ${formatBytes(p.rssMB)}`"
+                  />
+                </template>
               </div>
             </div>
           </div>
