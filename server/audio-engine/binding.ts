@@ -162,6 +162,17 @@ export const spawnAudioEngine = (
     child.removeAllListeners();
   });
 
+  child.on("close", () => {
+    // pipe 关闭后主动释放 stdin/stdout/stderr 引用链
+    // Readable.toWeb(child.stdout) 在 Response 端会锚住 Readable，
+    // 但主动 destroy 能加速 V8 发现不可达路径
+    child.stdout?.destroy();
+    child.stderr?.destroy();
+    child.stdin?.destroy();
+    // 兜底：杀掉可能卡在阻塞 IO 的进程（正常退出的已无影响）
+    if (!child.killed) child.kill("SIGKILL");
+  });
+
   return child;
 };
 
@@ -336,16 +347,4 @@ export const getOrCreateInteractiveEngine = (key: string, filePath: string, opti
   });
 
   return engine;
-};
-
-/**
- * 终止所有活跃的交互式引擎（切换到在线播放/原始流模式时调用）
- * 防止 C 引擎进程残留导致内存堆积
- */
-export const killAllInteractiveEngines = (): void => {
-  for (const [key, engine] of activeEngines) {
-    serverLog.debug(`[audio-engine] 终止活跃引擎: id=${key}`);
-    engine.kill();
-    activeEngines.delete(key);
-  }
 };
