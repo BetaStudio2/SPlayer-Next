@@ -351,11 +351,13 @@ func initCgroupPaths() {
 	if _, err := os.Stat(filepath.Join(cgroupRoot, "cgroup.controllers")); err == nil {
 		cgroupV2 = true
 		cgroupV2Base = resolveCgroupPath("0::")
+		fmt.Fprintf(os.Stderr, "[monitor] cgroup v2 detected, base=%q\n", cgroupV2Base)
 		return
 	}
 
 	// cgroup v1：从 /proc/self/cgroup 解析 per-subsystem 路径
 	cgroupV1MemBase = resolveCgroupPath("memory:")
+	fmt.Fprintf(os.Stderr, "[monitor] cgroup v1, memory_base=%q\n", cgroupV1MemBase)
 }
 
 // resolveCgroupPath 从 /proc/self/cgroup 中提取匹配 prefix 的 cgroup 路径
@@ -855,6 +857,18 @@ func main() {
 
 	// 必须在任何 cgroup 读取之前调用，动态检测容器 cgroup 路径
 	initCgroupPaths()
+
+	// 启动诊断：验证一次关键读取
+	if probeUser, _, _, _, err := readCPUJiffies(); err != nil {
+		fmt.Fprintf(os.Stderr, "[monitor] WARN /proc/stat 读取失败: %v\n", err)
+	} else {
+		fmt.Fprintf(os.Stderr, "[monitor] /proc/stat OK (user=%.0f jiffies)\n", probeUser)
+	}
+	if cu, cs := readCgroupUsage(); cu > 0 || cs > 0 {
+		fmt.Fprintf(os.Stderr, "[monitor] cgroup cpu.stat OK (user=%d system=%d µs)\n", cu, cs)
+	} else {
+		fmt.Fprintf(os.Stderr, "[monitor] WARN cgroup cpu.stat 读数=0，cgroup 路径可能不正确\n")
+	}
 
 	logBuf := NewLogBuffer(2000)
 	collector := NewCollector()
