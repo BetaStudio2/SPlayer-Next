@@ -266,9 +266,14 @@ function goBack(): void {
   router.back();
 }
 
-/** 容器内存基线：cgroup 有读数时用容器值，否则降级为进程 RSS 总和 */
-function containerMemoryBaseline(stats: Stats): number {
-  if (stats.container.memoryUsedMB > 0) return stats.container.memoryUsedMB;
+/** 进程 CPU% 总和（堆叠条 100% 填充基线） */
+function totalProcessCpuPct(stats: Stats): number {
+  const sum = stats.processes.reduce((s, p) => s + p.cpuUserPct + p.cpuSysPct, 0);
+  return sum > 0 ? sum : 0.01;
+}
+
+/** 进程 RSS 总和（堆叠条 100% 填充基线） */
+function totalProcessRssMB(stats: Stats): number {
   const sum = stats.processes.reduce((s, p) => s + p.rssMB, 0);
   return sum > 0 ? sum : 0.01;
 }
@@ -423,19 +428,19 @@ function containerMemoryBaseline(stats: Stats): number {
             </span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- 容器 CPU — 堆叠条（各组件按比例着色） -->
+            <!-- 容器 CPU — 堆叠条（100% 填充，组件按比例着色） -->
             <div>
               <div class="flex items-center justify-between text-xs mb-1">
                 <span class="text-on-surface-variant/60">CPU</span>
                 <span class="font-mono text-on-surface">{{ (stats.container.cpuUserPct + stats.container.cpuSystemPct).toFixed(1) }}%</span>
               </div>
-              <div class="h-3 rounded-full bg-on-surface/8 overflow-hidden flex">
+              <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden flex">
                 <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
                   <div
                     v-if="p.cpuUserPct + p.cpuSysPct > 0"
                     class="h-full transition-all duration-600"
                     :style="{
-                      width: ((p.cpuUserPct + p.cpuSysPct) / Math.max(stats.container.cpuUserPct + stats.container.cpuSystemPct, 0.01) * 100).toFixed(2) + '%',
+                      width: ((p.cpuUserPct + p.cpuSysPct) / totalProcessCpuPct(stats) * 100).toFixed(2) + '%',
                       backgroundColor: getProcColor(p.name).bg,
                     }"
                     :title="`${p.name}: ${(p.cpuUserPct + p.cpuSysPct).toFixed(1)}%`"
@@ -443,7 +448,7 @@ function containerMemoryBaseline(stats: Stats): number {
                 </template>
               </div>
             </div>
-            <!-- 容器内存 — 堆叠条（各组件 RSS 按比例着色） -->
+            <!-- 容器内存 — 堆叠条（100% 填充，组件 RSS 按比例着色） -->
             <div>
               <div class="flex items-center justify-between text-xs mb-1">
                 <span class="text-on-surface-variant/60">Memory</span>
@@ -451,13 +456,13 @@ function containerMemoryBaseline(stats: Stats): number {
                   <template v-if="stats.container.memoryLimitMB > 0"> / {{ formatBytes(stats.container.memoryLimitMB) }}</template>
                 </span>
               </div>
-              <div class="h-3 rounded-full bg-on-surface/8 overflow-hidden flex">
+              <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden flex">
                 <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
                   <div
                     v-if="p.rssMB > 0"
                     class="h-full transition-all duration-600"
                     :style="{
-                      width: (p.rssMB / containerMemoryBaseline(stats) * 100).toFixed(2) + '%',
+                      width: (p.rssMB / totalProcessRssMB(stats) * 100).toFixed(2) + '%',
                       backgroundColor: getProcColor(p.name).bg,
                     }"
                     :title="`${p.name}: ${formatBytes(p.rssMB)}`"
