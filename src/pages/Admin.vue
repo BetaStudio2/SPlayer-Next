@@ -286,7 +286,7 @@ function totalProcessRssMB(stats: Stats): number {
       <SButton variant="tertiary" size="small" @click="goBack">
         <template #icon><IconLucideArrowLeft class="size-5" /></template>
       </SButton>
-      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2">
         <IconLucideTerminal class="size-5 text-primary" />
         <h1 class="text-lg font-bold text-on-surface">{{ t("nav.devtools") }}</h1>
       </div>
@@ -435,9 +435,11 @@ function totalProcessRssMB(stats: Stats): number {
                 <span class="font-mono text-on-surface">{{ (stats.container.cpuUserPct + stats.container.cpuSystemPct).toFixed(1) }}%</span>
               </div>
               <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden flex">
-                <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
+                <TransitionGroup name="stack">
                   <div
-                    v-if="p.cpuUserPct + p.cpuSysPct > 0"
+                    v-for="p in sortedProcesses(stats.processes)"
+                    v-show="p.cpuUserPct + p.cpuSysPct > 0"
+                    :key="p.pid"
                     class="h-full transition-all duration-500"
                     :style="{
                       width: ((p.cpuUserPct + p.cpuSysPct) / totalProcessCpuPct(stats) * 100).toFixed(2) + '%',
@@ -445,7 +447,7 @@ function totalProcessRssMB(stats: Stats): number {
                     }"
                     :title="`${p.name}: ${(p.cpuUserPct + p.cpuSysPct).toFixed(1)}%`"
                   />
-                </template>
+                </TransitionGroup>
               </div>
             </div>
             <!-- 容器内存 — 堆叠条（100% 填充，组件 RSS 按比例着色） -->
@@ -457,9 +459,11 @@ function totalProcessRssMB(stats: Stats): number {
                 </span>
               </div>
               <div class="h-1.5 rounded-full bg-on-surface/8 overflow-hidden flex">
-                <template v-for="p in sortedProcesses(stats.processes)" :key="p.pid">
+                <TransitionGroup name="stack">
                   <div
-                    v-if="p.rssMB > 0"
+                    v-for="p in sortedProcesses(stats.processes)"
+                    v-show="p.rssMB > 0"
+                    :key="p.pid"
                     class="h-full transition-all duration-500"
                     :style="{
                       width: (p.rssMB / totalProcessRssMB(stats) * 100).toFixed(2) + '%',
@@ -467,7 +471,7 @@ function totalProcessRssMB(stats: Stats): number {
                     }"
                     :title="`${p.name}: ${formatBytes(p.rssMB)}`"
                   />
-                </template>
+                </TransitionGroup>
               </div>
             </div>
           </div>
@@ -566,3 +570,22 @@ function totalProcessRssMB(stats: Stats): number {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* TransitionGroup: 堆叠条色段进场/离场/位移动效 */
+.stack-enter-active {
+  transition: all 0.5s ease-out;
+}
+.stack-leave-active {
+  transition: all 0.3s ease-in;
+  position: absolute;
+}
+.stack-enter-from,
+.stack-leave-to {
+  width: 0 !important;
+  opacity: 0;
+}
+.stack-move {
+  transition: all 0.5s ease-out;
+}
+</style>
