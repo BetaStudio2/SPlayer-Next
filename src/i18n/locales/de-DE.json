@@ -1356,11 +1356,16 @@
       "description": "Hintergrundtyp des Vollbild-Players",
       "blur": "Weichzeichner",
       "solid": "Einfarbig",
-      "animation": "Fließend"
+      "animation": "Fließend",
+      "ripple": "Wasserwellen"
     },
     "playerBgFlowSpeed": {
       "label": "Fließgeschwindigkeit",
       "description": "Animationsfließgeschwindigkeit des fließenden Hintergrunds"
+    },
+    "playerBgRippleSpeed": {
+      "label": "Wellengeschwindigkeit",
+      "description": "Wellenanimationsgeschwindigkeit des Wasserwellen-Hintergrunds"
     },
     "playerBgRenderScale": {
       "label": "Render-Skalierung",

@@ -84,6 +84,7 @@ export const useSettingsStore = defineStore(
       playerBgRenderScale: 0.5,
       playerBgFreezeOnPause: false,
       playerBgBeat: false,
+      playerBgRippleSpeed: 3,
       coverLayout: "default",
       autoCenterCover: true,
       followCoverColor: true,

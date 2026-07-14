@@ -1356,11 +1356,16 @@
       "description": "Tipo de fondo del reproductor a pantalla completa",
       "blur": "Desenfocar",
       "solid": "Sólido",
-      "animation": "Fluido"
+      "animation": "Fluido",
+      "ripple": "Ondulación"
     },
     "playerBgFlowSpeed": {
       "label": "Velocidad de flujo",
       "description": "Velocidad de flujo de la animación del fondo fluido"
+    },
+    "playerBgRippleSpeed": {
+      "label": "Velocidad de onda",
+      "description": "Velocidad de animación de ondas del fondo ondulante"
     },
     "playerBgRenderScale": {
       "label": "Escala de renderizado",

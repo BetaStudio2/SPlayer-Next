@@ -10,6 +10,12 @@ const isWeb = !isElectron;
 /** 当前是否为流体背景 */
 const isAnimationBg = () => useSettingsStore().player.playerBgType === "animation";
 
+/** 当前是否为水纹背景 */
+const isRippleBg = () => useSettingsStore().player.playerBgType === "ripple";
+
+/** 当前是否为流体或水纹背景（需要显示子设置的动态效果） */
+const isEffectBg = () => isAnimationBg() || isRippleBg();
+
 const playerCategory: SettingCategory = {
   id: "player",
   icon: IconLucidePlay,
@@ -123,15 +129,16 @@ const playerCategory: SettingCategory = {
             { value: "blur", labelKey: "settings.playerBgType.blur" },
             { value: "solid", labelKey: "settings.playerBgType.solid" },
             { value: "animation", labelKey: "settings.playerBgType.animation" },
+            { value: "ripple", labelKey: "settings.playerBgType.ripple" },
           ],
           defaultValue: "blur",
           confirm: {
-            when: (next) => next === "animation",
+            when: (next) => next === "animation" || next === "ripple",
             titleKey: "settings.confirm.highResourceTitle",
             contentKey: "settings.confirm.highResourceContent",
             type: "warning",
           },
-          childrenCondition: isAnimationBg,
+          childrenCondition: isEffectBg,
           hideChildren: true,
           children: [
             {
@@ -143,6 +150,7 @@ const playerCategory: SettingCategory = {
               step: 0.1,
               defaultValue: 4,
               marks: { 0.1: "0.1", 4: "4", 10: "10" },
+              visible: isAnimationBg,
             },
             {
               key: "playerBgRenderScale",
@@ -153,6 +161,7 @@ const playerCategory: SettingCategory = {
               step: 0.1,
               defaultValue: 0.5,
               marks: { 0.5: "0.5", 1: "1", 2: "2" },
+              visible: isAnimationBg,
             },
             {
               key: "playerBgFps",
@@ -163,18 +172,32 @@ const playerCategory: SettingCategory = {
               step: 2,
               defaultValue: 30,
               marks: { 24: "24", 60: "60", 120: "120" },
+              visible: isAnimationBg,
             },
             {
               key: "playerBgFreezeOnPause",
               type: "switch",
               binding: { store: "settings", path: "player.playerBgFreezeOnPause" },
               defaultValue: false,
+              visible: isAnimationBg,
             },
             {
               key: "playerBgBeat",
               type: "switch",
               binding: { store: "settings", path: "player.playerBgBeat" },
               defaultValue: false,
+              visible: isAnimationBg,
+            },
+            {
+              key: "playerBgRippleSpeed",
+              type: "slider",
+              binding: { store: "settings", path: "player.playerBgRippleSpeed" },
+              min: 0.1,
+              max: 10,
+              step: 0.1,
+              defaultValue: 3,
+              marks: { 0.1: "0.1", 3: "3", 10: "10" },
+              visible: isRippleBg,
             },
           ],
         },

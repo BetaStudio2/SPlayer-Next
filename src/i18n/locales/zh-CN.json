@@ -1369,11 +1369,16 @@
       "description": "全屏播放器的背景类型",
       "blur": "模糊",
       "solid": "纯色",
-      "animation": "流体"
+      "animation": "流体",
+      "ripple": "水纹"
     },
     "playerBgFlowSpeed": {
       "label": "流动速度",
       "description": "流体背景的动画流动速度"
+    },
+    "playerBgRippleSpeed": {
+      "label": "波纹速度",
+      "description": "水纹背景的波纹动画速度"
     },
     "playerBgRenderScale": {
       "label": "渲染缩放",

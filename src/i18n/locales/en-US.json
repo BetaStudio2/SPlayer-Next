@@ -1381,11 +1381,16 @@
       "description": "Background type of the full-screen player",
       "blur": "Blur",
       "solid": "Solid",
-      "animation": "Fluid"
+      "animation": "Fluid",
+      "ripple": "Ripple"
     },
     "playerBgFlowSpeed": {
       "label": "Flow Speed",
       "description": "Animation flow speed of the fluid background"
+    },
+    "playerBgRippleSpeed": {
+      "label": "Ripple Speed",
+      "description": "Ripple animation speed of the water ripple background"
     },
     "playerBgRenderScale": {
       "label": "Render Scale",

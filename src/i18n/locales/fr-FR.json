@@ -1356,11 +1356,16 @@
       "description": "Type d'arrière-plan du lecteur plein écran",
       "blur": "Flou",
       "solid": "Uni",
-      "animation": "Fluide"
+      "animation": "Fluide",
+      "ripple": "Ondulation"
     },
     "playerBgFlowSpeed": {
       "label": "Vitesse de flux",
       "description": "Vitesse d'animation du flux de l'arrière-plan fluide"
+    },
+    "playerBgRippleSpeed": {
+      "label": "Vitesse d'ondulation",
+      "description": "Vitesse d'animation des ondulations de l'arrière-plan ondulant"
     },
     "playerBgRenderScale": {
       "label": "Échelle de rendu",

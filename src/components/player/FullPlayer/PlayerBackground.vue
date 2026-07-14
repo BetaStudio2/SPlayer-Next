@@ -4,6 +4,7 @@ import { useMediaStore } from "@/stores/media";
 import { useStatusStore } from "@/stores/status";
 import DEFAULT_COVER from "@/assets/images/song.jpg";
 import BackgroundRender from "./BackgroundRender.vue";
+import BackgroundRipple from "./BackgroundRipple.vue";
 
 const media = useMediaStore();
 const settings = useSettingsStore();
@@ -113,9 +114,13 @@ onBeforeUnmount(() => {
   <div class="absolute inset-0 overflow-hidden -z-1 bg-solid-wrap">
     <div class="color bg-cover-base" />
   </div>
-  <!-- 模糊背景 -->
-  <Transition v-if="bgType === 'blur'" name="bg-fade">
-    <div v-if="bgReady" class="absolute inset-0 overflow-hidden -z-1 bg-blur-wrap">
+  <!-- 模糊背景（blur / ripple 模式共用；ripple 使用 0.75x 模糊） -->
+  <Transition v-if="bgType === 'blur' || bgType === 'ripple'" name="bg-fade">
+    <div
+      v-if="bgReady"
+      class="absolute inset-0 overflow-hidden -z-1 bg-blur-wrap"
+      :class="{ 'blur-ripple': bgType === 'ripple' }"
+    >
       <img
         v-for="(layer, index) in blurLayers"
         :key="index"
@@ -123,6 +128,13 @@ onBeforeUnmount(() => {
         :class="['bg-img', { active: layer.active }]"
         decoding="async"
         alt=""
+      />
+      <!-- 水纹叠加层 -->
+      <BackgroundRipple
+        v-if="bgType === 'ripple'"
+        :album="blurLayers[currentLayerIndex].src"
+        :playing="bgPlaying"
+        :ripple-speed="settings.player.playerBgRippleSpeed"
       />
     </div>
   </Transition>
@@ -189,6 +201,13 @@ onBeforeUnmount(() => {
 
 .bg-blur-wrap .bg-img.active {
   opacity: 1;
+}
+
+/* 水纹模式：隐藏模糊图片（WebGL 直接渲染封面带折射） */
+.blur-ripple .bg-img {
+  filter: blur(18px) saturate(1.4);
+  transform: scale(1.2);
+  visibility: hidden;
 }
 
 /* 流体背景渐入 */

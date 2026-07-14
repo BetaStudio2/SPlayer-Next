@@ -19,6 +19,7 @@ declare module 'vue' {
     AutoCloseDialog: typeof import('./src/components/modals/AutoCloseDialog.vue')['default']
     BackgroundImagePicker: typeof import('./src/components/settings/custom/BackgroundImagePicker.vue')['default']
     BackgroundRender: typeof import('./src/components/player/FullPlayer/BackgroundRender.vue')['default']
+    BackgroundRipple: typeof import('./src/components/player/FullPlayer/BackgroundRipple.vue')['default']
     BottomSpectrum: typeof import('./src/components/player/FullPlayer/BottomSpectrum.vue')['default']
     CloudUploadDialog: typeof import('./src/components/modals/CloudUploadDialog.vue')['default']
     ComboboxAnchor: typeof import('reka-ui')['ComboboxAnchor']

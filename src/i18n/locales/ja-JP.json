@@ -1356,11 +1356,16 @@
       "description": "フルスクリーンプレイヤーの背景タイプ",
       "blur": "ブラー",
       "solid": "単色",
-      "animation": "フルイド"
+      "animation": "フルイド",
+      "ripple": "リップル"
     },
     "playerBgFlowSpeed": {
       "label": "流速",
       "description": "フルイド背景のアニメーション流速"
+    },
+    "playerBgRippleSpeed": {
+      "label": "波紋速度",
+      "description": "リップル背景の波紋アニメーション速度"
     },
     "playerBgRenderScale": {
       "label": "レンダリングスケール",

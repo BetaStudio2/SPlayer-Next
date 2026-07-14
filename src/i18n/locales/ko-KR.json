@@ -1356,11 +1356,16 @@
       "description": "전체 화면 플레이어의 배경 유형",
       "blur": "블러",
       "solid": "단색",
-      "animation": "유체"
+      "animation": "유체",
+      "ripple": "리플"
     },
     "playerBgFlowSpeed": {
       "label": "흐름 속도",
       "description": "유체 배경의 애니메이션 흐름 속도"
+    },
+    "playerBgRippleSpeed": {
+      "label": "리플 속도",
+      "description": "리플 배경의 리플 애니메이션 속도"
     },
     "playerBgRenderScale": {
       "label": "렌더링 배율",

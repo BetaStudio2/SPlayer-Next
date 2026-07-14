@@ -27,7 +27,7 @@ const applyChange = async (next: unknown): Promise<void> => {
       cancelText: cfg.cancelTextKey ? t(cfg.cancelTextKey) : undefined,
     });
     if (!confirmed) {
-      model.value = dragPrevValue.value;
+      model.value = dragPrevValue.value ?? model.value;
       return;
     }
   }
@@ -166,7 +166,7 @@ const descriptionText = computed(() =>
       class="mt-2.5 flex flex-col gap-2.5 transition-opacity duration-200"
       :class="isChildrenActive ? '' : 'opacity-50 pointer-events-none'"
     >
-      <SettingsItem v-for="child in item.children" :key="child.key" :item="child" />
+      <SettingsItem v-for="child in item.children.filter(c => !c.visible || c.visible())" :key="child.key" :item="child" />
     </div>
   </div>
 </template>
