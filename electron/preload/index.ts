@@ -58,6 +58,8 @@ const api = {
     getVolume: () => ipcRenderer.invoke("player:getVolume"),
     // 设置暂停/恢复时的渐变时长（毫秒），0 表示禁用
     setFadeDuration: (ms: number) => ipcRenderer.invoke("player:setFadeDuration", ms),
+    // 服务端转码（桌面端无此功能，仅用作无操作桩避免 console 报错）
+    setServerTranscode: (_enabled: boolean) => {},
     // 获取当前渐变时长（毫秒）
     getFadeDuration: () => ipcRenderer.invoke("player:getFadeDuration"),
     // 获取播放状态快照
