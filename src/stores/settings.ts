@@ -58,7 +58,7 @@ const debounce = <T extends (...args: unknown[]) => void>(
 export const useSettingsStore = defineStore(
   "settings",
   () => {
-    /** 界面语言（持久化，由 main.ts 同步到 vue-i18n） */
+    /** 界面语言 */
     const locale = ref<LocaleCode>("zh-CN");
 
     /** 外观 */
@@ -103,6 +103,7 @@ export const useSettingsStore = defineStore(
       snapToLyric: false,
       transitionStyle: "scale",
       showLyricInBar: true,
+      preloadNextTrack: false,
     });
 
     /** 强迫症设置 */
@@ -126,6 +127,10 @@ export const useSettingsStore = defineStore(
       fontWeight: 700,
       lyricBlendMode: "normal",
       fontFamily: "",
+      fontFamilyLatin: "",
+      fontFamilyJapanese: "",
+      fontFamilyKorean: "",
+      fontFamilyChinese: "",
       showTranslation: true,
       showRomanization: true,
       amllShowLineRomanization: true,

@@ -1,49 +1,54 @@
 use std::fs::File;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use ffmpeg_audio::{sys, AudioError, AudioReader, ResampleOptions, Resampler};
+use ffmpeg_audio::{sys, AudioError, AudioReader, ResampleOptions, Resampler, SeekMode};
 use tracing::debug;
 
-use crate::http_source;
+use crate::http_source::{HttpInterrupt, HttpRangeSource};
 use crate::loudness::LoudnessAnalyzer;
 use crate::metadata;
 use crate::priority;
 use crate::shared::{AudioChunk, AudioMetadata, Shared};
 
 /// 播放输出目标格式（重采样后送入 rodio）
-pub const TARGET_SAMPLE_RATE: u32 = 48000;
 pub const TARGET_CHANNELS: u16 = 2;
 
-/// 自定义 IO 源（HttpRangeSource / File）读取失败时，ffmpeg_audio 的 read 回调统一映射为此错误码
+/// 播放输出默认采样率
+pub const DEFAULT_TARGET_SAMPLE_RATE: u32 = 48_000;
+
+/// FFT 计算所需的目标采样率
+pub const FFT_TARGET_SAMPLE_RATE: u32 = 48_000;
+
+/// 自定义 File IO 读取失败时，ffmpeg_audio 的 read 回调可能映射为此错误码
 const AVERROR_EIO: i32 = sys::averror(libc::EIO);
 
 /// 解码会话所需的资源（跨 seek 复用，避免重建 ffmpeg_audio 上下文）
 ///
-/// 1-to-N 分发：同一帧零拷贝喂给两个重采样器
-/// - player_resampler: 48k stereo f32，给 rodio 播放
-/// - fft_resampler:    48k mono   f32，给 FFT 频谱分析
+/// 此处必须进行 1-to-N 分发，因为需要两个可能存在采样率差异的音源
+///  - 播放重采样器输出设备采样率的 stereo f32
+///  - FFT 重采样器输出 48kHz 的 stereo f32
 pub struct DecoderData {
     reader: AudioReader,
     player_resampler: Resampler,
     fft_resampler: Resampler,
-    /// 中断标志：仅网络源持有；本地 File 不会长时间阻塞，没必要绑
-    /// 通过 shared.bind_interrupt 注入，外部 stop() 触发后 HttpRangeSource::read 会返回 Interrupted
-    interrupt_flag: Option<Arc<AtomicBool>>,
+    /// 网络中断句柄仅由远端源持有，stop() 取消后可在 seek 前重置
+    interrupt: Option<HttpInterrupt>,
 }
 
 impl DecoderData {
     /// 在已有 reader 上 seek，失败时调用方应回退到完整 load
     ///
-    /// seek 后两个重采样器要 flush 掉残留样本，否则播放/FFT 会带上上一段尾巴
+    /// seek 后两个重采样器要 flush 掉残留样本，否则播放/FFT会带上上一段尾巴
     pub fn seek(&mut self, position_secs: f64) -> bool {
-        if self
-            .reader
-            .seek(Duration::from_secs_f64(position_secs))
-            .is_err()
+        if let Some(interrupt) = &self.interrupt {
+            interrupt.reset();
+        }
+        let target = Duration::from_secs_f64(position_secs);
+        if self.reader.seek(target, SeekMode::Accurate).is_err()
+            && self.reader.seek(target, SeekMode::Coarse).is_err()
         {
             return false;
         }
@@ -52,21 +57,11 @@ impl DecoderData {
         true
     }
 
-    /// 清除中断标志：seek 路径在 join 旧解码线程后调用一次，避免 stop 信号导致 seek 自爆
-    pub fn reset_interrupt(&self) {
-        if let Some(ref flag) = self.interrupt_flag {
-            flag.store(false, Ordering::Release);
-        }
-    }
-
-    /// 拿中断标志的 Arc clone：resume_decode 后需把它绑到新 shared
-    pub fn interrupt_handle(&self) -> Option<Arc<AtomicBool>> {
-        self.interrupt_flag.clone()
+    /// 获取网络中断句柄，恢复解码时绑定到新的共享状态
+    pub fn interrupt_handle(&self) -> Option<HttpInterrupt> {
+        self.interrupt.clone()
     }
 }
-
-// SAFETY: AudioReader/Resampler 内部持有 ffmpeg C 指针，仅被解码线程独占使用，spawn 时 move 进线程
-unsafe impl Send for DecoderData {}
 
 /// 启动解码线程，返回音频元数据和线程句柄
 ///
@@ -77,13 +72,10 @@ pub fn start_decode(
     shared: Arc<Shared>,
     cover_cache_dir: Option<&str>,
 ) -> Result<(AudioMetadata, JoinHandle<DecoderData>)> {
-    // 播放重采样目标 = 输出设备原生采样率
+    // 播放重采样目标 = 实际输出流采样率
     let target_rate = shared.sample_rate();
-    let (reader, player_resampler, fft_resampler, interrupt_flag) =
-        open_source(source, target_rate)?;
-    if let Some(ref flag) = interrupt_flag {
-        shared.bind_interrupt(Arc::clone(flag));
-    }
+    let (reader, player_resampler, fft_resampler, interrupt) =
+        open_source(source, target_rate, Some(&shared))?;
 
     let info = reader.source_info();
     let duration_secs = reader.duration().map(|d| d.as_secs_f64()).unwrap_or(0.0);
@@ -126,7 +118,7 @@ pub fn start_decode(
         reader,
         player_resampler,
         fft_resampler,
-        interrupt_flag,
+        interrupt,
     };
 
     let handle = thread::Builder::new()
@@ -148,8 +140,8 @@ pub fn start_decode(
 
 /// 用已有的 DecoderData 继续解码（seek 后复用）
 pub fn resume_decode(data: DecoderData, shared: Arc<Shared>) -> Result<JoinHandle<DecoderData>> {
-    if let Some(flag) = data.interrupt_handle() {
-        shared.bind_interrupt(flag);
+    if let Some(interrupt) = data.interrupt_handle() {
+        shared.bind_interrupt(interrupt);
     }
     thread::Builder::new()
         .name("audio-decoder".to_string())
@@ -165,18 +157,20 @@ pub fn resume_decode(data: DecoderData, shared: Arc<Shared>) -> Result<JoinHandl
         .context("启动解码线程失败")
 }
 
-/// 根据 source 协议打开音频：http(s) 走 HttpRangeSource + 拿 cancel flag，其他走本地 File
+/// 根据 source 协议打开音频：http(s) 走延迟 Range 源，其他走本地 File
 ///
-/// `target_rate` 为播放重采样目标采样率（输出设备原生采样率）；FFT 路径固定 48000
-///
-/// 返回 (reader, 播放重采样器, FFT 重采样器, cancel 标志)
+/// `target_rate` 为实际输出流的播放重采样目标采样率
 fn open_source(
     source: &str,
     target_rate: u32,
-) -> Result<(AudioReader, Resampler, Resampler, Option<Arc<AtomicBool>>)> {
-    let (reader, cancel) = if http_source::is_network_source(source) {
-        let http = http_source::HttpRangeSource::new(source)?;
-        let cancel = http.cancel_handle();
+    shared: Option<&Shared>,
+) -> Result<(AudioReader, Resampler, Resampler, Option<HttpInterrupt>)> {
+    let (reader, cancel) = if source.starts_with("http://") || source.starts_with("https://") {
+        let http = HttpRangeSource::new(source)?;
+        let cancel = http.interrupt_handle();
+        if let Some(shared) = shared {
+            shared.bind_interrupt(cancel.clone());
+        }
         let reader =
             AudioReader::new(http).with_context(|| format!("打开网络音频失败: {source}"))?;
         (reader, Some(cancel))
@@ -195,10 +189,9 @@ fn open_source(
         .build_resampler(player_opts)
         .with_context(|| "构建播放重采样器失败")?;
 
-    // FFT 用 mono：让 ffmpeg 做正经下混，比之前 chunks_exact(2).map(|c| c[0]) 抽左声道更合理
     let fft_opts = ResampleOptions::new()
-        .sample_rate(TARGET_SAMPLE_RATE as i32)
-        .channels(1)
+        .sample_rate(FFT_TARGET_SAMPLE_RATE as i32)
+        .channels(i32::from(TARGET_CHANNELS))
         .format::<f32>();
     let fft_resampler = reader
         .build_resampler(fft_opts)
@@ -225,7 +218,7 @@ fn run_decoding_loop(data: &mut DecoderData, shared: &Shared) {
 
         match data.reader.receive_frame() {
             Ok(Some(frame)) => {
-                // 1-to-N：同一帧顺序喂两个重采样器
+                // 1-to-N: 同一帧顺序喂两个重采样器
                 if data.player_resampler.process::<f32>(Some(&frame)).is_err() {
                     debug!("player resampler 处理失败，结束解码");
                     shared.mark_decode_failed();
@@ -235,6 +228,7 @@ fn run_decoding_loop(data: &mut DecoderData, shared: &Shared) {
 
                 if data.fft_resampler.process::<f32>(Some(&frame)).is_err() {
                     debug!("fft resampler 处理失败，结束解码");
+                    shared.mark_decode_failed();
                     return;
                 }
                 let fft_samples = data.fft_resampler.output_as::<f32>().to_vec();
@@ -278,13 +272,12 @@ fn run_decoding_loop(data: &mut DecoderData, shared: &Shared) {
                 return;
             }
             Err(e) => {
-                // stop/切歌触发的中断（interrupt flag / HttpRangeSource cancel）不是源故障
+                // stop/切歌触发的 HTTP 取消不是源故障
                 if shared.is_stopping() {
                     debug!(error = %e, "解码线程因停止信号退出");
                     return;
                 }
-                // HttpRangeSource 内部重试耗尽后以 io::Error 浮出，经 ffmpeg_audio 的
-                // read 回调映射为 AVERROR(EIO)
+                // 本地 File 的 io::Error 可能经 ffmpeg_audio read 回调映射为 AVERROR(EIO)
                 let io_failure = match &e {
                     AudioError::Io(_) => true,
                     AudioError::FFmpeg(code, _) => *code == AVERROR_EIO,

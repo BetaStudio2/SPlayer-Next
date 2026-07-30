@@ -28,7 +28,7 @@ pub enum PlayerEvent {
     /// 位置更新（秒）—— 由内部定时器推送
     Position { position: f64, duration: f64 },
     /// FFT 频谱数据推送
-    FftData { data: Vec<f32> },
+    FftData { ldata: Vec<f32>, rdata: Vec<f32> },
     /// 输出流停滞（rodio sink 长时间未消费样本，需要外部重建输出）
     OutputStalled,
 }
@@ -198,12 +198,12 @@ impl InnerPlayer {
             .ok_or_else(|| anyhow::anyhow!("ensure_output 后置条件违反"))
     }
 
-    /// 当前输出设备的原生采样率（播放重采样目标）
+    /// 当前实际输出流采样率（播放重采样目标）
     pub fn output_sample_rate(&self) -> u32 {
         self.output
             .as_ref()
             .map(|out| out.sample_rate())
-            .unwrap_or(decoder::TARGET_SAMPLE_RATE)
+            .unwrap_or(decoder::DEFAULT_TARGET_SAMPLE_RATE)
     }
 
     /// 把 EQ / stretch 的采样率对齐到当前输出设备率
@@ -223,7 +223,7 @@ impl InnerPlayer {
         let initial_rate = output
             .as_ref()
             .map(|out| out.sample_rate())
-            .unwrap_or(decoder::TARGET_SAMPLE_RATE);
+            .unwrap_or(decoder::DEFAULT_TARGET_SAMPLE_RATE);
         debug!("InnerPlayer 已创建");
 
         Ok(Self {
@@ -231,7 +231,7 @@ impl InnerPlayer {
             sink: None,
             shared: None,
             decoder_thread: None,
-            fft: Arc::new(FftAnalyzer::new(decoder::TARGET_SAMPLE_RATE)),
+            fft: Arc::new(FftAnalyzer::new()),
             audio_sample_rate: 0,
             audio_channels: 0,
             audio_duration: 0.0,
@@ -261,16 +261,20 @@ impl InnerPlayer {
         })
     }
 
-    /// 切换输出设备（None = 系统默认）
-    pub fn set_output_device(&mut self, device_name: Option<String>) -> Result<()> {
+    /// 切换输出设备（下一次重建设备时生效）
+    pub fn set_output_device(&mut self, device_name: Option<String>) {
         info!(device = ?device_name, "切换输出设备");
         self.selected_device_name = device_name;
-        self.reinit_output()
     }
 
     /// 获取当前选择的输出设备名称（None = 系统默认）
     pub fn selected_device_name(&self) -> Option<&str> {
         self.selected_device_name.as_deref()
+    }
+
+    /// 获取当前音频源
+    pub fn current_source(&self) -> Option<String> {
+        self.current_source.clone()
     }
 
     /// 注册事件回调（支持热替换：先停止旧的定时器/渐变，确保旧回调的 Arc 引用尽快释放）
@@ -405,6 +409,9 @@ impl InnerPlayer {
     /// 启动 FFT 推送定时器（独立线程，每 50ms 推送一次频谱数据）
     fn start_fft_timer(&mut self) {
         self.stop_fft_timer();
+        if !self.fft_enabled() {
+            return;
+        }
 
         let stop_flag = Arc::new(AtomicBool::new(false));
         self.fft_timer_stop = Some(Arc::clone(&stop_flag));
@@ -419,8 +426,8 @@ impl InnerPlayer {
         let handle = thread::spawn(move || {
             while !stop_flag.load(Ordering::Relaxed) {
                 if fft_enabled.load(Ordering::Relaxed) {
-                    let data = fft.analyze();
-                    cb(PlayerEvent::FftData { data });
+                    let (ldata, rdata) = fft.analyze();
+                    cb(PlayerEvent::FftData { ldata, rdata });
                 }
                 sleep_unless_stopped(&stop_flag, Duration::from_millis(50));
             }
@@ -441,6 +448,12 @@ impl InnerPlayer {
     /// 设置 FFT 推送开关
     pub fn set_fft_enabled(&mut self, enabled: bool) {
         self.fft_enabled.store(enabled, Ordering::Relaxed);
+        self.fft.set_enabled(enabled);
+        if enabled && self.state == PlayerState::Playing {
+            self.start_fft_timer();
+        } else if !enabled {
+            self.stop_fft_timer();
+        }
     }
 
     /// 获取 FFT 推送开关状态
@@ -448,55 +461,15 @@ impl InnerPlayer {
         self.fft_enabled.load(Ordering::Relaxed)
     }
 
-    /// 重新初始化音频输出设备（系统休眠唤醒、设备热拔插等场景调用）
+    /// 仅重建输出设备（系统休眠唤醒、设备热拔插等场景调用）
     ///
     /// 通过赋值新的 `AudioOutput` 触发旧 `AudioOutput` 的 `Drop`：旧 owner 线程
     /// 退出 + 旧 `cpal::Stream` 在该线程内释放，再创建新 `AudioOutput`（新 owner 线程）。
-    /// 保存当前播放状态（来源、位置、音量），重建后自动恢复：
-    /// - Playing → seek 到原位置继续播放
-    /// - Paused  → seek 到原位置并暂停
-    /// - 其他状态 → 仅重建输出，不恢复播放
-    pub fn reinit_output(&mut self) -> Result<()> {
+    /// 此函数仅替换输出设备，真正的状态恢复交由 `lib.rs` 层的 `reinit_output` 异步完成。
+    pub fn recreate_output_device(&mut self) -> Result<()> {
         info!(device = ?self.selected_device_name, "开始重建音频输出");
-        // 重建会改变输出采样率：作废在途的 async load/seek，否则它们用旧采样率解出的结果
-        // 会通过 commit 的 token 校验贴到新输出上（Shared/解码为旧率、DSP 却按新率配置）
-        self.load_token.fetch_add(1, Ordering::AcqRel);
-        // 保存当前状态
-        let prev_state = self.state;
-        let prev_source = self.current_source.clone();
-        let prev_position = self.position();
-        let prev_volume = self.target_volume;
-
-        // 停止当前播放（释放旧的 Sink / 解码线程）
-        self.stop_internal();
-
-        // 重建音频输出（使用用户选择的设备或系统默认）
         // 旧 AudioOutput 在赋值时被 drop，其 owner 线程随之退出并 drop 旧 cpal::Stream
         self.output = Some(AudioOutput::new(self.selected_device_name.as_deref())?);
-
-        // 恢复播放状态
-        match prev_state {
-            PlayerState::Playing | PlayerState::Paused => {
-                if let Some(source) = prev_source {
-                    // 先以暂停模式加载，避免 seek 前播出开头片段
-                    self.load(&source, false)?;
-                    if prev_position > 0.5 {
-                        self.seek(prev_position)?;
-                    }
-                    self.set_volume(prev_volume);
-                    // 恢复到原来的播放/暂停状态；此时必为 Paused 态，play 不会返回复活源
-                    if prev_state == PlayerState::Playing {
-                        let _ = self.play()?;
-                    }
-                } else {
-                    self.state = PlayerState::Idle;
-                }
-            }
-            _ => {
-                self.state = prev_state;
-            }
-        }
-
         Ok(())
     }
 
@@ -647,6 +620,9 @@ impl InnerPlayer {
             Arc::new(Sink::try_new(output.handle()).context("Failed to create audio sink")?)
         };
 
+        // 设备切换后输出采样率可能变化，须按新率重建 EQ/tempo 系数；
+        // seek 路径设备不变时 set_sample_rate 内部短路，无额外开销
+        self.configure_dsp_sample_rate();
         self.equalizer.lock().reset_state();
         self.tempo.lock().reset();
 
@@ -762,75 +738,6 @@ impl InnerPlayer {
         Ok(Some(metadata))
     }
 
-    /// 加载音频源，auto_play 控制是否自动播放
-    pub fn load(&mut self, source: &str, auto_play: bool) -> Result<AudioMetadata> {
-        debug!(source, auto_play, "开始加载音频源");
-        self.stop_internal();
-        self.fft.reset();
-        // 切歌时清空滤波器历史样本，避免上一首尾音残留导致瞬态不稳定
-        self.equalizer.lock().reset_state();
-        // 切歌时清空 stretch 内部 FFT 历史，但保留用户参数（speed/pitch/sync 跨曲目延续）
-        self.tempo.lock().reset();
-
-        // 先确保音频输出就绪（无设备时在此报错，不影响解码），再按设备原生采样率
-        // 对齐 DSP 并创建 Shared——Shared.sample_rate 即解码侧的播放重采样目标
-        self.ensure_output()?;
-        self.configure_dsp_sample_rate();
-        let shared = Shared::new(self.output_sample_rate(), decoder::TARGET_CHANNELS);
-        // 将归一化开关同步到新的 Shared 实例
-        shared.set_normalization_enabled(self.normalization_enabled);
-        let (mut metadata, decode_handle) =
-            decoder::start_decode(source, Arc::clone(&shared), self.cover_cache_dir.as_deref())?;
-
-        let sink = {
-            let output = self.ensure_output()?;
-            Arc::new(Sink::try_new(output.handle()).context("Failed to create audio sink")?)
-        };
-
-        let decoder_source = DecoderSource::new(
-            Arc::clone(&shared),
-            Arc::clone(&self.fft),
-            Arc::clone(&self.equalizer),
-            Arc::clone(&self.tempo),
-            metadata.sample_rate,
-            metadata.channels,
-        );
-
-        sink.set_volume(self.target_volume);
-        if !auto_play {
-            sink.pause();
-        }
-        sink.append(decoder_source);
-
-        self.sink = Some(sink);
-        self.shared = Some(shared);
-        self.decoder_thread = Some(decode_handle);
-        self.seek_base = 0.0;
-        self.current_source = Some(source.to_string());
-
-        // 缓存 seek 需要的 Copy 字段，cover_raw 单独取出
-        self.audio_sample_rate = metadata.sample_rate;
-        self.audio_channels = metadata.channels;
-        self.audio_duration = metadata.duration_secs;
-        self.cover_raw = metadata.cover_raw.take();
-
-        if auto_play {
-            self.state = PlayerState::Playing;
-            self.emit(PlayerEvent::StateChanged {
-                state: PlayerState::Playing,
-            });
-            self.start_position_timer();
-            self.start_fft_timer();
-        } else {
-            self.state = PlayerState::Paused;
-            self.emit(PlayerEvent::StateChanged {
-                state: PlayerState::Paused,
-            });
-        }
-
-        Ok(metadata)
-    }
-
     /// 恢复播放。Paused 时渐入恢复；Stopped/Idle/已播完时返回 Some(source)，
     /// 由 lib.rs 走 async load 复活——网络源的打开可达数秒，不能在锁内同步执行
     pub fn play(&mut self) -> Result<Option<String>> {
@@ -943,112 +850,6 @@ impl InnerPlayer {
         self.seek_base = 0.0;
     }
 
-    /// seek 失败时的回退：从头重新 load 当前源，保留 seek 前的播放/暂停状态
-    fn seek_via_reload(&mut self) -> Result<()> {
-        let was_playing = self.state == PlayerState::Playing;
-        if let Some(source) = self.current_source.clone() {
-            self.load(&source, was_playing)?;
-        }
-        Ok(())
-    }
-
-    /// 跳转到指定位置（秒）
-    ///
-    /// 回收解码线程中的 DecoderData 并复用（seek + flush），不重建 FFmpeg 上下文。
-    /// 仅在回收失败时回退到完整 load。
-    pub fn seek(&mut self, position_secs: f64) -> Result<()> {
-        self.cancel_fade();
-        self.stop_position_timer();
-        self.stop_fft_timer();
-
-        // 停止当前解码线程并回收 DecoderData
-        if let Some(ref shared) = self.shared {
-            shared.stop();
-        }
-        if let Some(sink) = self.sink.take() {
-            sink.stop();
-        }
-
-        let decoder_data = self.decoder_thread.take().and_then(|h| h.join().ok());
-
-        // 清空旧缓冲区，释放 AudioChunk 内存
-        if let Some(ref shared) = self.shared {
-            shared.drain_buffer();
-        }
-
-        self.fft.reset();
-
-        // 解码线程回收失败（panic）或 seek 失败时回退到从头 load
-        let Some(mut decoder_data) = decoder_data else {
-            return self.seek_via_reload();
-        };
-
-        // 清掉中断标志：上面 shared.stop() 已让 interrupt_flag=true，
-        // 否则 ffmpeg 的 avformat_seek_file 一进入就会被中断
-        decoder_data.reset_interrupt();
-
-        if !decoder_data.seek(position_secs) {
-            drop(decoder_data);
-            return self.seek_via_reload();
-        }
-
-        // 创建新的共享状态（旧的 is_stopping=true 不可复用）
-        let shared = Shared::new(self.output_sample_rate(), decoder::TARGET_CHANNELS);
-        // 同步归一化设置（从旧 Shared 继承增益值和开关）
-        if let Some(ref old_shared) = self.shared {
-            shared.set_normalization_enabled(old_shared.is_normalization_enabled());
-            shared.set_normalization_gain(old_shared.normalization_gain());
-        }
-        let handle = decoder::resume_decode(decoder_data, Arc::clone(&shared))?;
-
-        let sink = {
-            let output = self.ensure_output()?;
-            Arc::new(Sink::try_new(output.handle()).context("Failed to create audio sink")?)
-        };
-
-        // seek 时同样清空滤波器状态，避免不连续样本导致瞬态
-        self.equalizer.lock().reset_state();
-        // seek 时也清空 stretch 内部 FFT 历史
-        self.tempo.lock().reset();
-
-        let decoder_source = DecoderSource::new(
-            Arc::clone(&shared),
-            Arc::clone(&self.fft),
-            Arc::clone(&self.equalizer),
-            Arc::clone(&self.tempo),
-            self.audio_sample_rate,
-            self.audio_channels,
-        );
-
-        let was_paused = self.state == PlayerState::Paused;
-        sink.set_volume(self.target_volume);
-        if was_paused {
-            sink.pause();
-        }
-        sink.append(decoder_source);
-
-        self.sink = Some(sink);
-        self.shared = Some(shared);
-        self.decoder_thread = Some(handle);
-        self.seek_base = position_secs;
-
-        if was_paused {
-            self.state = PlayerState::Paused;
-            self.emit(PlayerEvent::StateChanged {
-                state: PlayerState::Paused,
-            });
-        } else {
-            self.state = PlayerState::Playing;
-            self.emit(PlayerEvent::StateChanged {
-                state: PlayerState::Playing,
-            });
-            self.start_position_timer();
-            self.start_fft_timer();
-        }
-
-        Ok(())
-    }
-
     /// 设置音量（0.0 ~ 1.0）
     pub fn set_volume(&mut self, volume: f32) {
         self.target_volume = volume;
@@ -1091,7 +892,7 @@ impl InnerPlayer {
     }
 
     /// 获取 FFT 频谱数据（128 个频段）
-    pub fn fft_data(&self) -> Vec<f32> {
+    pub fn fft_data(&self) -> (Vec<f32>, Vec<f32>) {
         self.fft.analyze()
     }
 

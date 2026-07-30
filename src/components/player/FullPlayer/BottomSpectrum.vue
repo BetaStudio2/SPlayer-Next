@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useStatusStore } from "@/stores/status";
 import { useSettingsStore } from "@/stores/settings";
-import { getFftFrame, getFftFrameStereo } from "@/services/playback";
+import { getFftFrame } from "@/services/playback";
 import { acquireFft, releaseFft } from "@/services/fftCapture";
 
 interface Props {
@@ -36,22 +36,18 @@ const BAR_GAP = 3;
 /** 后端推送间隔（ms），用于时间插值 */
 const PUSH_INTERVAL = 50;
 
-// --- 单声道平滑缓冲（对称模式 + Electron 降级） ---
-const prev = new Float32Array(FFT_SIZE);
-const curr = new Float32Array(FFT_SIZE);
-const display = new Float32Array(FFT_SIZE);
-let lastRef: readonly number[] = [];
+/** 上一帧推送数据 */
+const prev = [new Float32Array(FFT_SIZE), new Float32Array(FFT_SIZE)];
+/** 当前帧推送数据 */
+const curr = [new Float32Array(FFT_SIZE), new Float32Array(FFT_SIZE)];
+/** 实际渲染显示值（经过指数平滑） */
+const display = [new Float32Array(FFT_SIZE), new Float32Array(FFT_SIZE)];
+/** 双声道显示值 */
+const stereoDisplay = new Float32Array(FFT_SIZE * 2);
+/** 上一次推送数据的引用，用于检测新帧到达 */
+let lastRef: readonly [number[], number[]] = [[], []];
+/** 上一次推送到达的时间戳 */
 let lastUpdate = 0;
-
-// --- 立体声平滑缓冲（split 模式 + Web 端立体声 FFT） ---
-const prevL = new Float32Array(FFT_SIZE);
-const currL = new Float32Array(FFT_SIZE);
-const displayL = new Float32Array(FFT_SIZE);
-const prevR = new Float32Array(FFT_SIZE);
-const currR = new Float32Array(FFT_SIZE);
-const displayR = new Float32Array(FFT_SIZE);
-let lastStereoRefL: readonly number[] = [];
-let lastUpdateStereo = 0;
 
 /** 调整画布大小 */
 const resizeCanvas = (): void => {
@@ -74,128 +70,73 @@ const draw = (): void => {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  // --- 单声道帧检测 + 时间插值平滑 ---
+  // 检测新帧推送
   const data = getFftFrame();
   if (data !== lastRef) {
     lastRef = data;
-    prev.set(curr);
-    for (let i = 0; i < FFT_SIZE; i++) curr[i] = data[i] ?? 0;
+    prev[0].set(curr[0]);
+    prev[1].set(curr[1]);
+    for (let i = 0; i < FFT_SIZE; i++) {
+      curr[0][i] = data[0][i] ?? 0;
+      curr[1][i] = data[1][i] ?? 0;
+    }
     lastUpdate = performance.now();
   }
+
+  // 时间插值：在 prev → curr 之间按时间平滑过渡，消除 20Hz stair-step
   const t = Math.min((performance.now() - lastUpdate) / PUSH_INTERVAL, 1);
+  // 上行快（响应灵敏），下行慢（视觉柔和）
   const ATTACK = 0.4;
   const DECAY = 0.88;
 
-  for (let i = 0; i < FFT_SIZE; i++) {
-    const target = prev[i] + (curr[i] - prev[i]) * t;
-    if (target > display[i]) {
-      display[i] = display[i] + (target - display[i]) * ATTACK;
-    } else {
-      display[i] = display[i] * DECAY + target * (1 - DECAY);
+  // 处理双声道
+  for (let c = 0; c < 2; c++) {
+    for (let i = 0; i < FFT_SIZE; i++) {
+      const target = prev[c][i] + (curr[c][i] - prev[c][i]) * t;
+      if (target > display[c][i]) {
+        display[c][i] = display[c][i] + (target - display[c][i]) * ATTACK;
+      } else {
+        display[c][i] = display[c][i] * DECAY + target * (1 - DECAY);
+      }
     }
   }
-
-  // --- 立体声帧检测 + 时间插值平滑 ---
-  const stereo = getFftFrameStereo();
-  const hasStereo = stereo.left.length > 0;
-  if (hasStereo) {
-    if (stereo.left !== lastStereoRefL) {
-      lastStereoRefL = stereo.left;
-      prevL.set(currL);
-      prevR.set(currR);
-      for (let i = 0; i < FFT_SIZE; i++) {
-        currL[i] = stereo.left[i] ?? 0;
-        currR[i] = stereo.right[i] ?? 0;
-      }
-      lastUpdateStereo = performance.now();
-    }
-    const tS = Math.min((performance.now() - lastUpdateStereo) / PUSH_INTERVAL, 1);
-    for (let i = 0; i < FFT_SIZE; i++) {
-      const targetL = prevL[i] + (currL[i] - prevL[i]) * tS;
-      if (targetL > displayL[i]) {
-        displayL[i] = displayL[i] + (targetL - displayL[i]) * ATTACK;
-      } else {
-        displayL[i] = displayL[i] * DECAY + targetL * (1 - DECAY);
-      }
-      const targetR = prevR[i] + (currR[i] - prevR[i]) * tS;
-      if (targetR > displayR[i]) {
-        displayR[i] = displayR[i] + (targetR - displayR[i]) * ATTACK;
-      } else {
-        displayR[i] = displayR[i] * DECAY + targetR * (1 - DECAY);
-      }
-    }
+  // 直接写入预分配缓冲区，避免 RAF 热路径产生临时数组
+  const channelLength = FFT_SIZE - SKIP_LOW;
+  for (let i = 0; i < channelLength; i++) {
+    stereoDisplay[i] = display[0][FFT_SIZE - 1 - i];
+    stereoDisplay[channelLength + i] = display[1][SKIP_LOW + i];
   }
 
   const cssWidth = canvas.clientWidth;
   const cssHeight = canvas.clientHeight;
-  const usableLen = FFT_SIZE - SKIP_LOW;
+  const usableLen = channelLength * 2;
   const barWidth = Math.max(1, settings.player.spectrumBarWidth);
   const slotWidth = barWidth + BAR_GAP;
-  const numBars = Math.floor(cssWidth / 2 / slotWidth);
+  // 能放下的 bar 数；不再限制 ≤ usableLen，允许过采样
+  const numBars = Math.floor(cssWidth / slotWidth);
   if (numBars === 0) return;
 
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   ctx.fillStyle = getComputedStyle(canvas).color;
 
-  const isSplit = settings.player.spectrumDisplayMode === "split";
-  // Electron 端无立体声 FFT 数据，split 模式退化为 mirror
-  const effectiveSplit = isSplit && hasStereo;
-  const halfWidth = cssWidth / 2;
+  for (let i = 0; i < numBars; i++) {
+    // 每个 bar 覆盖一段 bin，再扩 1 个邻居做空间平滑
+    const startBin = Math.floor(i * (usableLen / numBars));
+    const endBin = Math.floor((i + 1) * (usableLen / numBars));
+    const lo = Math.max(0, startBin - 1);
+    const hi = Math.min(usableLen, Math.max(endBin, startBin + 1) + 1);
+    let sum = 0;
+    for (let j = lo; j < hi; j++) sum += stereoDisplay[j];
+    const v = sum / (hi - lo);
 
-  ctx.beginPath();
-  if (effectiveSplit) {
-    // 立体声模式：高频在中心、低频在边缘
-    for (let i = 0; i < numBars; i++) {
-      const xRight = halfWidth + i * slotWidth;
-      const xLeft = halfWidth - (i + 1) * slotWidth;
-
-      // 反向映射：i=0（中心）取高频端，i=numBars-1（边缘）取低频端
-      const start = ((numBars - i - 1) / numBars) * usableLen;
-      const end = ((numBars - i) / numBars) * usableLen;
-      const lo = Math.floor(start);
-      const hi = Math.ceil(end);
-
-      let sumL = 0;
-      let sumR = 0;
-      let weight = 0;
-      for (let j = lo; j < hi; j++) {
-        const w = Math.min(end, j + 1) - Math.max(start, j);
-        if (w > 0) {
-          const sw = w * w;
-          sumL += displayL[SKIP_LOW + j] * sw;
-          sumR += displayR[SKIP_LOW + j] * sw;
-          weight += sw;
-        }
-      }
-      if (weight > 0) {
-        const hL = (sumL / weight) * cssHeight;
-        const hR = (sumR / weight) * cssHeight;
-        if (hL > 0.5) ctx.roundRect(xLeft, cssHeight - hL, barWidth, hL, props.radius);
-        if (hR > 0.5) ctx.roundRect(xRight, cssHeight - hR, barWidth, hR, props.radius);
-      }
-    }
-  } else {
-    // 对称模式：两侧显示相同数据，低频在中心、高频在边缘
-    for (let i = 0; i < numBars; i++) {
-      const xRight = halfWidth + i * slotWidth;
-      const xLeft = halfWidth - (i + 1) * slotWidth;
-
-      const startBin = SKIP_LOW + Math.floor((i * usableLen) / numBars);
-      const endBin = SKIP_LOW + Math.floor(((i + 1) * usableLen) / numBars);
-      const lo = Math.max(SKIP_LOW, startBin - 1);
-      const hi = Math.min(FFT_SIZE, Math.max(endBin, startBin + 1) + 1);
-      let sum = 0;
-      for (let j = lo; j < hi; j++) sum += display[j];
-      const v = sum / (hi - lo);
-
-      const barHeight = v * cssHeight;
-      if (barHeight <= 0.5) continue;
-      const y = cssHeight - barHeight;
-      ctx.roundRect(xRight, y, barWidth, barHeight, props.radius);
-      ctx.roundRect(xLeft, y, barWidth, barHeight, props.radius);
-    }
+    const barHeight = v * cssHeight;
+    if (barHeight <= 0.5) continue;
+    const y = cssHeight - barHeight;
+    const x = i * slotWidth;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barWidth, barHeight, props.radius);
+    ctx.fill();
   }
-  ctx.fill();
 };
 
 const { resume, pause } = useRafFn(draw, { immediate: false });
@@ -237,17 +178,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("resize", resizeCanvas);
   stopCapture();
-  prev.fill(0);
-  curr.fill(0);
-  display.fill(0);
-  lastRef = [];
-  prevL.fill(0);
-  currL.fill(0);
-  displayL.fill(0);
-  prevR.fill(0);
-  currR.fill(0);
-  displayR.fill(0);
-  lastStereoRefL = [];
+  prev[0].fill(0);
+  prev[1].fill(0);
+  curr[0].fill(0);
+  curr[1].fill(0);
+  display[0].fill(0);
+  display[1].fill(0);
+  lastRef = [[], []];
 });
 </script>
 

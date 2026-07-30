@@ -1,6 +1,12 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
 import { PlayerApi, TrackSource } from "@shared/types/player";
-import { ConfigApi, ExternalApiStatus, LocaleCode } from "@shared/types/settings";
+import {
+  ConfigApi,
+  ExternalApiStatus,
+  LocaleCode,
+  McpAgentApp,
+  McpStatus,
+} from "@shared/types/settings";
 import type { FormatStat } from "@shared/types/library";
 import { LibraryApi } from "@shared/types/library";
 import { NowPlayingApi } from "@shared/types/nowPlaying";
@@ -22,6 +28,7 @@ import { StatsApi } from "@shared/types/stats";
 import { UpdateApi } from "@shared/types/update";
 import { CloudUploadApi } from "@shared/types/cloudUpload";
 import { CommentsApi } from "@shared/types/comment";
+import { AiModelApi } from "@shared/types/ai";
 
 declare global {
   interface Window {
@@ -90,7 +97,17 @@ declare global {
       externalApi: {
         restart: () => Promise<ExternalApiStatus>;
         getStatus: () => Promise<ExternalApiStatus>;
+        onStatus: (callback: (status: ExternalApiStatus) => void) => () => void;
       };
+      mcp: {
+        restart: () => Promise<McpStatus>;
+        getStatus: () => Promise<McpStatus>;
+        getClientConfigParams: () => Promise<McpClientConfigParams>;
+        detectAgents: () => Promise<McpAgentApp[]>;
+        injectAgentConfig: (agentId: string, params: McpClientConfigParams) => Promise<boolean>;
+        onStatus: (callback: (status: McpStatus) => void) => () => void;
+      };
+      aiModel: AiModelApi;
       update: UpdateApi;
     };
   }

@@ -71,7 +71,7 @@ pnpm build         # 完整构建：清理 → 原生模块 → 类型检查 →
 
 pnpm build:win     # 打包 Windows
 pnpm build:mac     # 打包 macOS
-pnpm build:linux   # 打包 Linux
+pnpm build:linux   # 打包 Linux（AppImage / deb / rpm / tar.gz / pacman）
 ```
 
 > 默认仅构建当前架构。如需指定架构，可追加参数，例如 `pnpm build:win --x64 --arm64`。
@@ -85,57 +85,15 @@ pnpm format           # Prettier
 pnpm build:native     # 仅构建 Rust 原生模块（加 `--dev` 为 debug 构建）
 ```
 
-## Web 服务端部署（Docker / 原生）
+## 安装
 
-除桌面端外，本项目亦可作为 **自包含 Web 流媒体服务** 运行：浏览器访问即用，无需安装客户端。Web 化零侵入——`src/` 前端代码零修改，新增 `server/`（Hono + SQLite + 流媒体引擎）与 `web/`（`window.api` Mock 层）两个独立目录。
+### Arch Linux / Manjaro / EndeavourOS
 
-### 架构
-
-```
-浏览器（Vue 3 SPA）              服务端（Node.js Hono :8080）
-┌────────────────────┐          ┌────────────────────────────┐
-│  src/（零修改）     │  HTTP    │  /api/music/*  流媒体引擎    │
-│  调用 window.api.*  │ ──────→  │  /api/proxy/*  在线 API 代理 │
-│                    │          │  /api/lyric/*  歌词匹配      │
-│  web/api Mock 层    │  WS      │  /api/config/* 配置持久化    │
-│  把 window.api 转为 │ ←──────  │  /ws           实时事件推送  │
-│  fetch / WS 调用    │          │  /*            SPA 静态分发  │
-└────────────────────┘          └────────────────────────────┘
-```
-
-### Docker 部署（推荐）
+从 Release 页面下载 `.pacman` 包，使用 `pacman` 安装：
 
 ```bash
-# 1. 准备音乐库与数据目录
-mkdir -p music data && cp /path/to/your/music/*.mp3 music/
-
-# 2. 构建并启动（单容器，端口 8080 同时提供 SPA + API + WS）
-docker compose up -d --build
-
-# 3. 浏览器访问 http://<服务器IP>:8080
+sudo pacman -U ./splayer-next-*.pacman
 ```
-
-挂载卷：`./music`（音乐库，只读）+ `./data`（SQLite / 配置 / 封面缓存，持久化）。详见 [DEPLOY.md](./DEPLOY.md)。
-
-### 原生运行（开发 / 调试）
-
-```bash
-# 后端（:8080）
-cd server && npm install && npm run dev
-
-# 前端（:14558，/api 与 /ws 自动代理到 8080）
-cd web && npm install && npm run dev
-```
-
-### 与桌面端的差异
-
-| 能力 | 桌面端 | Web 服务端 |
-|:----|:------|:----------|
-| 音频解码 | Rust + FFmpeg | HTML5 `<audio>` + Web Audio API |
-| 本地曲库 | 本地文件直读 | HTTP Range 流媒体（挂载 `/app/music`） |
-| 实时事件 | IPC | WebSocket（`/ws`，扫描进度 / 库变更推送） |
-| 下载 | 本地磁盘 | 浏览器 Blob 下载（可选服务端缓存模式） |
-| 桌面歌词 / SMTC / 系统托盘 | ✓ | 桌面端专有，Web 版以 stub 降级 |
 
 ## 致谢
 

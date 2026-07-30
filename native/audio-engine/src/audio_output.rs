@@ -37,7 +37,7 @@ use crate::priority;
 /// ```
 pub struct AudioOutput {
     handle: OutputStreamHandle,
-    /// 设备原生采样率
+    /// 实际打开的输出流采样率
     sample_rate: u32,
     /// drop 这个 sender 会让 owner 线程的 recv 返回 Err，从而退出并释放 Stream
     /// 包成 Option 是为了 Drop 里能 take() 出来显式 drop，从而在 join 前先关闭 channel
@@ -109,7 +109,7 @@ impl AudioOutput {
         &self.handle
     }
 
-    /// 设备原生采样率，作为播放重采样目标
+    /// 输出流采样率，作为播放重采样目标
     pub fn sample_rate(&self) -> u32 {
         self.sample_rate
     }
@@ -133,8 +133,8 @@ impl Drop for AudioOutput {
 /// 构建 cpal/rodio 输出流；**仅在 `audio-output-owner` 线程内调用**，
 /// 保证 `OutputStream` 的创建、持有和 drop 都发生在同一线程上
 ///
-/// 返回的采样率为设备 `default_output_config` 的采样率——正是 rodio 内部
-/// `try_from_device` / `try_default` 打开 stream 所用的值，用作播放重采样目标
+/// 返回的采样率来自实际用于打开流的默认配置，用作播放重采样目标。
+/// 共享模式下应遵循系统混音配置，设备能力上限并不代表当前输出格式。
 fn build_output_stream(
     device_name: Option<&str>,
 ) -> Result<(OutputStream, OutputStreamHandle, u32)> {
@@ -146,23 +146,18 @@ fn build_output_stream(
                 .context("Failed to enumerate output devices")?
                 .find(|d| d.name().map(|got| got == name).unwrap_or(false))
                 .with_context(|| format!("Output device '{}' not found", name))?;
-            let sample_rate = device_sample_rate(&device);
-            let (stream, handle) = OutputStream::try_from_device(&device)
-                .context("Failed to open named output device")?;
-            Ok((stream, handle, sample_rate))
+            open_device_with_default_config(&device)
         }
         None => open_default_stream(&host),
     }
 }
 
-/// 记录到"打不开的默认设备"的采样率，导致 rodio 内部又按真实设备率重采样
 fn open_default_stream(host: &cpal::Host) -> Result<(OutputStream, OutputStreamHandle, u32)> {
     let default_device = host
         .default_output_device()
         .context("No default output device")?;
-    if let Ok((stream, handle)) = OutputStream::try_from_device(&default_device) {
-        let sample_rate = device_sample_rate(&default_device);
-        return Ok((stream, handle, sample_rate));
+    if let Ok(result) = open_device_with_default_config(&default_device) {
+        return Ok(result);
     }
 
     // 默认设备打不开：遍历其它设备，打开成功的那个用它自身的采样率
@@ -170,20 +165,24 @@ fn open_default_stream(host: &cpal::Host) -> Result<(OutputStream, OutputStreamH
         .output_devices()
         .context("Failed to enumerate output devices")?;
     for device in devices {
-        if let Ok((stream, handle)) = OutputStream::try_from_device(&device) {
-            let sample_rate = device_sample_rate(&device);
-            return Ok((stream, handle, sample_rate));
+        if let Ok(result) = open_device_with_default_config(&device) {
+            return Ok(result);
         }
     }
     anyhow::bail!("No usable output device")
 }
 
-/// 取设备默认输出配置的采样率，查询失败回退到 `TARGET_SAMPLE_RATE`
-fn device_sample_rate(device: &cpal::Device) -> u32 {
-    device
+/// 使用设备默认配置创建输出流，确保记录的采样率与实际流配置一致
+fn open_device_with_default_config(
+    device: &cpal::Device,
+) -> Result<(OutputStream, OutputStreamHandle, u32)> {
+    let config = device
         .default_output_config()
-        .map(|config| config.sample_rate().0)
-        .unwrap_or(crate::decoder::TARGET_SAMPLE_RATE)
+        .context("Failed to get default output config")?;
+    let sample_rate = config.sample_rate().0;
+    let (stream, handle) = OutputStream::try_from_device_config(device, config)
+        .context("Failed to open output device")?;
+    Ok((stream, handle, sample_rate))
 }
 
 /// 枚举所有输出设备，返回 `(name, is_default)` 列表
