@@ -128,23 +128,6 @@ export const setFftFrame = (ldata: number[], rdata: number[]): void => {
 /** RAF 循环读取最新频谱帧 */
 export const getFftFrame = (): readonly [number[], number[]] => fftFrame;
 
-/**
- * @deprecated 统一使用 setFftFrame(ldata, rdata)
- * 保留兼容引用避免上游合并后组件报错
- */
-export const setFftFrameStereo = (left: number[], right: number[]): void => {
-  setFftFrame(left, right);
-};
-
-/**
- * @deprecated 统一使用 getFftFrame()
- * 保留兼容引用避免上游合并后组件报错
- */
-export const getFftFrameStereo = (): { left: readonly number[]; right: readonly number[] } => {
-  const [l, r] = fftFrame;
-  return { left: l, right: r };
-};
-
 /** 重置位置/时长/播放标志 */
 export const reset = (): void => {
   currentTimeMs = 0;

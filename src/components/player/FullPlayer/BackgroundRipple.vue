@@ -439,6 +439,7 @@ const tryWebGPU = async (
         beginTransition();
       }
       const img = new Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         if (pendingAlbumSrc !== src) return;
         currentImage = img;
@@ -690,6 +691,7 @@ const tryWebGL = (canvas: HTMLCanvasElement): RenderBackend | null => {
         beginTransition();
       }
       const img = new Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         if (pendingAlbumSrc !== src) return;
         currentImage = img;

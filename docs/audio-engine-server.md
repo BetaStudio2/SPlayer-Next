@@ -98,7 +98,7 @@ server/audio-engine/
 - [x] `loudness.c` — EBU R128 响度归一化（预计算增益模式，避免实时延迟）
 - [x] `limiter.c` — Soft-knee 限幅器（4:1 压缩比，默认 -1dB 阈值）
 - [x] `tempo.c` — 变速变调（C FFI → Rust signalsmith-stretch，无 cargo 时 stub bypass）
-- [x] `fft.c` — 频谱分析（Cooley-Tukey 基 2 FFT，Hann 窗，平滑，dB 转换，峰值保持）
+- [x] `fft.c` — 频谱分析（Cooley-Tukey 基 2 FFT，Hann 窗，平滑，dB 转换，峰值保持，自适应 1~6 声道下混）
 - [x] `encoder.c` — libopus 编码 + OGG 容器封装
 - [x] `pipeline.c` — 完整管线：decode → resample → eq → loudness → limiter → tempo → fft → encode
 - [x] `main.c` — CLI，支持 `--interactive` 交互模式 + `--control-fd` / `--fft-fd` 协议
@@ -153,7 +153,7 @@ server/audio-engine/
        │
        ▼
 ┌──────────────┐
-│  fft.c       │  频谱分析（Hann 窗 + DFT）
+│  fft.c       │  频谱分析（Hann 窗 + DFT + 自适应 1~6 声道下混）
 │              │  数据通过 fd 4 JSON 行协议推送
 └──────┬───────┘
        │

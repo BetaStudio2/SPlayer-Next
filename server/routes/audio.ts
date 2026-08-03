@@ -83,8 +83,8 @@ app.get("/stream/:id", (c) => {
       const engine = getOrCreateInteractiveEngine(id, audioPath, engineOptions);
       child = engine.start(audioPath, engineOptions);
 
-      // FFT 数据 → WebSocket 广播
-      engine.on("fft", (msg: { bins: number; data: number[] }) => {
+      // FFT 数据 → WebSocket 广播（双声道：ldata/rdata）
+      engine.on("fft", (msg: { bins: number; ldata: number[]; rdata: number[] }) => {
         broadcastToStream(id, { type: "audio:fft", data: msg });
       });
     } else {

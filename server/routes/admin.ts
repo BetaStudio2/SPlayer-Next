@@ -59,8 +59,7 @@ router.get("/stream", async (c) => {
     }
 
     // 客户端断开时中止与 sidecar 的连接
-    c.req.raw?.on?.("close", () => controller.abort());
-    c.req.raw?.on?.("error", () => controller.abort());
+    c.req.raw.signal.addEventListener("abort", () => controller.abort());
 
     // 将 sidecar 的 SSE 流直接 pipe 给前端
     return new Response(res.body as ReadableStream, {

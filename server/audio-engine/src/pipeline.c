@@ -253,8 +253,8 @@ static int process_frame(AudioPipeline *p, AVFrame *frame)
         out_samples = t_samples;
     }
 
-    /* FFT 分析 */
-    fft_process(p->fft, p->pcm_temp, out_samples);
+    /* FFT 分析（自适应声道数，含 5.1，内部下混为左右声道） */
+    fft_process_multi(p->fft, p->pcm_temp, out_samples, p->cfg.output_channels);
 
     /* 送入编码器 */
     return encoder_write_pcm(p->encoder, p->pcm_temp, out_samples);
@@ -315,7 +315,7 @@ int pipeline_run(AudioPipeline *p)
                 out = t_samples;
             }
 
-            fft_process(p->fft, p->pcm_temp, out);
+            fft_process_multi(p->fft, p->pcm_temp, out, p->cfg.output_channels);
             encoder_write_pcm(p->encoder, p->pcm_temp, out);
         }
         encoder_flush(p->encoder);
@@ -372,6 +372,15 @@ int pipeline_get_fft_spectrum(AudioPipeline *p, float *out_db, int bins, float m
 {
     if (!p || !p->fft || !out_db || bins <= 0) return -1;
     fft_get_spectrum_db(p->fft, out_db, bins, min_db);
+    return 0;
+}
+
+int pipeline_get_fft_spectrum_stereo(AudioPipeline *p,
+                                     float *out_db_l, float *out_db_r,
+                                     int bins, float min_db)
+{
+    if (!p || !p->fft || !out_db_l || !out_db_r || bins <= 0) return -1;
+    fft_get_spectrum_db_stereo(p->fft, out_db_l, out_db_r, bins, min_db);
     return 0;
 }
 

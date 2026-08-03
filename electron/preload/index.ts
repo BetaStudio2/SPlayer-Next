@@ -65,10 +65,8 @@ const api = {
     getFadeDuration: () => ipcRenderer.invoke("player:getFadeDuration"),
     // 获取播放状态快照
     getStatus: () => ipcRenderer.invoke("player:getStatus"),
-    // 获取 FFT 频谱数据
+    // 获取 FFT 频谱数据（返回 { ldata: number[], rdata: number[] }）
     getFftData: () => ipcRenderer.invoke("player:getFftData"),
-    // 获取立体声 FFT 频谱数据（暂返回空，待 Rust 引擎支持立体声后启用）
-    getFftDataStereo: () => ipcRenderer.invoke("player:getFftDataStereo"),
     // 启用/禁用 FFT 频谱推送
     setFftEnabled: (enabled: boolean) => ipcRenderer.invoke("player:setFftEnabled", enabled),
     // 启用/禁用音量均衡

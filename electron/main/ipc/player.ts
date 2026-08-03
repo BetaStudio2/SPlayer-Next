@@ -507,14 +507,9 @@ export const registerPlayerIpc = (): void => {
     }
   });
 
-  // 获取 FFT 频谱数据（128 个频段，值域 0.0 ~ 1.0）
+  // 获取 FFT 频谱数据（返回 { success: true, data: { ldata: number[], rdata: number[] } }）
   ipcMain.handle("player:getFftData", () => {
     return { success: true, data: getPlayer().getFftData() };
-  });
-
-  // 获取立体声 FFT 频谱数据（Electron 端暂不支持，返回空数组）
-  ipcMain.handle("player:getFftDataStereo", () => {
-    return { success: true, data: { left: [], right: [] } };
   });
 
   // 按需读取外部歌词文件内容

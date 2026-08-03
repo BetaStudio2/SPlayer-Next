@@ -9,6 +9,8 @@
  *   - 对数刻度（dB）转换
  *   - 频段聚合（任意输出频段数）
  *   - 峰值保持 + 衰减
+ *   - 自适应多声道（1~6ch，含 5.1）：输入按声道数自动下混为左右声道，
+ *     频谱输出保持立体声兼容（ldata/rdata）
  */
 #include "fft.h"
 #include <stdlib.h>
@@ -36,18 +38,25 @@ struct FFTAnalyzer {
     /* 窗函数 */
     float *window;
 
-    /* 输入缓冲 */
+    /* 输入缓冲（左声道） */
     float *input_buf;
+    /* 输入缓冲（右声道，立体声模式使用） */
+    float *input_buf_r;
     int buf_pos;
 
     /* FFT 工作区 */
     float *fft_real;
     float *fft_imag;
 
-    /* 频谱数据 */
+    /* 频谱数据（左声道） */
     float *spectrum;        /* 线性幅度谱（平滑后） */
     float *raw_spectrum;    /* 原始频谱（未平滑） */
     float *peak_spectrum;   /* 峰值保持谱 */
+
+    /* 频谱数据（右声道） */
+    float *spectrum_r;
+    float *raw_spectrum_r;
+    float *peak_spectrum_r;
 
     /* 参数 */
     float smoothing;        /* 平滑系数 0~1 */
@@ -201,15 +210,20 @@ FFTAnalyzer* fft_create(int sample_rate, int fft_size)
     /* 分配内存 */
     fft->window = malloc(fft_size * sizeof(float));
     fft->input_buf = malloc(fft_size * sizeof(float));
+    fft->input_buf_r = malloc(fft_size * sizeof(float));
     fft->fft_real = malloc(fft_size * sizeof(float));
     fft->fft_imag = malloc(fft_size * sizeof(float));
     fft->spectrum = malloc(half * sizeof(float));
     fft->raw_spectrum = malloc(half * sizeof(float));
     fft->peak_spectrum = malloc(half * sizeof(float));
+    fft->spectrum_r = malloc(half * sizeof(float));
+    fft->raw_spectrum_r = malloc(half * sizeof(float));
+    fft->peak_spectrum_r = malloc(half * sizeof(float));
 
-    if (!fft->window || !fft->input_buf || !fft->fft_real ||
-        !fft->fft_imag || !fft->spectrum || !fft->raw_spectrum ||
-        !fft->peak_spectrum) {
+    if (!fft->window || !fft->input_buf || !fft->input_buf_r ||
+        !fft->fft_real || !fft->fft_imag || !fft->spectrum ||
+        !fft->raw_spectrum || !fft->peak_spectrum ||
+        !fft->spectrum_r || !fft->raw_spectrum_r || !fft->peak_spectrum_r) {
         fft_destroy(fft);
         return NULL;
     }
@@ -221,6 +235,7 @@ FFTAnalyzer* fft_create(int sample_rate, int fft_size)
 
     /* 初始化峰值谱 */
     memset(fft->peak_spectrum, 0, half * sizeof(float));
+    memset(fft->peak_spectrum_r, 0, half * sizeof(float));
 
     fprintf(stderr, "%s 创建: %dHz / FFT %d 点 (order=%d)\n",
             LOG_TAG, sample_rate, fft_size, fft->fft_order);
@@ -253,6 +268,7 @@ void fft_reset_peak(FFTAnalyzer *fft)
 {
     if (!fft) return;
     memset(fft->peak_spectrum, 0, (fft->fft_size / 2) * sizeof(float));
+    memset(fft->peak_spectrum_r, 0, (fft->fft_size / 2) * sizeof(float));
 }
 
 int fft_get_size(const FFTAnalyzer *fft)
@@ -265,50 +281,115 @@ int fft_get_sample_rate(const FFTAnalyzer *fft)
     return fft ? fft->sample_rate : 0;
 }
 
-void fft_process(FFTAnalyzer *fft, const float *pcm, int samples)
+/* 对左右输入缓冲执行窗函数 → FFT → 幅度 → 平滑 → 峰值 */
+static void process_buffers(FFTAnalyzer *fft, int half)
 {
-    if (!fft || !pcm || samples <= 0) return;
+    /* ─── 左声道 FFT ─── */
+    for (int j = 0; j < fft->fft_size; j++) {
+        fft->fft_real[j] = fft->input_buf[j] * fft->window[j];
+        fft->fft_imag[j] = 0.0f;
+    }
+    compute_fft_inplace(fft->fft_real, fft->fft_imag,
+                       fft->fft_size, fft->fft_order);
+    compute_magnitude(fft->fft_real, fft->fft_imag,
+                    fft->raw_spectrum, fft->fft_size);
+
+    /* ─── 右声道 FFT ─── */
+    for (int j = 0; j < fft->fft_size; j++) {
+        fft->fft_real[j] = fft->input_buf_r[j] * fft->window[j];
+        fft->fft_imag[j] = 0.0f;
+    }
+    compute_fft_inplace(fft->fft_real, fft->fft_imag,
+                       fft->fft_size, fft->fft_order);
+    compute_magnitude(fft->fft_real, fft->fft_imag,
+                    fft->raw_spectrum_r, fft->fft_size);
+
+    /* 左右声道分别平滑 */
+    apply_smoothing(fft->spectrum, fft->raw_spectrum,
+                  half, fft->smoothing);
+    apply_smoothing(fft->spectrum_r, fft->raw_spectrum_r,
+                  half, fft->smoothing);
+
+    /* 左右声道分别更新峰值 */
+    update_peak(fft->peak_spectrum, fft->spectrum,
+               half, fft->peak_decay);
+    update_peak(fft->peak_spectrum_r, fft->spectrum_r,
+               half, fft->peak_decay);
+}
+
+void fft_process_multi(FFTAnalyzer *fft, const float *pcm, int samples, int channels)
+{
+    if (!fft || !pcm || samples <= 0 || channels <= 0) return;
     if (!fft->enabled) return;
 
     int half = fft->fft_size / 2;
+    const float INV_SQRT2 = 0.70710678f; /* 1/sqrt(2)，ITU-R BS.775 下混系数 */
 
-    /* 收集样本到缓冲（仅使用第一声道） */
+    /* 收集样本：按声道数将交错 PCM 下混为左右声道写入独立缓冲 */
     for (int i = 0; i < samples; i++) {
         if (fft->buf_pos < fft->fft_size) {
-            fft->input_buf[fft->buf_pos++] = pcm[i * 2];  /* 左声道 */
+            const float *s = pcm + (size_t)i * channels;
+            float l, r;
+
+            switch (channels) {
+            case 1: /* 单声道：左右相同 */
+                l = s[0];
+                r = s[0];
+                break;
+            case 2: /* 立体声 */
+                l = s[0];
+                r = s[1];
+                break;
+            case 3: /* L R C */
+                l = s[0] + INV_SQRT2 * s[2];
+                r = s[1] + INV_SQRT2 * s[2];
+                break;
+            case 4: /* 四声道：FL FR BL BR */
+                l = s[0] + INV_SQRT2 * s[2];
+                r = s[1] + INV_SQRT2 * s[3];
+                break;
+            case 5: /* L R C BL BR */
+                l = s[0] + INV_SQRT2 * s[2] + INV_SQRT2 * s[3];
+                r = s[1] + INV_SQRT2 * s[2] + INV_SQRT2 * s[4];
+                break;
+            case 6: /* 5.1：FL FR C LFE BL BR，LFE 不入下混 */
+                l = s[0] + INV_SQRT2 * s[2] + INV_SQRT2 * s[4];
+                r = s[1] + INV_SQRT2 * s[2] + INV_SQRT2 * s[5];
+                break;
+            default: /* 超出已知布局：退化为取前两个声道 */
+                l = s[0];
+                r = channels >= 2 ? s[1] : s[0];
+                break;
+            }
+
+            fft->input_buf[fft->buf_pos] = l;
+            fft->input_buf_r[fft->buf_pos] = r;
+            fft->buf_pos++;
         }
 
         /* 缓冲满时计算 FFT */
         if (fft->buf_pos >= fft->fft_size) {
-            /* 应用窗函数 */
-            for (int j = 0; j < fft->fft_size; j++) {
-                fft->fft_real[j] = fft->input_buf[j] * fft->window[j];
-                fft->fft_imag[j] = 0.0f;
-            }
-
-            /* 计算 FFT */
-            compute_fft_inplace(fft->fft_real, fft->fft_imag,
-                               fft->fft_size, fft->fft_order);
-
-            /* 计算幅度谱 */
-            compute_magnitude(fft->fft_real, fft->fft_imag,
-                            fft->raw_spectrum, fft->fft_size);
-
-            /* 平滑 */
-            apply_smoothing(fft->spectrum, fft->raw_spectrum,
-                          half, fft->smoothing);
-
-            /* 更新峰值 */
-            update_peak(fft->peak_spectrum, fft->spectrum,
-                       half, fft->peak_decay);
+            process_buffers(fft, half);
 
             /* 清空缓冲，保留一半重叠 */
             int overlap = half;
             memmove(fft->input_buf, fft->input_buf + overlap,
                    overlap * sizeof(float));
+            memmove(fft->input_buf_r, fft->input_buf_r + overlap,
+                   overlap * sizeof(float));
             fft->buf_pos = overlap;
         }
     }
+}
+
+void fft_process(FFTAnalyzer *fft, const float *pcm, int samples)
+{
+    fft_process_multi(fft, pcm, samples, 1);
+}
+
+void fft_process_stereo(FFTAnalyzer *fft, const float *pcm, int samples)
+{
+    fft_process_multi(fft, pcm, samples, 2);
 }
 
 void fft_get_spectrum(const FFTAnalyzer *fft, float *out_mag, int bins)
@@ -338,6 +419,40 @@ void fft_get_spectrum(const FFTAnalyzer *fft, float *out_mag, int bins)
     }
 }
 
+void fft_get_spectrum_stereo(const FFTAnalyzer *fft,
+                              float *out_mag_l, float *out_mag_r, int bins)
+{
+    if (!fft || !out_mag_l || !out_mag_r || bins <= 0) return;
+
+    int half = fft->fft_size / 2;
+    if (bins > half) bins = half;
+
+    /* helper: 线性插值聚合到目标频段数 */
+    #define BIN_AGGREGATE(src, dst, n) do { \
+        if ((n) == half) { \
+            memcpy((dst), (src), half * sizeof(float)); \
+        } else { \
+            float _step = (float)half / (n); \
+            for (int _i = 0; _i < (n); _i++) { \
+                float _pos = _i * _step; \
+                int _idx = (int)_pos; \
+                float _frac = _pos - _idx; \
+                if (_idx + 1 < half) { \
+                    (dst)[_i] = (src)[_idx] * (1.0f - _frac) + \
+                                (src)[_idx + 1] * _frac; \
+                } else { \
+                    (dst)[_i] = (src)[_idx]; \
+                } \
+            } \
+        } \
+    } while(0)
+
+    BIN_AGGREGATE(fft->spectrum, out_mag_l, bins);
+    BIN_AGGREGATE(fft->spectrum_r, out_mag_r, bins);
+
+    #undef BIN_AGGREGATE
+}
+
 void fft_get_spectrum_db(const FFTAnalyzer *fft, float *out_db,
                          int bins, float min_db)
 {
@@ -362,6 +477,37 @@ void fft_get_spectrum_db(const FFTAnalyzer *fft, float *out_db,
     }
 
     free(linear);
+}
+
+void fft_get_spectrum_db_stereo(const FFTAnalyzer *fft,
+                                float *out_db_l, float *out_db_r,
+                                int bins, float min_db)
+{
+    if (!fft || !out_db_l || !out_db_r || bins <= 0) return;
+
+    float *linear_l = malloc(bins * sizeof(float));
+    float *linear_r = malloc(bins * sizeof(float));
+    if (!linear_l || !linear_r) {
+        free(linear_l);
+        free(linear_r);
+        return;
+    }
+
+    fft_get_spectrum_stereo(fft, linear_l, linear_r, bins);
+
+    for (int i = 0; i < bins; i++) {
+        float mag_l = linear_l[i];
+        float mag_r = linear_r[i];
+        if (mag_l < 1e-10f) mag_l = 1e-10f;
+        if (mag_r < 1e-10f) mag_r = 1e-10f;
+        float db_l = 20.0f * log10f(mag_l);
+        float db_r = 20.0f * log10f(mag_r);
+        out_db_l[i] = db_l < min_db ? min_db : db_l;
+        out_db_r[i] = db_r < min_db ? min_db : db_r;
+    }
+
+    free(linear_l);
+    free(linear_r);
 }
 
 void fft_get_peak_spectrum(const FFTAnalyzer *fft, float *out_peak, int bins)
@@ -391,15 +537,53 @@ void fft_get_peak_spectrum(const FFTAnalyzer *fft, float *out_peak, int bins)
     }
 }
 
+void fft_get_peak_spectrum_stereo(const FFTAnalyzer *fft,
+                                  float *out_peak_l, float *out_peak_r, int bins)
+{
+    if (!fft || !out_peak_l || !out_peak_r || bins <= 0) return;
+
+    int half = fft->fft_size / 2;
+    if (bins > half) bins = half;
+
+    /* 复用 BIN_AGGREGATE 宏（定义在 fft_get_spectrum_stereo 中） */
+    #define BIN_AGGREGATE(src, dst, n) do { \
+        if ((n) == half) { \
+            memcpy((dst), (src), half * sizeof(float)); \
+        } else { \
+            float _step = (float)half / (n); \
+            for (int _i = 0; _i < (n); _i++) { \
+                float _pos = _i * _step; \
+                int _idx = (int)_pos; \
+                float _frac = _pos - _idx; \
+                if (_idx + 1 < half) { \
+                    (dst)[_i] = (src)[_idx] * (1.0f - _frac) + \
+                                (src)[_idx + 1] * _frac; \
+                } else { \
+                    (dst)[_i] = (src)[_idx]; \
+                } \
+            } \
+        } \
+    } while(0)
+
+    BIN_AGGREGATE(fft->peak_spectrum, out_peak_l, bins);
+    BIN_AGGREGATE(fft->peak_spectrum_r, out_peak_r, bins);
+
+    #undef BIN_AGGREGATE
+}
+
 void fft_destroy(FFTAnalyzer *fft)
 {
     if (!fft) return;
     free(fft->window);
     free(fft->input_buf);
+    free(fft->input_buf_r);
     free(fft->fft_real);
     free(fft->fft_imag);
     free(fft->spectrum);
     free(fft->raw_spectrum);
     free(fft->peak_spectrum);
+    free(fft->spectrum_r);
+    free(fft->raw_spectrum_r);
+    free(fft->peak_spectrum_r);
     free(fft);
 }

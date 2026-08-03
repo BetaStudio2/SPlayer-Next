@@ -15,8 +15,11 @@ import type {
   LoadResult,
   IpcResponse,
   AudioDevice,
+  FftData,
 } from "@shared/types/player";
 import { registerLoudnessWorklet } from "./loudnessWorklet";
+import { subscribeServerEvent, type ServerEvent } from "./ws";
+import { setFftFrame } from "@/services/playback";
 
 const ok = <T>(data?: T): IpcResponse<T> => ({ success: true, data });
 const fail = (error: string): IpcResponse<never> => ({ success: false, error });
@@ -56,6 +59,12 @@ class WebAudioPlayer implements PlayerApi {
   private eqNodes: BiquadFilterNode[] = [];
   private eqEnabled = false;
   private fftEnabled = false;
+
+  /** 服务端转码模式下 WebSocket FFT 推送的取消订阅函数 */
+  private unsubServerFft: (() => void) | null = null;
+  /** 非转码模式下本地 AnalyserNode FFT 推送的 RAF id */
+  private _fftRafId = 0;
+
   private fadeMs = 0;
   private normalization = false;
   private pitchSync = true;
@@ -273,13 +282,19 @@ class WebAudioPlayer implements PlayerApi {
       // 卸载上一首的解码缓存
       this.unloadSource();
       const url = normalizeSource(source, options?.meta);
+      // 服务端转码 + FFT 启用时，在流 URL 中追加 fft=1 参数，
+      // 使服务端为 C 引擎开启 --fft --fft-fd 4，FFT 数据通过 WebSocket 推送
+      const fftUrl =
+        serverTranscodeMode && this.fftEnabled
+          ? url + (url.includes("?") ? "&" : "?") + "fft=1"
+          : url;
       this.ensureGraph();
       if (this.ctx?.state === "suspended") void this.ctx.resume();
       // 切歌：重置响度归一化分析器
       if (this.normalizerNode?.port) {
         this.normalizerNode.port.postMessage({ type: "reset" });
       }
-      this.audio.src = url;
+      this.audio.src = fftUrl;
       this.audio.dataset.coverUrl = options?.meta?.cover ?? "";
       // unloadSource() 断开了 sourceNode；先断开再重连保证幂等
       if (this.sourceNode && this.preamp) {
@@ -410,31 +425,100 @@ class WebAudioPlayer implements PlayerApi {
 
   async setFftEnabled(enabled: boolean): Promise<IpcResponse> {
     this.fftEnabled = enabled;
+    if (serverTranscodeMode) {
+      if (enabled) {
+        this.subscribeServerFft();
+      } else {
+        this.unsubscribeServerFft();
+      }
+    } else {
+      if (enabled) {
+        this.startLocalFft();
+      } else {
+        this.stopLocalFft();
+      }
+    }
     return ok();
   }
 
-  async getFftData(): Promise<IpcResponse<number[]>> {
-    if (!this.fftEnabled || !this.analyserL || !this.analyserR) return ok([]);
-    const arrL = new Uint8Array(this.analyserL.frequencyBinCount);
-    const arrR = new Uint8Array(this.analyserR.frequencyBinCount);
-    this.analyserL.getByteFrequencyData(arrL);
-    this.analyserR.getByteFrequencyData(arrR);
-    const mono = new Array(arrL.length);
-    for (let i = 0; i < arrL.length; i++) {
-      mono[i] = (arrL[i] + arrR[i]) / 2;
-    }
-    return ok(mono);
+  /** 非转码模式：RAF 循环读取 AnalyserNode，直接推送到 playback（无 IPC 轮询） */
+  private startLocalFft(): void {
+    if (this._fftRafId) return;
+    const tick = (): void => {
+      if (!this._fftRafId) return;
+      this._fftRafId = requestAnimationFrame(tick);
+      if (!this.fftEnabled || !this.analyserL || !this.analyserR) return;
+      const arrL = new Uint8Array(this.analyserL.frequencyBinCount);
+      const arrR = new Uint8Array(this.analyserR.frequencyBinCount);
+      this.analyserL.getByteFrequencyData(arrL);
+      this.analyserR.getByteFrequencyData(arrR);
+      // getByteFrequencyData 返回 0-255，归一化到 0-1
+      const left = new Array(arrL.length);
+      const right = new Array(arrR.length);
+      for (let i = 0; i < arrL.length; i++) {
+        left[i] = arrL[i] / 255;
+        right[i] = arrR[i] / 255;
+      }
+      setFftFrame(left, right);
+    };
+    this._fftRafId = requestAnimationFrame(tick);
   }
 
-  async getFftDataStereo(): Promise<IpcResponse<{ left: number[]; right: number[] }>> {
-    if (!this.fftEnabled || !this.analyserL || !this.analyserR) {
-      return ok({ left: [], right: [] });
+  private stopLocalFft(): void {
+    if (this._fftRafId) {
+      cancelAnimationFrame(this._fftRafId);
+      this._fftRafId = 0;
     }
+    setFftFrame([], []);
+  }
+
+  /** 服务端转码模式下订阅 WebSocket FFT 事件，直接推送到 playback */
+  private subscribeServerFft(): void {
+    if (this.unsubServerFft) return;
+    this.unsubServerFft = subscribeServerEvent((event: ServerEvent) => {
+      if (event.type !== "audio:fft" || !event.data) return;
+      // C 引擎发送的 JSON: {"type":"fft","bins":128,"ldata":[-60,...],"rdata":[-55,...]}
+      const payload = event.data as { bins: number; ldata: number[]; rdata: number[] };
+      // 兼容旧格式（data 字段单声道回退）
+      const legacy = event.data as { bins: number; data: number[] };
+      if (payload.ldata && payload.rdata && payload.ldata.length > 0 && payload.rdata.length > 0) {
+        // C 引擎 FFT 数据已是 dB 值（-60~0），但前端期望 0~1 幅度值
+        // dB 转线性: mag = 10^(dB/20)
+        const bins = Math.min(payload.ldata.length, payload.rdata.length);
+        const ldata = new Array(bins);
+        const rdata = new Array(bins);
+        for (let i = 0; i < bins; i++) {
+          ldata[i] = Math.pow(10, payload.ldata[i] / 20);
+          rdata[i] = Math.pow(10, payload.rdata[i] / 20);
+        }
+        setFftFrame(ldata, rdata);
+      } else if (legacy.data && legacy.data.length > 0) {
+        const fftArr = Array.from(legacy.data);
+        setFftFrame(fftArr, fftArr);
+      }
+    });
+  }
+
+  private unsubscribeServerFft(): void {
+    if (this.unsubServerFft) {
+      this.unsubServerFft();
+      this.unsubServerFft = null;
+    }
+  }
+
+  async getFftData(): Promise<IpcResponse<FftData>> {
+    if (!this.fftEnabled || !this.analyserL || !this.analyserR) return ok({ ldata: [], rdata: [] });
     const arrL = new Uint8Array(this.analyserL.frequencyBinCount);
     const arrR = new Uint8Array(this.analyserR.frequencyBinCount);
     this.analyserL.getByteFrequencyData(arrL);
     this.analyserR.getByteFrequencyData(arrR);
-    return ok({ left: Array.from(arrL), right: Array.from(arrR) });
+    const ldata = new Array(arrL.length);
+    const rdata = new Array(arrR.length);
+    for (let i = 0; i < arrL.length; i++) {
+      ldata[i] = arrL[i] / 255;
+      rdata[i] = arrR[i] / 255;
+    }
+    return ok({ ldata, rdata });
   }
 
   async setFadeDuration(ms: number): Promise<IpcResponse> {
@@ -521,6 +605,10 @@ class WebAudioPlayer implements PlayerApi {
     // 切换到纯音频播放模式时，释放已有的 Web Audio 图
     // 下次播放时将自动重建（enabled=false）或跳过（enabled=true）
     if (enabled && this.ctx) {
+      // 先暂停音频，再关闭 AudioContext
+      // createMediaElementSource 会永久捕获 <audio> 输出，
+      // ctx.close() 后必须强制重置 src="" 让浏览器释放路由
+      this.audio.pause();
       try { await this.ctx.close(); } catch { /* 忽略 */ }
       this.ctx = null;
       this.sourceNode = null;
@@ -533,6 +621,23 @@ class WebAudioPlayer implements PlayerApi {
       this.eqNodes = [];
       this.normalizerNode = null;
       this.normalizerReady = false;
+      // 强制重置 <audio> 释放 MediaElementAudioSourceNode 路由
+      this.audio.src = "";
+      this.audio.load();
+      // 等待重置生效后再加载新源
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    // 热切换时同步 FFT 推送源
+    if (changed) {
+      if (enabled) {
+        // 切换到转码模式：本地 RAF → WebSocket
+        this.stopLocalFft();
+        if (this.fftEnabled) this.subscribeServerFft();
+      } else {
+        // 切换到非转码模式：WebSocket → 本地 RAF
+        this.unsubscribeServerFft();
+        if (this.fftEnabled) this.startLocalFft();
+      }
     }
     // 热切换：如果有正在播放的曲目，用新模式重新加载
     if (changed && this.lastSource) {

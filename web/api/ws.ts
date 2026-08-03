@@ -16,6 +16,7 @@ export interface ServerEvent {
     | "library:changed"
     | "download:state"
     | "download:progress"
+    | "audio:fft"
     | "pong";
   data?: unknown;
 }

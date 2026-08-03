@@ -138,6 +138,20 @@ void pipeline_set_fft_enabled(AudioPipeline *p, bool enabled);
 /** 获取 FFT 频谱数据（dB 值，输出到 out_db 缓冲区） */
 int pipeline_get_fft_spectrum(AudioPipeline *p, float *out_db, int bins, float min_db);
 
+/**
+ * 获取立体声 FFT 频谱数据（dB，左右声道独立）
+ *
+ * @param p         管线实例
+ * @param out_db_l  输出左声道 dB 值缓冲区
+ * @param out_db_r  输出右声道 dB 值缓冲区
+ * @param bins      频段数
+ * @param min_db    最小 dB 值
+ * @return 0 成功，-1 参数错误
+ */
+int pipeline_get_fft_spectrum_stereo(AudioPipeline *p,
+                                     float *out_db_l, float *out_db_r,
+                                     int bins, float min_db);
+
 /** 获取 FFT 点数 */
 int pipeline_get_fft_size(const AudioPipeline *p);
 

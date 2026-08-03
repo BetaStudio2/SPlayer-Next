@@ -35,16 +35,44 @@ FFTAnalyzer* fft_create(int sample_rate, int fft_size);
 void fft_set_enabled(FFTAnalyzer *fft, bool enabled);
 
 /**
- * 处理 PCM 数据（提取频谱）
+ * 处理 PCM 数据（提取频谱，单声道，左右频谱相同）
  *
  * @param fft     实例
- * @param pcm     交错 float PCM 数据（仅使用第一声道）
+ * @param pcm     交错 float PCM 数据（每帧 1 个样本）
  * @param samples 样本数（每声道）
  */
 void fft_process(FFTAnalyzer *fft, const float *pcm, int samples);
 
 /**
- * 获取线性幅度谱
+ * 处理 PCM 数据（提取立体声频谱，左右声道独立分析）
+ *
+ * @param fft     实例
+ * @param pcm     交错 float PCM 数据（L R L R ...）
+ * @param samples 样本数（每声道）
+ */
+void fft_process_stereo(FFTAnalyzer *fft, const float *pcm, int samples);
+
+/**
+ * 处理 PCM 数据（自适应声道数，频谱输出保持立体声兼容）
+ *
+ * 对交错 float PCM 按声道数（1~6）自动下混为左右声道后再分析，
+ * 频谱输出格式与立体声一致（ldata/rdata）。声道布局遵循 FFmpeg 默认布局：
+ *   1ch  单声道        L = R = s0
+ *   2ch  立体声        L = s0, R = s1
+ *   3ch  L R C         L = s0 + 0.7071*C, R = s1 + 0.7071*C
+ *   4ch  四声道        L = s0 + 0.7071*BL, R = s1 + 0.7071*BR
+ *   5ch  L R C BL BR   L = s0 + 0.7071*C + 0.7071*BL, R = s1 + 0.7071*C + 0.7071*BR
+ *   6ch  5.1          L = s0 + 0.7071*C + 0.7071*BL, R = s1 + 0.7071*C + 0.7071*BR（LFE 不入下混）
+ *
+ * @param fft      实例
+ * @param pcm      交错 float PCM 数据（L R C LFE BL BR ...）
+ * @param samples  样本数（每声道）
+ * @param channels 声道数（1~6，超出范围时退化为取前两个声道）
+ */
+void fft_process_multi(FFTAnalyzer *fft, const float *pcm, int samples, int channels);
+
+/**
+ * 获取线性幅度谱（单声道）
  *
  * @param fft       实例
  * @param out_mag   输出幅度谱（线性，0~1），至少 bins 个元素
@@ -53,7 +81,18 @@ void fft_process(FFTAnalyzer *fft, const float *pcm, int samples);
 void fft_get_spectrum(const FFTAnalyzer *fft, float *out_mag, int bins);
 
 /**
- * 获取对数频谱（dB）
+ * 获取立体声线性幅度谱（左右声道独立）
+ *
+ * @param fft         实例
+ * @param out_mag_l   输出左声道幅度谱，至少 bins 个元素
+ * @param out_mag_r   输出右声道幅度谱，至少 bins 个元素
+ * @param bins        请求的频段数
+ */
+void fft_get_spectrum_stereo(const FFTAnalyzer *fft,
+                             float *out_mag_l, float *out_mag_r, int bins);
+
+/**
+ * 获取对数频谱（dB，单声道）
  *
  * @param fft       实例
  * @param out_db    输出 dB 值（通常 -60~0），至少 bins 个元素
@@ -63,7 +102,20 @@ void fft_get_spectrum(const FFTAnalyzer *fft, float *out_mag, int bins);
 void fft_get_spectrum_db(const FFTAnalyzer *fft, float *out_db, int bins, float min_db);
 
 /**
- * 获取峰值保持谱
+ * 获取立体声对数频谱（dB，左右声道独立）
+ *
+ * @param fft         实例
+ * @param out_db_l    输出左声道 dB 值，至少 bins 个元素
+ * @param out_db_r    输出右声道 dB 值，至少 bins 个元素
+ * @param bins        请求的频段数
+ * @param min_db      最小 dB 值
+ */
+void fft_get_spectrum_db_stereo(const FFTAnalyzer *fft,
+                                float *out_db_l, float *out_db_r,
+                                int bins, float min_db);
+
+/**
+ * 获取峰值保持谱（单声道）
  *
  * @param fft       实例
  * @param out_peak  输出峰值谱（线性，0~1），至少 bins 个元素
@@ -72,7 +124,18 @@ void fft_get_spectrum_db(const FFTAnalyzer *fft, float *out_db, int bins, float 
 void fft_get_peak_spectrum(const FFTAnalyzer *fft, float *out_peak, int bins);
 
 /**
- * 重置峰值保持
+ * 获取立体声峰值保持谱（左右声道独立）
+ *
+ * @param fft           实例
+ * @param out_peak_l    输出左声道峰值谱，至少 bins 个元素
+ * @param out_peak_r    输出右声道峰值谱，至少 bins 个元素
+ * @param bins          请求的频段数
+ */
+void fft_get_peak_spectrum_stereo(const FFTAnalyzer *fft,
+                                  float *out_peak_l, float *out_peak_r, int bins);
+
+/**
+ * 重置峰值保持（左右声道同时重置）
  */
 void fft_reset_peak(FFTAnalyzer *fft);
 

@@ -56,15 +56,22 @@ static int swr_init_real(Resampler *r)
     if (r->swr) return 0; /* 已初始化 */
 
 #if LIBAVUTIL_VERSION_MAJOR >= 57
-    /* FFmpeg 5.1+：使用 ch_layout API */
+    /* FFmpeg 5.1+：使用 ch_layout API，按实际声道数构造默认布局
+     * （输入 5.1 源正确下混到输出声道，输出声道数由 cfg->output_channels 决定） */
+    AVChannelLayout in_layout;
+    AVChannelLayout out_layout;
+    av_channel_layout_default(&in_layout, r->in_channels);
+    av_channel_layout_default(&out_layout, r->out_channels);
     int ret = swr_alloc_set_opts2(&r->swr,
-        &(AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO, AV_SAMPLE_FMT_FLT, r->out_rate,
-        &(AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO, r->in_format, r->in_rate,
+        &out_layout, AV_SAMPLE_FMT_FLT, r->out_rate,
+        &in_layout, r->in_format, r->in_rate,
         0, NULL);
+    av_channel_layout_uninit(&in_layout);
+    av_channel_layout_uninit(&out_layout);
 #else
     /* 旧 API */
     r->swr = swr_alloc_set_opts(NULL,
-        AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_FLT, r->out_rate,
+        av_get_default_channel_layout(r->out_channels), AV_SAMPLE_FMT_FLT, r->out_rate,
         av_get_default_channel_layout(r->in_channels), r->in_format, r->in_rate,
         0, NULL);
     int ret = r->swr ? 0 : -1;

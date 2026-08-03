@@ -354,15 +354,21 @@ static int run_interactive(AudioPipeline *p, int ctl_fd, int fft_fd, int fft_int
                 int bins = fft_size / 2 + 1;
                 if (bins > 512) bins = 512; /* 限制输出频段数 */
                 float fft_data[512];
-                pipeline_get_fft_spectrum(p, fft_data, bins, -60.0f);
+                float fft_data_r[512];
+                pipeline_get_fft_spectrum_stereo(p, fft_data, fft_data_r, bins, -60.0f);
 
-                /* 构造 JSON */
-                char fft_json[8192];
+                /* 构造 JSON（双声道独立数据） */
+                char fft_json[16384];
                 int off = snprintf(fft_json, sizeof(fft_json),
-                    "{\"type\":\"fft\",\"bins\":%d,\"data\":[", bins);
+                    "{\"type\":\"fft\",\"bins\":%d,\"ldata\":[", bins);
                 for (int i = 0; i < bins; i++) {
                     off += snprintf(fft_json + off, sizeof(fft_json) - off,
                         "%.1f%s", fft_data[i], i < bins - 1 ? "," : "");
+                }
+                off += snprintf(fft_json + off, sizeof(fft_json) - off, "],\"rdata\":[");
+                for (int i = 0; i < bins; i++) {
+                    off += snprintf(fft_json + off, sizeof(fft_json) - off,
+                        "%.1f%s", fft_data_r[i], i < bins - 1 ? "," : "");
                 }
                 off += snprintf(fft_json + off, sizeof(fft_json) - off, "]}");
 

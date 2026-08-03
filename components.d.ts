@@ -166,6 +166,7 @@ declare module 'vue' {
     LyricSourceOrderConfig: typeof import('./src/components/settings/custom/LyricSourceOrderConfig.vue')['default']
     McpConfigDialog: typeof import('./src/components/settings/custom/McpConfigDialog.vue')['default']
     McpStatusCard: typeof import('./src/components/settings/custom/McpStatusCard.vue')['default']
+    MediaStatsDialog: typeof import('./src/components/modals/MediaStatsDialog.vue')['default']
     MusicCommentsDialog: typeof import('./src/components/modals/MusicCommentsDialog.vue')['default']
     NavHeader: typeof import('./src/components/layout/NavHeader.vue')['default']
     NavSearch: typeof import('./src/components/layout/NavSearch.vue')['default']
