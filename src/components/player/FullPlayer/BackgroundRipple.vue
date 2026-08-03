@@ -105,7 +105,6 @@ let resizeObserver: ResizeObserver | null = null;
 //  WebGPU backend
 // ══════════════════════════════════════════════════════════════
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 type GPUDeviceT = any;
 type GPUCanvasContextT = any;
 type GPUBindGroupT = any;
@@ -114,7 +113,6 @@ type GPUBufferT = any;
 type GPUTextureT = any;
 type GPUSamplerT = any;
 type GPUShaderModuleT = any;
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const wgslVertex = `
   struct VertexOutput {

@@ -17,7 +17,7 @@ import { Readable } from "node:stream";
 import { existsSync } from "node:fs";
 import { getTracksByIds } from "@main/database";
 import { spawnAudioEngine, getOrCreateInteractiveEngine, isAudioEngineAvailable } from "@main/audio-engine/binding";
-import { getWebSocketServer, broadcastToStream } from "@main/routes/ws";
+import { broadcastToStream } from "@main/routes/ws";
 import { serverLog } from "@main/utils/logger";
 
 const app = new Hono();
@@ -153,7 +153,7 @@ app.post("/control/:id", async (c) => {
     const body = await c.req.json();
     engine.send(body);
     return c.json({ ok: true });
-  } catch (err) {
+  } catch (_err) {
     return c.json({ error: "invalid control command" }, 400);
   }
 });

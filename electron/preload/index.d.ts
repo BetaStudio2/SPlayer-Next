@@ -7,7 +7,6 @@ import {
   McpAgentApp,
   McpStatus,
 } from "@shared/types/settings";
-import type { FormatStat } from "@shared/types/library";
 import { LibraryApi } from "@shared/types/library";
 import { NowPlayingApi } from "@shared/types/nowPlaying";
 import { PluginsApi } from "@shared/types/plugin";
